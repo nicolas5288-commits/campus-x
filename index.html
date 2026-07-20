@@ -113,6 +113,49 @@
     </div>
   </div>
 
+  <!-- 分享經驗 Modal -->
+  <div class="modal-mask" id="reviewMask">
+    <div class="modal" id="reviewBody">
+      <button class="modal-close" id="reviewClose">✕</button>
+      <h2 id="reviewTitle">分享你的經驗</h2>
+      <p class="auth-sub" id="reviewFor"></p>
+      <form id="reviewForm" style="margin-top:18px;">
+        <div class="field">
+          <span>經驗類型</span>
+          <div class="rev-tabs" id="revTypeTabs">
+            <button type="button" class="rev-tab active" data-type="interview">面試經驗</button>
+            <button type="button" class="rev-tab" data-type="experience">參與心得</button>
+          </div>
+        </div>
+
+        <!-- 面試經驗欄 -->
+        <div id="revInterview">
+          <div class="field"><label><span>面試流程</span><textarea name="process" placeholder="幾關？線上還線下？多久？"></textarea></label></div>
+          <div class="field"><label><span>被問了什麼</span><textarea name="questions" placeholder="印象深刻的題目…"></textarea></label></div>
+          <div class="field"><label><span>準備建議</span><textarea name="tips" placeholder="給要面試的人的建議…"></textarea></label></div>
+          <div class="field"><label><span>結果</span>
+            <select name="result"><option value="">不透露</option><option value="錄取">錄取</option><option value="備取">備取</option><option value="未錄取">未錄取</option></select></label></div>
+        </div>
+
+        <!-- 參與心得欄 -->
+        <div id="revExperience" style="display:none;">
+          <div class="field"><label><span>實際任務量</span><textarea name="workload" placeholder="每週大概花多少時間？做什麼？"></textarea></label></div>
+          <div class="field"><label><span>收穫 / 學到什麼</span><textarea name="gains" placeholder="最大的收穫…"></textarea></label></div>
+          <div class="field"><label><span>給學弟妹的建議</span><textarea name="advice" placeholder="推不推？值不值得？"></textarea></label></div>
+        </div>
+
+        <div class="field">
+          <span>推薦度</span>
+          <div class="rev-tabs" id="ratingPick"></div>
+        </div>
+        <div class="field"><label><span>還想補充什麼？<span class="hint">選填</span></span><textarea name="extra"></textarea></label></div>
+        <label class="check-line" style="margin:6px 0 16px;"><input type="checkbox" name="anonymous" /> 匿名分享（顯示「前 OO 大使」，不露出我的暱稱）</label>
+        <div class="auth-err" id="reviewErr"></div>
+        <button type="submit" class="btn" id="reviewSubmit" style="width:100%;justify-content:center;">送出（審核後上架）</button>
+      </form>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <!-- Supabase JS（雲端模式用；本機模式不影響）-->

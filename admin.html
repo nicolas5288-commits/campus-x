@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>審核後台 · Campus X</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="index.html" class="logo"><span class="dot"></span>Campus X</a>
+      <nav class="nav-links">
+        <a href="index.html">找計畫</a>
+        <a href="submit.html">投稿</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page">
+    <div class="page-head">
+      <h1>審核後台</h1>
+      <p>審核廠商投稿的計畫，以及學長姐分享的心得。通過就會上架，退回可附原因。</p>
+    </div>
+
+    <!-- 未登入 / 非管理員時 -->
+    <div id="gate" class="admin-gate" style="display:none;">
+      <p style="color:var(--ink-soft);margin-bottom:18px;" id="gateMsg">請以管理員帳號登入後台。</p>
+      <div id="gateForm" style="max-width:340px;margin:0 auto;text-align:left;">
+        <div class="field"><label><span>管理員 Email</span><input type="email" id="adEmail" placeholder="you@example.com" /></label></div>
+        <div class="field"><label><span>密碼</span><input type="password" id="adPw" placeholder="密碼" /></label></div>
+        <div class="auth-err" id="adErr" style="margin-bottom:10px;"></div>
+        <button class="btn" id="adLoginBtn" style="width:100%;justify-content:center;">登入</button>
+      </div>
+    </div>
+
+    <!-- 後台主體 -->
+    <div id="panel" style="display:none;">
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="programs">廠商投稿 <span class="badge" id="badgeP" style="display:none;">0</span></button>
+        <button class="admin-tab" data-tab="reviews">學生心得 <span class="badge" id="badgeR" style="display:none;">0</span></button>
+        <button class="btn ghost sm" id="adLogout" style="margin-left:auto;">登出</button>
+      </div>
+      <div id="queue"></div>
+    </div>
+  </div>
+
+  <div class="mode-badge" id="modeBadge"></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="data.js"></script>
+  <script src="db.js"></script>
+  <script>
+  (function () {
+    const DB = window.DB;
+    let tab = "programs";
+    document.getElementById("modeBadge").textContent = DB.MODE === "supabase" ? "☁️ 雲端資料庫" : "🖥️ 本機展示模式";
+
+    function toast(msg) {
+      const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2200);
+    }
+    function esc(s) { return (s == null ? "" : String(s)).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+    function stars(n) { n = n || 0; return "★".repeat(n) + "☆".repeat(5 - n); }
+
+    // ---- 畫面切換 ----
+    function showGate(msg) {
+      document.getElementById("gate").style.display = "block";
+      document.getElementById("panel").style.display = "none";
+      if (msg) document.getElementById("gateMsg").textContent = msg;
+    }
+    function showPanel() {
+      document.getElementById("gate").style.display = "none";
+      document.getElementById("panel").style.display = "block";
+      loadQueue();
+    }
+
+    // ---- 投稿佇列 ----
+    function programCard(p) {
+      return `<div class="queue-card" data-id="${p.id}">
+        <div style="display:flex;gap:12px;align-items:start;">
+          <div class="card-emoji">${p.emoji || "📌"}</div>
+          <div style="flex:1;">
+            <h3>${esc(p.title)}</h3>
+            <div class="q-brand">${esc(p.brand)}</div>
+          </div>
+        </div>
+        <div class="q-meta">
+          <span class="tag ${p.paid ? "paid" : "unpaid"}">${p.paid ? "有薪" : "無薪"}</span>
+          <span class="tag">${esc(p.category)}</span>
+          <span class="tag">${esc(p.location)}</span>
+          ${p.deadline ? `<span class="tag">截止 ${esc(p.deadline)}</span>` : ""}
+        </div>
+        <div class="q-section"><b>簡介</b><div>${esc(p.summary)}</div></div>
+        ${p.tasks && p.tasks.length ? `<div class="q-section"><b>任務</b><div>${p.tasks.map(esc).join("、")}</div></div>` : ""}
+        ${p.benefits && p.benefits.length ? `<div class="q-section"><b>福利</b><div>${p.benefits.map(esc).join("、")}</div></div>` : ""}
+        <div class="q-section"><b>報名連結</b><div><a href="${esc(p.applyUrl)}" target="_blank" rel="noopener">${esc(p.applyUrl)}</a></div></div>
+        <div class="q-actions">
+          <button class="btn approve" data-approve="${p.id}">✓ 通過上架</button>
+          <button class="btn reject" data-reject="${p.id}">✕ 退回</button>
+        </div>
+      </div>`;
+    }
+
+    // ---- 心得佇列 ----
+    function reviewCard(r) {
+      const typeLabel = r.type === "interview" ? "面試經驗" : "參與心得";
+      const prog = r.programs ? `${esc(r.programs.title)}` : r.program_id;
+      const rows = r.type === "interview"
+        ? [["面試流程", r.process], ["被問了什麼", r.questions], ["準備建議", r.tips], ["結果", r.result]]
+        : [["實際任務量", r.workload], ["收穫", r.gains], ["給學弟妹的建議", r.advice]];
+      const body = rows.filter(([, v]) => v).map(([k, v]) =>
+        `<div class="q-section"><b>${k}</b><div>${esc(v)}</div></div>`).join("");
+      return `<div class="queue-card" data-id="${r.id}">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span class="rev-type-badge">${typeLabel}</span>
+          <span class="stars">${stars(r.rating)}</span>
+          ${r.anonymous ? '<span class="tag">匿名</span>' : ""}
+        </div>
+        <div class="q-brand" style="margin-top:8px;">計畫：${prog}</div>
+        ${body}
+        ${r.extra ? `<div class="q-section"><b>補充</b><div>${esc(r.extra)}</div></div>` : ""}
+        <div class="q-actions">
+          <button class="btn approve" data-rapprove="${r.id}">✓ 通過上架</button>
+          <button class="btn reject" data-rreject="${r.id}">✕ 退回</button>
+        </div>
+      </div>`;
+    }
+
+    async function loadQueue() {
+      const queue = document.getElementById("queue");
+      queue.innerHTML = '<div class="admin-empty">載入中…</div>';
+      try {
+        if (tab === "programs") {
+          const list = await DB.getPendingPrograms();
+          updateBadge("badgeP", list.length);
+          queue.innerHTML = list.length
+            ? list.map(programCard).join("")
+            : '<div class="admin-empty">目前沒有待審的投稿 🎉</div>';
+          bindProgramActions();
+        } else {
+          const list = await DB.getPendingReviews();
+          updateBadge("badgeR", list.length);
+          queue.innerHTML = list.length
+            ? list.map(reviewCard).join("")
+            : '<div class="admin-empty">目前沒有待審的心得 🎉</div>';
+          bindReviewActions();
+        }
+      } catch (err) {
+        queue.innerHTML = `<div class="admin-empty">載入失敗：${esc(err.message)}</div>`;
+      }
+      refreshBadges();
+    }
+
+    function updateBadge(id, n) {
+      const b = document.getElementById(id);
+      b.textContent = n; b.style.display = n > 0 ? "inline-block" : "none";
+    }
+    async function refreshBadges() {
+      try { updateBadge("badgeP", (await DB.getPendingPrograms()).length); } catch {}
+      try { updateBadge("badgeR", (await DB.getPendingReviews()).length); } catch {}
+    }
+
+    function bindProgramActions() {
+      document.querySelectorAll("[data-approve]").forEach(b => b.onclick = async () => {
+        b.disabled = true;
+        await DB.approveProgram(b.dataset.approve);
+        toast("已通過上架 ✓"); loadQueue();
+      });
+      document.querySelectorAll("[data-reject]").forEach(b => b.onclick = async () => {
+        const reason = prompt("退回原因（選填，會記錄下來）：") ?? null;
+        if (reason === null) return;
+        b.disabled = true;
+        await DB.rejectProgram(b.dataset.reject, reason);
+        toast("已退回"); loadQueue();
+      });
+    }
+    function bindReviewActions() {
+      document.querySelectorAll("[data-rapprove]").forEach(b => b.onclick = async () => {
+        b.disabled = true;
+        await DB.approveReview(b.dataset.rapprove);
+        toast("心得已通過上架 ✓"); loadQueue();
+      });
+      document.querySelectorAll("[data-rreject]").forEach(b => b.onclick = async () => {
+        const reason = prompt("退回原因（選填）：") ?? null;
+        if (reason === null) return;
+        b.disabled = true;
+        await DB.rejectReview(b.dataset.rreject, reason);
+        toast("已退回"); loadQueue();
+      });
+    }
+
+    // ---- Tabs ----
+    document.querySelectorAll(".admin-tab").forEach(t => t.onclick = () => {
+      tab = t.dataset.tab;
+      document.querySelectorAll(".admin-tab").forEach(x => x.classList.remove("active"));
+      t.classList.add("active");
+      loadQueue();
+    });
+
+    // ---- 登入 gate ----
+    document.getElementById("adLoginBtn").onclick = async () => {
+      const email = document.getElementById("adEmail").value.trim();
+      const pw = document.getElementById("adPw").value;
+      const err = document.getElementById("adErr");
+      err.textContent = "";
+      try {
+        await DB.signIn(email, pw);
+        // onAuth 會處理後續
+      } catch (e) {
+        err.textContent = /invalid login/i.test(e.message) ? "Email 或密碼錯誤" : e.message;
+      }
+    };
+    document.getElementById("adLogout").onclick = async () => { await DB.signOut(); };
+
+    // ---- 啟動 ----
+    async function boot() {
+      DB.onAuth((user) => {
+        if (DB.isAdmin()) showPanel();
+        else if (DB.configured) showGate(user ? "這個帳號沒有管理員權限。" : "請以管理員帳號登入後台。");
+        else showPanel(); // 本機模式直接進（方便 demo）
+      });
+      await DB.initAuth();
+    }
+    boot();
+  })();
+  </script>
+</body>
+</html>

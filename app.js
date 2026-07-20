@@ -161,12 +161,154 @@
       <div class="modal-actions">
         <a href="${p.applyUrl}" target="_blank" rel="noopener" class="btn">前往報名 ↗</a>
         <button class="btn ghost" id="modalFav" data-fav="${p.id}" data-id="${p.id}">${favSet.has(p.id) ? "♥ 已收藏" : "♡ 收藏"}</button>
+      </div>
+
+      <div class="reviews-block">
+        <div class="reviews-head">
+          <h4>學長姐怎麼說</h4>
+          <button class="btn ghost sm" id="shareExpBtn">＋ 分享我的經驗</button>
+        </div>
+        <div class="rev-tabs" id="revViewTabs">
+          <button class="rev-tab active" data-rv="interview">面試經驗</button>
+          <button class="rev-tab" data-rv="experience">參與心得</button>
+        </div>
+        <div id="revList"><div class="rev-empty">載入中…</div></div>
       </div>`;
 
     document.getElementById("modalMask").classList.add("open");
     document.getElementById("modalClose").onclick = closeModal;
     document.getElementById("modalFav").onclick = () => handleFav(p.id);
+    document.getElementById("shareExpBtn").onclick = () => openReview(p);
+
+    // 載入該計畫的心得
+    loadProgramReviews(p);
   }
+
+  // ---------- 學長姐怎麼說 ----------
+  let reviewViewType = "interview";
+  async function loadProgramReviews(p) {
+    let reviews = [];
+    try { reviews = await window.DB.getReviews(p.id); } catch { reviews = []; }
+    const tabs = document.getElementById("revViewTabs");
+    if (!tabs) return; // modal 已關
+    tabs.querySelectorAll(".rev-tab").forEach((t) => {
+      t.onclick = () => {
+        reviewViewType = t.dataset.rv;
+        tabs.querySelectorAll(".rev-tab").forEach((x) => x.classList.remove("active"));
+        t.classList.add("active");
+        renderReviewList(reviews, p);
+      };
+    });
+    renderReviewList(reviews, p);
+  }
+  function renderReviewList(reviews, p) {
+    const box = document.getElementById("revList");
+    if (!box) return;
+    const list = reviews.filter((r) => r.type === reviewViewType);
+    if (!list.length) {
+      box.innerHTML = `<div class="rev-empty">還沒有${reviewViewType === "interview" ? "面試經驗" : "參與心得"}，當第一個分享的人吧 👋</div>`;
+      return;
+    }
+    box.innerHTML = list.map((r) => reviewItemHTML(r, p)).join("");
+  }
+  function reviewItemHTML(r, p) {
+    // 品牌名常已含「大使/校園大使」，去掉尾綴避免疊字（JLab 校園大使 → 前 JLab 大使）
+    const shortBrand = (p.brand || "").replace(/\s*(校園)?大使\s*$/, "").trim();
+    const who = r.anonymous ? `前 ${shortBrand} 大使` : (r.nickname || "校園大使");
+    const stars = "★".repeat(r.rating || 0) + "☆".repeat(5 - (r.rating || 0));
+    const rows = r.type === "interview"
+      ? [["面試流程", r.process], ["被問了什麼", r.questions], ["準備建議", r.tips], ["結果", r.result]]
+      : [["任務量", r.workload], ["收穫", r.gains], ["建議", r.advice]];
+    const body = rows.filter(([, v]) => v).map(([k, v]) =>
+      `<div class="rev-q">${k}</div><div class="rev-a">${escapeHtml(v)}</div>`).join("");
+    return `<div class="rev-item">
+      <div class="rev-who">👤 ${escapeHtml(who)} <span class="stars">${stars}</span></div>
+      ${body}
+      ${r.extra ? `<div class="rev-q">補充</div><div class="rev-a">${escapeHtml(r.extra)}</div>` : ""}
+    </div>`;
+  }
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  }
+
+  // ---------- 分享經驗 Modal ----------
+  let reviewFormType = "interview";
+  let reviewTargetProgram = null;
+  function openReview(p) {
+    // 雲端模式需登入
+    if (window.DB.configured && !window.DB.getUser()) {
+      openAuth("login", "登入後就能分享你的經驗給學弟妹！");
+      return;
+    }
+    reviewTargetProgram = p;
+    document.getElementById("reviewFor").textContent = `${p.title}（${p.brand}）`;
+    document.getElementById("reviewErr").textContent = "";
+    document.getElementById("reviewForm").reset();
+    setReviewFormType("interview");
+    document.getElementById("reviewMask").classList.add("open");
+  }
+  function closeReview() { document.getElementById("reviewMask").classList.remove("open"); }
+  function setReviewFormType(type) {
+    reviewFormType = type;
+    document.querySelectorAll("#revTypeTabs .rev-tab").forEach((t) =>
+      t.classList.toggle("active", t.dataset.type === type));
+    document.getElementById("revInterview").style.display = type === "interview" ? "" : "none";
+    document.getElementById("revExperience").style.display = type === "experience" ? "" : "none";
+  }
+  document.querySelectorAll("#revTypeTabs .rev-tab").forEach((t) => {
+    t.onclick = () => setReviewFormType(t.dataset.type);
+  });
+  // 推薦度星星選擇
+  let pickedRating = 5;
+  (function initRating() {
+    const box = document.getElementById("ratingPick");
+    box.innerHTML = "";
+    for (let i = 1; i <= 5; i++) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "rev-tab" + (i <= pickedRating ? " active" : "");
+      b.textContent = "★"; b.dataset.star = i;
+      b.onclick = () => {
+        pickedRating = i;
+        box.querySelectorAll(".rev-tab").forEach((x) =>
+          x.classList.toggle("active", +x.dataset.star <= i));
+      };
+      box.appendChild(b);
+    }
+  })();
+  document.getElementById("reviewClose").onclick = closeReview;
+  document.getElementById("reviewMask").onclick = (e) => { if (e.target.id === "reviewMask") closeReview(); };
+  document.getElementById("reviewForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const errEl = document.getElementById("reviewErr");
+    const btn = document.getElementById("reviewSubmit");
+    errEl.textContent = "";
+    const form = {
+      program_id: reviewTargetProgram.id,
+      type: reviewFormType,
+      rating: pickedRating,
+      anonymous: f.anonymous.checked,
+      process: f.process.value.trim(), questions: f.questions.value.trim(),
+      tips: f.tips.value.trim(), result: f.result.value,
+      workload: f.workload.value.trim(), gains: f.gains.value.trim(), advice: f.advice.value.trim(),
+      extra: f.extra.value.trim(),
+    };
+    // 至少填一欄
+    const hasContent = form.type === "interview"
+      ? (form.process || form.questions || form.tips)
+      : (form.workload || form.gains || form.advice);
+    if (!hasContent) { errEl.textContent = "至少填一個欄位再送出喔"; return; }
+    btn.disabled = true; btn.textContent = "送出中…";
+    try {
+      await window.DB.submitReview(form);
+      closeReview();
+      toast("感謝分享！審核通過後就會顯示 🙌");
+    } catch (err) {
+      errEl.textContent = err.message || "送出失敗，請稍後再試";
+    } finally {
+      btn.disabled = false; btn.textContent = "送出（審核後上架）";
+    }
+  };
   function closeModal() {
     document.getElementById("modalMask").classList.remove("open");
   }
@@ -174,7 +316,7 @@
     if (e.target.id === "modalMask") closeModal();
   };
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") { closeModal(); closeAuth(); }
+    if (e.key === "Escape") { closeModal(); closeAuth(); closeReview(); }
   });
 
   // ---------- Toast ----------

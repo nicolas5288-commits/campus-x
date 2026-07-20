@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>刊登校園大使計畫 · Campus X</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="index.html" class="logo"><span class="dot"></span>Campus X</a>
+      <nav class="nav-links">
+        <a href="index.html">找計畫</a>
+        <a href="admin.html">後台</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page">
+    <a href="index.html" class="back-link">← 回首頁</a>
+    <div class="page-head">
+      <h1>刊登你的校園大使計畫</h1>
+      <p>免費刊登、不需註冊。送出後由 Campus X 審核，通過就會出現在計畫列表，並通知有訂閱的學生。</p>
+    </div>
+
+    <div id="formWrap" class="form-card" style="margin-top:24px;">
+      <div id="formMsg"></div>
+      <form id="submitForm">
+        <div class="field">
+          <label><span>品牌 / 單位名稱 <span class="hint">必填</span></span>
+            <input type="text" name="brand" required placeholder="例：JLab 校園大使" /></label>
+        </div>
+
+        <div class="field">
+          <span>選一個代表圖示</span>
+          <div class="emoji-picker" id="emojiPicker"></div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label><span>產業分類 <span class="hint">必填</span></span>
+              <select name="category" id="categorySel" required></select></label>
+          </div>
+          <div class="field">
+            <label><span>地區</span>
+              <input type="text" name="location" placeholder="例：全台 / 北部 / 遠距" value="全台" /></label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label><span>計畫名稱 <span class="hint">必填</span></span>
+            <input type="text" name="title" required placeholder="例：第 1 屆 JLab 校園大使招募" /></label>
+        </div>
+
+        <div class="field">
+          <label><span>一句話簡介 <span class="hint">必填，會顯示在卡片上</span></span>
+            <input type="text" name="summary" required placeholder="例：耳機品牌校園推廣，新品搶先體驗＋每月任務獎金。" /></label>
+        </div>
+
+        <div class="field">
+          <label><span>任務內容 <span class="hint">一行一項</span></span>
+            <textarea name="tasks" placeholder="校園與社群推廣&#10;完成每月指定任務&#10;回饋校園使用者反饋"></textarea></label>
+        </div>
+
+        <div class="field">
+          <label><span>大使福利 <span class="hint">一行一項</span></span>
+            <textarea name="benefits" placeholder="每月任務獎金&#10;新品搶先體驗&#10;結業證明"></textarea></label>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label><span>招募對象</span>
+              <input type="text" name="eligibility" placeholder="例：全台大專院校在學學生" value="全台大專院校在學學生" /></label>
+          </div>
+          <div class="field">
+            <label><span>任期</span>
+              <input type="text" name="term" placeholder="例：一學期 / 一學年" value="一學期" /></label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label><span>報名截止日</span>
+              <input type="date" name="deadline" /></label>
+          </div>
+          <div class="field">
+            <span>是否有薪 / 獎金</span>
+            <label class="check-line" style="margin-top:8px;">
+              <input type="checkbox" name="paid" /> 有薪 / 有獎金（會顯示「有薪」標籤）</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label><span>報名連結 <span class="hint">必填，學生點「前往報名」會到這裡</span></span>
+            <input type="url" name="applyUrl" required placeholder="https://..." /></label>
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn" style="width:100%;justify-content:center;">送出審核</button>
+      </form>
+    </div>
+
+    <div id="successWrap" class="form-card" style="display:none;margin-top:24px;">
+      <div class="success-box">
+        <div class="big">🎉</div>
+        <h2>投稿成功，已送出審核！</h2>
+        <p>審核通過後，你的計畫就會出現在 Campus X 計畫列表。</p>
+        <a href="index.html" class="btn ghost">回首頁看看</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="mode-badge" id="modeBadge"></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="data.js"></script>
+  <script src="db.js"></script>
+  <script>
+  (function () {
+    const EMOJIS = ["📌","🎧","🐼","🧴","🏦","📝","💄","👜","💼","✈️","📚","🍔","🎮","👟","☕","🎬","📱","💡","🌱","🎨"];
+    let picked = "📌";
+    const picker = document.getElementById("emojiPicker");
+    EMOJIS.forEach((e, i) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "emoji-opt" + (i === 0 ? " sel" : ""); b.textContent = e;
+      b.onclick = () => { picked = e; document.querySelectorAll(".emoji-opt").forEach(x => x.classList.remove("sel")); b.classList.add("sel"); };
+      picker.appendChild(b);
+    });
+
+    // 分類選項
+    const sel = document.getElementById("categorySel");
+    (window.DB.CATEGORIES || []).forEach((c) => {
+      const o = document.createElement("option"); o.value = c; o.textContent = c; sel.appendChild(o);
+    });
+
+    // 模式標籤
+    document.getElementById("modeBadge").textContent = window.DB.MODE === "supabase" ? "☁️ 雲端資料庫" : "🖥️ 本機展示模式";
+
+    function toast(msg) {
+      const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2200);
+    }
+
+    document.getElementById("submitForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const btn = document.getElementById("submitBtn");
+      const msg = document.getElementById("formMsg");
+      msg.innerHTML = "";
+      const form = {
+        brand: f.brand.value.trim(),
+        emoji: picked,
+        category: f.category.value,
+        title: f.title.value.trim(),
+        summary: f.summary.value.trim(),
+        tasks: f.tasks.value.split("\n").map(s => s.trim()).filter(Boolean),
+        benefits: f.benefits.value.split("\n").map(s => s.trim()).filter(Boolean),
+        eligibility: f.eligibility.value.trim(),
+        term: f.term.value.trim(),
+        paid: f.paid.checked,
+        location: f.location.value.trim(),
+        deadline: f.deadline.value || null,
+        applyUrl: f.applyUrl.value.trim(),
+      };
+      btn.disabled = true; btn.textContent = "送出中…";
+      try {
+        await window.DB.submitProgram(form);
+        document.getElementById("formWrap").style.display = "none";
+        document.getElementById("successWrap").style.display = "block";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch (err) {
+        msg.innerHTML = `<div class="form-msg err">送出失敗：${err.message || "請稍後再試"}</div>`;
+        btn.disabled = false; btn.textContent = "送出審核";
+      }
+    };
+  })();
+  </script>
+</body>
+</html>
