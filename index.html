@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campus X · 台灣校園大使機會平台</title>
+  <meta name="description" content="一站看遍全台校園大使計畫，訂閱通知不錯過新機會。" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Nav -->
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="#" class="logo"><span class="dot"></span>Campus X</a>
+      <nav class="nav-links">
+        <a href="#programs">找計畫</a>
+        <a href="#subscribe">訂閱通知</a>
+        <a href="submit.html">我是廠商</a>
+        <a href="#" class="btn ghost sm" id="loginBtn">登入 / 註冊</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero wrap">
+    <span class="eyebrow">🎓 全台校園大使機會，一站看遍</span>
+    <h1>找到最適合你的<br /><span class="hl">校園大使</span>計畫</h1>
+    <p>品牌實習、任務獎金、履歷加分——所有校園大使機會集中在這裡，訂閱通知就不會錯過新上架。</p>
+    <div class="hero-cta">
+      <a href="#programs" class="btn">開始探索計畫</a>
+      <a href="#subscribe" class="btn ghost">訂閱新計畫通知</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><b id="statCount">–</b><span>個計畫上架中</span></div>
+      <div class="stat"><b id="statPaid">–</b><span>個有薪機會</span></div>
+      <div class="stat"><b>10+</b><span>個產業領域</span></div>
+    </div>
+  </section>
+
+  <!-- Programs -->
+  <main class="wrap" id="programs">
+    <div class="section-head">
+      <div>
+        <h2>探索計畫</h2>
+        <div class="sub" id="resultCount">載入中…</div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="chips" id="catChips"></div>
+      <div class="filter-row">
+        <label class="toggle"><input type="checkbox" id="paidOnly" /> 只看有薪</label>
+        <div class="search-box">
+          🔍 <input type="text" id="searchInput" placeholder="搜尋品牌或關鍵字…" />
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none;">找不到符合條件的計畫，換個篩選條件試試 🔍</div>
+  </main>
+
+  <!-- Subscribe -->
+  <section class="wrap" id="subscribe">
+    <div class="subscribe">
+      <h2>新計畫上架，第一個收到通知</h2>
+      <p>留下 Email，我們一有新的校園大使計畫上架就通知你。可以只訂閱你有興趣的產業。</p>
+      <form class="sub-form" id="subForm">
+        <input type="email" id="subEmail" placeholder="你的 Email" required />
+        <button type="submit" class="btn">訂閱通知</button>
+      </form>
+      <small>免費訂閱，隨時可取消。（Phase 1 為前台展示，Email 通知將於 Phase 4 接上）</small>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="wrap foot-inner">
+      <a href="#" class="logo"><span class="dot"></span>Campus X</a>
+      <div>© 2026 Campus X · 台灣校園大使機會平台</div>
+      <div><a href="submit.html">廠商投稿</a> · <a href="admin.html">後台</a></div>
+    </div>
+  </footer>
+
+  <!-- Modal -->
+  <div class="modal-mask" id="modalMask">
+    <div class="modal" id="modalBody"></div>
+  </div>
+
+  <!-- Auth Modal（登入 / 註冊）-->
+  <div class="modal-mask" id="authMask">
+    <div class="modal auth-modal" id="authBody">
+      <button class="modal-close" id="authClose">✕</button>
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-mode="login">登入</button>
+        <button class="auth-tab" data-mode="signup">註冊</button>
+      </div>
+      <h2 id="authTitle">歡迎回來</h2>
+      <p class="auth-sub" id="authSub">登入後可收藏計畫、分享心得。</p>
+      <form id="authForm">
+        <label class="field">
+          <span>Email</span>
+          <input type="email" id="authEmail" required placeholder="you@example.com" />
+        </label>
+        <label class="field">
+          <span>密碼</span>
+          <input type="password" id="authPassword" required minlength="6" placeholder="至少 6 碼" />
+        </label>
+        <div class="auth-err" id="authErr"></div>
+        <button type="submit" class="btn" id="authSubmit" style="width:100%;justify-content:center;margin-top:6px;">登入</button>
+      </form>
+      <small class="auth-note" id="authNote"></small>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Supabase JS（雲端模式用；本機模式不影響）-->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="data.js"></script>
+  <script src="db.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
