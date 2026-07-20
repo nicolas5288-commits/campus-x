@@ -77,7 +77,7 @@ alter table subscriptions enable row level security;
 
 -- 管理員判斷：用一個 helper function 讀 JWT email，之後換 admin 只改一個地方
 create or replace function is_admin() returns boolean as $$
-  select auth.jwt()->>'email' = 'CHANGE_ME@example.com';   -- ← 改成你的 email
+  select auth.jwt()->>'email' = 'chiwen5288@gmail.com';   -- Campus X 管理員
 $$ language sql stable;
 
 -- programs：所有人看得到 live；管理員看得到全部
