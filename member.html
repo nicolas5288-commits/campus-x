@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>我的收藏 · Campus X</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="index.html" class="logo"><span class="dot"></span>Campus X</a>
+      <nav class="nav-links">
+        <a href="index.html">找計畫</a>
+        <a href="network.html">人脈網</a>
+        <a href="events.html">活動</a>
+        <a href="#" class="btn ghost sm" id="loginBtn">登入 / 註冊</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page" style="max-width:1120px;">
+    <div class="page-head">
+      <h1>⭐ 我的收藏</h1>
+      <p>你收藏的校園大使計畫都在這。登入後跨裝置同步。</p>
+    </div>
+
+    <!-- 未登入 -->
+    <div id="needLogin" class="admin-gate" style="display:none;">
+      <p style="color:var(--ink-soft);margin-bottom:18px;">登入後就能看到你收藏的計畫。</p>
+      <button class="btn" id="loginCta">使用 Google 登入</button>
+    </div>
+
+    <div id="favWrap" style="display:none;">
+      <div class="sub" id="favCount" style="color:var(--ink-soft);font-size:14.5px;margin-bottom:18px;"></div>
+      <div class="grid" id="favGrid"></div>
+      <div class="admin-empty" id="favEmpty" style="display:none;">還沒有收藏任何計畫。<a href="index.html">去逛逛計畫 →</a></div>
+    </div>
+  </div>
+
+  <div class="mode-badge" id="modeBadge"></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="data.js"></script>
+  <script src="db.js"></script>
+  <script src="authui.js"></script>
+  <script src="member.js"></script>
+</body>
+</html>

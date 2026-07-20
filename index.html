@@ -72,7 +72,18 @@
         <input type="email" id="subEmail" placeholder="你的 Email" required />
         <button type="submit" class="btn">訂閱通知</button>
       </form>
-      <small>免費訂閱，隨時可取消。（Phase 1 為前台展示，Email 通知將於 Phase 4 接上）</small>
+      <small>免費訂閱，隨時可取消。</small>
+    </div>
+  </section>
+
+  <!-- 許願池 -->
+  <section class="wrap" id="wish">
+    <div class="wish-band">
+      <div>
+        <h2>🪄 想要哪個品牌來開校園大使？</h2>
+        <p>許願告訴我們，越多人想要的品牌，我們越有機會幫你敲來。</p>
+      </div>
+      <button class="btn ghost" id="wishBtn">我要許願</button>
     </div>
   </section>
 
@@ -81,7 +92,12 @@
     <div class="wrap foot-inner">
       <a href="#" class="logo"><span class="dot"></span>Campus X</a>
       <div>© 2026 Campus X · 台灣校園大使機會平台</div>
-      <div><a href="submit.html">廠商投稿</a> · <a href="track.html">查詢投稿進度</a> · <a href="admin.html">後台</a></div>
+      <div class="foot-links">
+        <a href="submit.html">廠商投稿</a>
+        <a href="track.html">查詢投稿進度</a>
+        <a id="footIg" target="_blank" rel="noopener">IG</a>
+        <a id="footMail">聯絡我們</a>
+      </div>
     </div>
   </footer>
 
@@ -176,6 +192,23 @@
     <div class="modal cmp-modal" id="cmpBody"></div>
   </div>
 
+  <!-- 許願 Modal -->
+  <div class="modal-mask" id="wishMask">
+    <div class="modal" id="wishBody" style="max-width:440px;">
+      <button class="modal-close" id="wishClose">✕</button>
+      <h2>🪄 許願</h2>
+      <p class="auth-sub">告訴我們你想要哪個品牌開校園大使。</p>
+      <form id="wishForm" style="margin-top:16px;">
+        <div class="field"><label><span>品牌 / 單位名稱 <span class="hint">必填</span></span>
+          <input type="text" name="brand" required placeholder="例：UNIQLO、誠品、星巴克…" /></label></div>
+        <div class="field"><label><span>想說的話 <span class="hint">選填</span></span>
+          <textarea name="reason" placeholder="為什麼想要這個品牌的大使？"></textarea></label></div>
+        <div class="auth-err" id="wishErr"></div>
+        <button type="submit" class="btn" id="wishSubmit" style="width:100%;justify-content:center;">送出許願</button>
+      </form>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <!-- Supabase JS（雲端模式用；本機模式不影響）-->
@@ -183,6 +216,7 @@
   <script src="config.js"></script>
   <script src="data.js"></script>
   <script src="db.js"></script>
+  <script src="authui.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

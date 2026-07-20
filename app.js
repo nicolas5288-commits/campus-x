@@ -396,7 +396,10 @@
     if (e.target.id === "modalMask") closeModal();
   };
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") { closeModal(); closeAuth(); closeReview(); closeCompare(); }
+    if (e.key === "Escape") {
+      closeModal(); closeAuth(); closeReview(); closeCompare();
+      document.getElementById("wishMask").classList.remove("open");
+    }
   });
 
   // ---------- Toast ----------
@@ -482,30 +485,7 @@
     return m;
   }
 
-  // ---------- Nav 使用者狀態 ----------
-  function renderAuthState(user) {
-    const loginBtn = document.getElementById("loginBtn");
-    // 移除舊的 user chip
-    const old = document.getElementById("userChip");
-    if (old) old.remove();
-    if (user) {
-      loginBtn.style.display = "none";
-      const initial = (user.email || "?")[0].toUpperCase();
-      const chip = document.createElement("div");
-      chip.id = "userChip";
-      chip.className = "user-chip";
-      chip.innerHTML = `<span class="avatar">${initial}</span><span>${user.email}</span><button class="logout" id="logoutBtn">登出</button>`;
-      loginBtn.parentNode.appendChild(chip);
-      document.getElementById("logoutBtn").onclick = async () => {
-        await window.DB.signOut();
-        toast("已登出");
-      };
-    } else {
-      loginBtn.style.display = "";
-    }
-  }
-
-  // 登入狀態改變 → 重載收藏 + 重繪
+  // 登入狀態改變 → 重載收藏 + 重繪（右上角使用者選單由 authui.js 負責）
   async function refreshFavs() {
     try {
       favSet = new Set(await window.DB.getFavorites());
@@ -533,6 +513,49 @@
     openAuth("login");
   };
 
+  // ---------- 許願池 ----------
+  const wishMask = document.getElementById("wishMask");
+  document.getElementById("wishBtn").onclick = () => {
+    if (window.DB.configured && !window.DB.getUser()) {
+      openAuth("login", "登入後就能許願囉！");
+      return;
+    }
+    document.getElementById("wishErr").textContent = "";
+    wishMask.classList.add("open");
+  };
+  document.getElementById("wishClose").onclick = () => wishMask.classList.remove("open");
+  wishMask.onclick = (e) => { if (e.target.id === "wishMask") wishMask.classList.remove("open"); };
+  document.getElementById("wishForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const btn = document.getElementById("wishSubmit");
+    const errEl = document.getElementById("wishErr");
+    errEl.textContent = "";
+    btn.disabled = true; btn.textContent = "送出中…";
+    try {
+      await window.DB.submitWish(f.brand.value.trim(), f.reason.value.trim());
+      wishMask.classList.remove("open");
+      f.reset();
+      toast("許願成功！謝謝你的建議 🪄");
+    } catch (err) {
+      errEl.textContent = err.message || "送出失敗";
+    } finally {
+      btn.disabled = false; btn.textContent = "送出許願";
+    }
+  };
+
+  // ---------- 聯絡我們（footer 連結）----------
+  (function initContact() {
+    const cfg = window.DB.cfg || {};
+    const ig = document.getElementById("footIg");
+    const mail = document.getElementById("footMail");
+    if (ig) { if (cfg.CONTACT_IG) ig.href = cfg.CONTACT_IG; else ig.style.display = "none"; }
+    if (mail) {
+      if (cfg.CONTACT_EMAIL) mail.href = "mailto:" + cfg.CONTACT_EMAIL + "?subject=Campus%20X%20聯絡";
+      else mail.style.display = "none";
+    }
+  })();
+
   // ---------- 事件 ----------
   paidOnly.onchange = render;
   searchInput.oninput = render;
@@ -556,11 +579,14 @@
     document.getElementById("statCount").textContent = livePrograms.length;
     document.getElementById("statPaid").textContent = livePrograms.filter((p) => p.paid).length;
 
-    // Auth：狀態變化時更新 nav + 收藏
-    window.DB.onAuth((user) => {
-      renderAuthState(user);
-      refreshFavs();
-    });
+    // 從會員頁「看詳情」帶 ?p=id 進來 → 自動開該計畫詳情
+    const wantP = new URLSearchParams(location.search).get("p");
+    if (wantP && livePrograms.some((x) => x.id === wantP)) {
+      setTimeout(() => openModal(wantP), 300);
+    }
+
+    // Auth：狀態變化時重載收藏（nav 由 authui.js 處理）
+    window.DB.onAuth(() => { refreshFavs(); });
     await window.DB.initAuth();
 
     // 若本機模式，onAuth 已用 null 觸發一次 refreshFavs；確保至少 render 一次

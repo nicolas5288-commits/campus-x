@@ -207,6 +207,21 @@ header.nav {
 .user-chip .logout:hover { background: var(--accent-soft); color: var(--ink); }
 .mode-badge { position: fixed; bottom: 14px; left: 14px; z-index: 90; font-size: 11.5px; color: var(--ink-soft); background: #fff; border: 1px solid var(--line); padding: 4px 10px; border-radius: 999px; opacity: .75; }
 
+/* 右上角使用者選單 */
+.user-menu { position: relative; }
+.um-trigger { display: inline-flex; align-items: center; gap: 8px; padding: 5px 10px 5px 6px; border: 1px solid var(--line-strong); border-radius: 999px; background: #fff; cursor: pointer; font-family: inherit; font-size: 14px; color: var(--ink); transition: .15s; }
+.um-trigger:hover { background: var(--accent-soft); }
+.um-emoji, .um-img { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; }
+.um-emoji { background: var(--ink); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; }
+.um-img { object-fit: cover; }
+.um-name { font-weight: 600; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.um-caret { color: var(--ink-soft); font-size: 11px; }
+.um-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-hover); padding: 6px; min-width: 168px; display: none; flex-direction: column; gap: 2px; z-index: 60; }
+.um-dropdown.open { display: flex; }
+.um-dropdown a, .um-dropdown .um-logout { display: block; text-align: left; padding: 9px 12px; border-radius: 8px; font-size: 14px; color: var(--ink); background: none; border: none; cursor: pointer; font-family: inherit; width: 100%; }
+.um-dropdown a:hover, .um-dropdown .um-logout:hover { background: var(--accent-soft); }
+.um-dropdown .um-logout { color: var(--ink-soft); border-top: 1px solid var(--line); margin-top: 2px; }
+
 /* ===== 表單頁（投稿 / 後台共用）===== */
 .page { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
 .page-head { margin-bottom: 8px; }
@@ -257,6 +272,12 @@ header.nav {
 .btn.reject { background: #fff; color: #c0392b; border-color: #f0c9c4; }
 .btn.reject:hover { background: #fdeaea; opacity: 1; }
 .admin-gate { text-align: center; padding: 70px 20px; }
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.stat-tile { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; box-shadow: var(--shadow); }
+.stat-tile b { font-size: 30px; font-weight: 800; letter-spacing: -.02em; display: block; }
+.stat-tile span { font-size: 13.5px; color: var(--ink-soft); }
+.stat-tile small { display: block; font-size: 11.5px; color: var(--ink-soft); margin-top: 2px; }
+@media (max-width: 620px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
 .admin-empty { text-align: center; padding: 50px; color: var(--ink-soft); }
 .rev-type-badge { display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--ink-soft); font-weight: 600; }
 .stars { color: #f5a623; letter-spacing: 2px; }
@@ -370,7 +391,15 @@ header.nav {
 .sub-form .btn { background: #fff; color: #111; border-color: #fff; }
 .subscribe small { display: block; margin-top: 14px; color: #888; font-size: 12.5px; }
 
+/* ===== 許願池 band ===== */
+.wish-band { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; background: #fbf7ee; border: 1px solid #efe4cd; border-radius: 22px; padding: 34px 40px; margin: 30px 0; }
+.wish-band h2 { font-size: 23px; letter-spacing: -.02em; }
+.wish-band p { color: var(--ink-soft); margin-top: 8px; font-size: 15px; max-width: 460px; }
+.wish-band .btn { white-space: nowrap; }
+
 /* ===== Footer ===== */
+.foot-links { display: flex; gap: 16px; flex-wrap: wrap; }
+.foot-links a { cursor: pointer; }
 footer { border-top: 1px solid var(--line); padding: 40px 0; margin-top: 40px; }
 .foot-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; color: var(--ink-soft); font-size: 14px; }
 .foot-inner .logo { color: var(--ink); }

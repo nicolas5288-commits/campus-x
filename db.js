@@ -422,6 +422,52 @@ window.DB = (function () {
     return out;
   }
 
+  // ========== 許願池 wishes ==========
+  async function submitWish(brandName, reason) {
+    if (!sb) {
+      const s = loadStore();
+      s.wishes = s.wishes || [];
+      s.wishes.push({ id: "w-" + Date.now(), brand_name: brandName, reason: reason || null, created_at: new Date(0).toISOString() });
+      saveStore(s);
+      return { ok: true };
+    }
+    if (!currentUser) throw new Error("請先登入再許願");
+    const { error } = await sb.from("wishes").insert({ user_id: currentUser.id, brand_name: brandName, reason: reason || null });
+    if (error) throw error;
+    return { ok: true };
+  }
+  // 後台：依品牌彙總的許願清單
+  async function getAdminWishes() {
+    if (!sb) {
+      const s = loadStore();
+      const map = {};
+      (s.wishes || []).forEach((w) => { map[w.brand_name] = (map[w.brand_name] || 0) + 1; });
+      return Object.entries(map).map(([brand_name, votes]) => ({ brand_name, votes })).sort((a, b) => b.votes - a.votes);
+    }
+    const { data, error } = await sb.rpc("admin_wishes");
+    if (error) throw error;
+    return data || [];
+  }
+  // 後台：數據總覽
+  async function getAdminStats() {
+    if (!sb) {
+      const s = loadStore();
+      return {
+        users: 0, favorites: localFavs.get().length,
+        subscriptions: 0, wishes: (s.wishes || []).length,
+        profiles_live: localAllProfiles().filter((p) => p.status === "live").length,
+        programs_live: localAllPrograms().filter((p) => p.status === "live").length,
+        pending_programs: localAllPrograms().filter((p) => p.status === "pending").length,
+        pending_reviews: (s.reviews || []).filter((r) => r.status === "pending").length,
+        pending_profiles: localAllProfiles().filter((p) => p.status === "pending").length,
+        pending_events: localAllEvents().filter((e) => e.status === "pending").length,
+      };
+    }
+    const { data, error } = await sb.rpc("admin_stats");
+    if (error) throw error;
+    return data || {};
+  }
+
   // ========== Subscriptions ==========
   async function subscribe(email, categories = []) {
     if (!sb) return { local: true };
@@ -439,7 +485,9 @@ window.DB = (function () {
     getReviews, getPendingReviews, submitReview, approveReview, rejectReview,
     getProfiles, getPendingProfiles, getMyProfile, saveProfile, approveProfile, rejectProfile,
     getEvents, getPendingEvents, createEvent, approveEvent, rejectEvent, toggleSignup, localMySignups,
+    submitWish, getAdminWishes, getAdminStats,
     subscribe,
+    cfg,
     CATEGORIES: (window.CATEGORIES || []).filter((c) => c !== "全部"),
   };
 })();

@@ -10,4 +10,7 @@ window.CAMPUSX_CONFIG = {
   SUPABASE_URL: "https://xjoggvwngsvowjnwwrnc.supabase.co",
   SUPABASE_KEY: "sb_publishable_JQ0K7GNF7KbhzqNHQvHi-A_SWIaUwo4",
   ADMIN_EMAIL: "chiwen5288@gmail.com",   // Campus X 管理員（已設定）
+  // 聯絡我們（可自由修改；留空的項目不顯示）
+  CONTACT_IG: "https://www.instagram.com/nicolas0929_liu/",
+  CONTACT_EMAIL: "4gpt4used@gmail.com",
 };
