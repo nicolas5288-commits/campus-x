@@ -107,6 +107,7 @@ window.DB = (function () {
       title: r.title, summary: r.summary, tasks: r.tasks || [], benefits: r.benefits || [],
       eligibility: r.eligibility, term: r.term, paid: r.paid, location: r.location,
       deadline: r.deadline, applyUrl: r.apply_url, status: r.status, reject_reason: r.reject_reason,
+      recruiting: r.recruiting, recruitNote: r.recruit_note, sourceUrl: r.source_url,
     };
   }
 

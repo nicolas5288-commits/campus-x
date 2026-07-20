@@ -20,6 +20,9 @@ create table programs (
   paid boolean not null default false,
   location text,
   deadline date,
+  recruiting boolean not null default true,   -- true=現正招募 / false=本梯已截止或時間未定
+  recruit_note text,                          -- 招募狀態說明（如「隨到隨審」「本梯已截止」）
+  source_url text,                            -- 資料來源官方頁
   apply_url text,
   status text not null default 'pending' check (status in ('pending','live','rejected','closed')),
   reject_reason text,
@@ -178,60 +181,62 @@ returns table(title text, brand text, status text, reject_reason text) as $$
 $$ language sql stable security definer;
 
 -- ============================================================
--- SEED 範例資料（10 筆 live + 1 筆 pending）
+-- SEED 真實計畫資料（10 筆 live + 1 筆 pending）
+-- 由公開官方頁面查證，附 source_url；查證日 2026-07-20
+-- recruiting=true 現正招募 / false 本梯已截止或時間未定
 -- ============================================================
-insert into programs (id, brand, emoji, category, title, summary, tasks, benefits, eligibility, term, paid, location, deadline, apply_url, status) values
-('jlab-01','JLab 校園大使','🎧','3C 科技','第 1 屆 JLab 校園大使招募','耳機品牌校園推廣，新品搶先體驗＋每月任務獎金。',
- ARRAY['在校園與個人社群分享 JLab 產品使用心得','完成每月指定推廣任務（貼文、限動、開箱）','回饋校園使用者真實反饋給品牌'],
- ARRAY['每月任務獎金','新品耳機搶先體驗','專業形象照拍攝','結業證明'],
- '全台大專院校在學學生','一學期（可續任）',true,'全台','2026-08-31','https://example.com/apply/jlab','live'),
+insert into programs (id, brand, emoji, category, title, summary, tasks, benefits, eligibility, term, paid, location, deadline, recruiting, recruit_note, source_url, apply_url, status) values
+('itri-2026','工業技術研究院 ITRI','🔬','3C 科技','工研院 第四屆校園大使','把科技研發轉譯成大眾易懂內容，經營社群、串聯校園與工研院資源。',
+ ARRAY['研發體驗推廣：參與工研院各單位活動，將科技研發轉化為學生易懂資訊','社群經營與內容創作：經營 LINE@、Instagram，短影音製作','校園連接器：參與線上與實體活動，串聯校園與工研院資源'],
+ ARRAY['時薪 220 元','遠距工作（每月至少 4 小時）','走進科技研發場域','個人影響力經營'],
+ '大專院校在校生（不限科系，跨領域尤佳）；影音剪輯/社群/文案/社團幹部經驗加分','2026/7 – 2027/7',true,'遠距',null,true,'隨到隨審，建議儘早投遞','https://indigenous-osa.ntunhs.edu.tw/p/406-1049-82569,r2156.php?Lang=zh-tw','https://forms.gle/XhFj2sX8i1zbfLee9','live'),
 
-('foodpanda-01','foodpanda','🐼','餐飲外送','foodpanda 校園大使','積極、勇於挑戰、有團隊精神者優先，萬元結業獎金。',
- ARRAY['校園內品牌推廣與活動擺攤','協助校園行銷專案執行','回報校園市場觀察'],
- ARRAY['萬元結業獎金','結業證書','內部職缺優先面試','主管推薦信','履歷健檢'],
- '全台大專院校在學學生','一學年',true,'全台','2026-09-15','https://example.com/apply/foodpanda','live'),
+('advantech-2026','研華科技 Advantech','💡','3C 科技','研華科技 第三屆校園大使','推廣研華雇主品牌、擔任研華與校園橋樑，跨校專案含影片拍攝剪輯。',
+ ARRAY['發揮個人社群影響力，推廣研華雇主品牌','擔任研華與校園間的橋樑，舉辦實體校園或企業活動','跨校專案規劃與執行：創意企劃、活動規劃、影片拍攝剪輯'],
+ ARRAY['萬元以上獎學金（總獎金最多約 4 萬元）','與實習生共同課程（企業參訪、職涯講座）','履歷健檢、模擬面試','大使證書＋研華獨家好禮','高階主管餐敘、建立人脈'],
+ '2027/4/30 前有在學學籍（含研究所），不限學校科系','2026/6 – 2027/4',true,'全台','2026-04-26',false,'本梯報名已截止（每年約 3 月開放，可追官方 IG）','https://mse.site.nthu.edu.tw/p/405-1298-306712,c16775.php?Lang=zh-tw','https://forms.gle/AtyqpNehJsYkqoSs6','live'),
 
-('unilever-01','聯合利華 Unilever','🧴','消費品','2026 聯合利華校園大使','作為品牌與校園人才的橋樑，參與雇主品牌推廣。',
- ARRAY['校園招募、雇主品牌推廣','線上與線下校園活動規劃與執行','用鏡頭與創意讓品牌走進學生'],
- ARRAY['實習機會','品牌活動參與','職涯資源','推薦函'],
- '大學三年級以上（含研究所）','一學年',true,'北部為主','2026-08-20','https://example.com/apply/unilever','live'),
+('wits-2026','緯創軟體 WITS','💻','軟體工具','2026 WITS 校園大使計畫','軟體公司校園大使，分雇主品牌、校園經營、國際人才三組別。',
+ ARRAY['雇主品牌組：規劃品牌內容活動，推廣 WITS 雇主品牌形象','校園經營組：擔任 WITS 與校園社群橋樑，推廣招募與實習','國際人才組：規劃 WITS 國際人才計畫，連結國際人才社群'],
+ ARRAY['完成任務累積點數兌換獎勵金','跨校夥伴企劃合作','相見歡與結業典禮'],
+ '國內公私立大專院校在學學生，不限科系與國籍','2026/2 – 2026/5',true,'全台','2026-01-02',false,'本梯報名已截止','https://oga.site.nthu.edu.tw/p/406-1524-301109,r9308.php?Lang=zh-tw','https://forms.gle/doRcQtdP8x6Mkvi87','live'),
 
-('sinopac-01','永豐銀行','🏦','金融','永豐銀行第三屆校園大使','經營人資官方 IG、策劃校園活動，擔任品牌與校方橋樑。',
- ARRAY['經營永豐人資官方 IG','策劃與執行校園活動專案','擔任品牌與校方間的溝通橋樑'],
- ARRAY['大使專屬福利','金融業實習機會','職涯輔導','結業證明'],
- '全台大專院校在學學生','一學年',true,'全台','2026-08-10','https://example.com/apply/sinopac','live'),
+('roots-2026','Roots','🦫','時尚配件','Roots 2026 校園穿搭大使','服飾品牌校園穿搭大使，每月萬元商品額度、搶先穿新系列。',
+ ARRAY['分享 Roots 穿搭內容（OOTD）','在社群推廣品牌'],
+ ARRAY['每月 $5,000 商品額度','搶先穿到品牌最新系列','照片有機會在官方 IG/FB 曝光'],
+ '穿搭控學生（詳細條件見官方）','',false,'全台',null,false,'近期招募，報名時間以官方 FB 公告為準','https://www.facebook.com/RootsTaiwan','https://www.facebook.com/RootsTaiwan','live'),
 
-('notion-01','Notion Campus Leaders','📝','軟體工具','Notion 校園領袖計畫','在校內推廣 Notion，舉辦工作坊，建立校園社群。',
- ARRAY['在校內推廣 Notion 使用','舉辦 Notion 工作坊與教學','建立並經營校園使用者社群'],
- ARRAY['Notion 官方認證','全球社群人脈','獨家周邊','履歷加分'],
- '全台大專院校在學學生','一學期',false,'全台','2026-07-31','https://example.com/apply/notion','live'),
+('sstandc-2026','SST&C','👗','時尚配件','SST&C 校園大使','時尚品牌校園大使，透過社群傳遞品牌與穿搭風格。',
+ ARRAY['透過社群傳遞 SST&C 品牌理念與穿搭風格','參與內部會議，與跨校夥伴進行企劃發想與執行'],
+ ARRAY['報名即贈 500 購物金','最高享 2 萬元好禮','跨校合作培養行銷力'],
+ '熱愛時尚、喜愛分享的學生','',false,'全台',null,false,'開放時間以官方頁為準','https://shop.sstandc.com/page/campus','https://shop.sstandc.com/page/campus','live'),
 
-('etude-01','ETUDE 伊蒂之屋','💄','美妝','ETUDE 校園甜派員','美妝品牌校園推廣，新品體驗＋社群分享。',
- ARRAY['校園社群美妝內容分享','新品體驗與心得回饋','協助校園活動推廣'],
- ARRAY['新品試用','品牌贈品','社群曝光','結業證明'],
- '全台大專院校在學學生','一學期',false,'全台','2026-07-25','https://example.com/apply/etude','live'),
+('adecco-2026','藝珂 Adecco','💼','媒體／職涯','2026 第三屆藝珂校園大使計畫','人力資源品牌校園大使，職場探索、雇主品牌調查、業界導師交流。',
+ ARRAY['參與雇主品牌調查專案','社群經營','校園活動企劃與執行'],
+ ARRAY['專屬培訓','業界導師交流','職場實戰經驗'],
+ '全台大專院校學生','',false,'全台',null,false,'報名時間以官方頁為準','https://www.adecco.com/zh-tw/campus-ambassador-2026','https://www.adecco.com/zh-tw/campus-ambassador-2026','live'),
 
-('robinmay-01','ROBINMAY','👜','時尚配件','ROBINMAY 校園大使','包款品牌校園推廣，穿搭內容創作。',
- ARRAY['品牌包款穿搭內容創作','校園社群推廣','活動協助'],
- ARRAY['產品贈送','拍攝合作機會','社群曝光'],
- '全台大專院校在學學生','一學期',false,'全台','2026-08-05','https://example.com/apply/robinmay','live'),
+('semi-2026','SEMI Taiwan','🔧','3C 科技','2026 SEMI 校園大使','半導體展會（SEMICON）校園大使，展前培訓＋展會導覽執行，遴選 10 名。',
+ ARRAY['參與展前培訓','SEMICON 展會期間學生導覽與現場執行'],
+ ARRAY['培養溝通表達能力','產業理解','半導體業界連結'],
+ '學生（2026 年預計遴選 10 名）','',false,'全台',null,false,'報名時間以官方頁為準','https://semicontaiwan.org/zh/Campus_Ambassador_Program_2026','https://semicontaiwan.org/zh/Campus_Ambassador_Program_2026','live'),
 
-('104-01','104 人力銀行','💼','媒體／職涯','104 校園大使（社群播客／品牌公關／職涯課程）','全遠距實習，提早累積職場經驗。分社群、公關、課程三組。',
- ARRAY['社群播客內容製作','品牌公關專案協助','職涯課程規劃支援'],
- ARRAY['全遠距實習','職場經驗','實習證明','職涯資源'],
- '大學生、專科生及研究生','一學年',true,'遠距','2026-09-30','https://example.com/apply/104','live'),
+('glo-2026','GLO','🌍','教育','GLO 第六屆校園大使計畫','國際領導組織校園大使，累積國際人脈與作品集、強化履歷。',
+ ARRAY['參與並推廣 GLO 活動與內容'],
+ ARRAY['一對一 Mentorship','免費 GLO 活動門票','行銷培訓','官方結業證書'],
+ '全國高中生和大學生，須年滿 18 歲，不需經驗','2026/2 – 2026/7',false,'全台','2026-01-25',false,'本梯報名已截止（每年招募）','https://www.gloleadership.org/zh/student-ambassador','https://www.gloleadership.org/zh/student-ambassador','live'),
 
-('starroad-01','StarRoad × Skyline','✈️','旅遊','StarRoad 第四屆校園大使','參與品牌營運與社群經營，表現優異可獲實習與推薦函。',
- ARRAY['品牌營運參與','社群經營','校園推廣活動'],
- ARRAY['品牌系統實習機會','主品牌 Skyline 機會補助','年度推薦函'],
- '全台大專院校在學學生','一學年',false,'全台','2026-08-18','https://example.com/apply/starroad','live'),
+('frusirnana-2026','美膚娜娜 FRUSIRNANA','💄','美妝','2026 美膚娜娜 第四屆校園大使','美妝保養品牌大使，搶先試用新品、參與品牌行銷過程。',
+ ARRAY['試用新品並回饋','參與品牌行銷過程'],
+ ARRAY['搶先試用新品','參與美妝品牌行銷'],
+ '對美妝保養產業有興趣的學生','',false,'全台',null,false,'報名時間以官方頁為準','https://frusirnana.co/post/1738/','https://frusirnana.co/activities','live'),
 
-('dunhuang-01','敦煌書局','📚','教育','2026 敦煌校園大使招募計畫','全台大專院校大一到大三學生皆可報名，任期學年制。',
- ARRAY['校園語言學習資源推廣','社群內容經營','校園活動協助'],
- ARRAY['產品資源','社群曝光','結業證明'],
- '全台大專院校大一到大三學生','一學年',false,'全台','2026-07-22','https://example.com/apply/dunhuang','live'),
+('unilever-2026','聯合利華 Unilever','🧴','消費品','2026 聯合利華校園大使','作為聯合利華與校園人才的橋樑，參與雇主品牌推廣與校園活動。',
+ ARRAY['校園招募、雇主品牌推廣','線上與線下校園活動規劃與執行'],
+ ARRAY[]::text[],
+ '大專院校在學學生','',false,'全台','2026-07-13',false,'本梯報名已截止（每年招募，可追官方 IG）','https://www.instagram.com/p/DZZu6UsmnEh/','https://www.instagram.com/p/DZZu6UsmnEh/','live'),
 
 ('demo-pending-01','範例新品牌','🆕','3C 科技','（待審範例）某科技新創校園大使','這是一筆廠商剛投稿、還沒審核的計畫。',
  ARRAY['校園推廣','社群經營'],
  ARRAY['獎金','實習機會'],
- '全台大專院校在學學生','一學期',true,'全台','2026-10-01','https://example.com/apply/demo','pending');
+ '全台大專院校在學學生','一學期',true,'全台','2026-10-01',true,null,null,'https://example.com/apply/demo','pending');
