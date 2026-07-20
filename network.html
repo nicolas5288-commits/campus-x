@@ -53,7 +53,19 @@
       <form id="profileForm" style="margin-top:16px;">
         <div class="form-row">
           <div class="field"><label><span>暱稱 <span class="hint">必填</span></span><input type="text" name="nickname" required placeholder="想被叫什麼" /></label></div>
-          <div class="field"><span>頭像</span><div class="emoji-picker" id="avatarPicker"></div></div>
+          <div class="field"><span>頭像</span>
+            <div class="avatar-upload">
+              <div class="avatar-preview" id="avatarPreview">🦊</div>
+              <div>
+                <label class="btn ghost sm" style="cursor:pointer;">
+                  上傳照片<input type="file" id="avatarFile" accept="image/*" hidden />
+                </label>
+                <button type="button" class="btn ghost sm" id="avatarClear" style="display:none;">改用表情</button>
+                <div class="hint" style="margin-top:6px;">照片會自動壓縮；不傳就用下面的表情符號</div>
+              </div>
+            </div>
+            <div class="emoji-picker" id="avatarPicker" style="margin-top:10px;"></div>
+          </div>
         </div>
         <div class="form-row">
           <div class="field"><label><span>學校</span><input type="text" name="school" placeholder="例：國立政治大學" /></label></div>

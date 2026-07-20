@@ -322,6 +322,40 @@ window.DB = (function () {
     if (error) throw error;
     return { ok: true };
   }
+  // 上傳前壓縮：正方形置中裁切、縮到 size、JPEG（沿用購物趣做法）
+  function compressImage(file, size = 400, quality = 0.85) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+        const out = Math.min(size, side);
+        const canvas = document.createElement("canvas");
+        canvas.width = out; canvas.height = out;
+        canvas.getContext("2d").drawImage(img, sx, sy, side, side, 0, 0, out, out);
+        canvas.toBlob((b) => resolve(b || file), "image/jpeg", quality);
+        URL.revokeObjectURL(img.src);
+      };
+      img.onerror = () => resolve(file);
+      img.src = URL.createObjectURL(file);
+    });
+  }
+  // 頭貼上傳：壓縮 → 上傳 storage → 回 public URL；本機模式回 dataURL
+  async function uploadAvatar(file) {
+    const blob = await compressImage(file);
+    if (!sb || !currentUser) {
+      return await new Promise((resolve) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result);
+        r.readAsDataURL(blob);
+      });
+    }
+    const path = `${currentUser.id}/${Date.now()}.jpg`;
+    const { error } = await sb.storage.from("avatars").upload(path, blob, { upsert: true, contentType: "image/jpeg" });
+    if (error) throw error;
+    return sb.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+  }
+
   async function approveProfile(id) {
     if (!sb) return localSetProfileStatus(id, "live");
     const { error } = await sb.from("profiles").update({ status: "live" }).eq("id", id);
@@ -483,7 +517,7 @@ window.DB = (function () {
     getPrograms, getPendingPrograms, submitProgram, approveProgram, rejectProgram, getProgramStatus,
     getFavorites, toggleFavorite,
     getReviews, getPendingReviews, submitReview, approveReview, rejectReview,
-    getProfiles, getPendingProfiles, getMyProfile, saveProfile, approveProfile, rejectProfile,
+    getProfiles, getPendingProfiles, getMyProfile, saveProfile, approveProfile, rejectProfile, uploadAvatar,
     getEvents, getPendingEvents, createEvent, approveEvent, rejectEvent, toggleSignup, localMySignups,
     submitWish, getAdminWishes, getAdminStats,
     subscribe,

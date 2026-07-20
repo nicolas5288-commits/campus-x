@@ -31,10 +31,13 @@
     return h;
   }
 
+  function avatarInner(p) {
+    return p.avatar_url ? `<img src="${esc(p.avatar_url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />` : (p.avatar || "👤");
+  }
   function cardHTML(p) {
     return `<div class="profile-card" data-id="${p.id}">
       <div class="pc-top">
-        <div class="pc-avatar">${p.avatar || "👤"}</div>
+        <div class="pc-avatar" style="overflow:hidden;">${avatarInner(p)}</div>
         <div>
           <div class="pc-name">${esc(p.nickname)} ${badgeHTML(p.badges)}</div>
           <div class="pc-school">${esc(p.school || "")} ${esc(p.grade || "")}</div>
@@ -77,7 +80,7 @@
     document.getElementById("pmBody").innerHTML = `
       <button class="modal-close" id="pmClose">✕</button>
       <div class="pm-head">
-        <div class="pm-avatar">${p.avatar || "👤"}</div>
+        <div class="pm-avatar" style="overflow:hidden;">${avatarInner(p)}</div>
         <div>
           <div class="pc-name" style="font-size:21px;">${esc(p.nickname)}</div>
           <div class="pc-school">${esc(p.school || "")} ${esc(p.grade || "")}</div>
@@ -98,8 +101,58 @@
   // ---------- 建立名片 ----------
   const AVATARS = ["🦊", "🐻", "🐰", "🐺", "🐱", "🦁", "🐨", "🐯", "🐼", "🐸", "🦄", "🐙"];
   let pickedAvatar = "🦊";
+  let pickedFile = null;        // 使用者選的照片 File（送出時才上傳）
+  let previewUrl = null;        // 壓縮後預覽 dataURL
   const ap = document.getElementById("avatarPicker");
-  AVATARS.forEach((e, i) => { const b = document.createElement("button"); b.type = "button"; b.className = "emoji-opt" + (i === 0 ? " sel" : ""); b.textContent = e; b.onclick = () => { pickedAvatar = e; ap.querySelectorAll(".emoji-opt").forEach(x => x.classList.remove("sel")); b.classList.add("sel"); }; ap.appendChild(b); });
+  const preview = document.getElementById("avatarPreview");
+  const clearBtn = document.getElementById("avatarClear");
+  function showEmojiPreview() { preview.innerHTML = pickedAvatar; }
+  AVATARS.forEach((e, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "emoji-opt" + (i === 0 ? " sel" : ""); b.textContent = e;
+    b.onclick = () => {
+      pickedAvatar = e;
+      ap.querySelectorAll(".emoji-opt").forEach(x => x.classList.remove("sel"));
+      b.classList.add("sel");
+      if (!pickedFile) showEmojiPreview();
+    };
+    ap.appendChild(b);
+  });
+  showEmojiPreview();
+
+  // 選照片 → 壓縮預覽（實際上傳延到送出）
+  document.getElementById("avatarFile").onchange = async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    pickedFile = f;
+    previewUrl = await toPreview(f);
+    preview.innerHTML = previewUrl ? `<img src="${previewUrl}" alt="" />` : pickedAvatar;
+    clearBtn.style.display = "";
+  };
+  clearBtn.onclick = () => {
+    pickedFile = null; previewUrl = null;
+    document.getElementById("avatarFile").value = "";
+    clearBtn.style.display = "none";
+    showEmojiPreview();
+  };
+  // 壓縮出 dataURL 供預覽（同 db 壓縮參數）
+  function toPreview(file) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+        const out = Math.min(400, side);
+        const c = document.createElement("canvas");
+        c.width = out; c.height = out;
+        c.getContext("2d").drawImage(img, sx, sy, side, side, 0, 0, out, out);
+        resolve(c.toDataURL("image/jpeg", 0.85));
+        URL.revokeObjectURL(img.src);
+      };
+      img.onerror = () => resolve(null);
+      img.src = URL.createObjectURL(file);
+    });
+  }
 
   function openEdit() {
     if (DB.configured && !DB.getUser()) { toast("請先登入再建立名片 🔑"); return; }
@@ -129,6 +182,11 @@
     };
     btn.disabled = true; btn.textContent = "送出中…";
     try {
+      if (pickedFile) {
+        btn.textContent = "上傳照片中…";
+        form.avatar_url = await DB.uploadAvatar(pickedFile);
+      }
+      btn.textContent = "送出中…";
       await DB.saveProfile(form);
       document.getElementById("editMask").classList.remove("open");
       toast("名片已送出審核！通過後會出現在人脈網 🙌");

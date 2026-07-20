@@ -7,20 +7,29 @@
     return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   }
 
+  let renderToken = 0;
   async function render(user) {
+    const token = ++renderToken;
     const loginBtn = document.getElementById("loginBtn");
     if (!loginBtn) return;
+
+    const meta = user ? (user.user_metadata || {}) : {};
+    let nickname = user ? (meta.full_name || meta.name || (user.email || "").split("@")[0]) : "";
+    let profile = null;
+    if (user) { try { profile = await DB.getMyProfile(); } catch {} }
+    // 若期間有更新的 render 進來，放棄這次（防並行造成重複頭貼）
+    if (token !== renderToken) return;
+
     const old = document.getElementById("userMenu");
     if (old) old.remove();
     if (!user) { loginBtn.style.display = ""; return; }
     loginBtn.style.display = "none";
 
-    const meta = user.user_metadata || {};
-    let nickname = meta.full_name || meta.name || (user.email || "").split("@")[0];
     let avatarHtml;
-    let profile = null;
-    try { profile = await DB.getMyProfile(); } catch {}
-    if (profile) {
+    if (profile && profile.avatar_url) {
+      nickname = profile.nickname || nickname;
+      avatarHtml = `<img src="${escapeHtml(profile.avatar_url)}" class="um-img" alt="" />`;
+    } else if (profile) {
       nickname = profile.nickname || nickname;
       avatarHtml = `<span class="um-emoji">${escapeHtml(profile.avatar || "👤")}</span>`;
     } else if (meta.avatar_url || meta.picture) {

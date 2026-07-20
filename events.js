@@ -22,6 +22,7 @@
   (window.EVENT_TYPES || []).forEach((t) => { const o = document.createElement("option"); o.value = t; o.textContent = t; document.getElementById("ceType").appendChild(o); });
 
   function prof(id) { return profileMap[id] || { nickname: "大使", avatar: "👤" }; }
+  function av(p) { return p && p.avatar_url ? `<img src="${esc(p.avatar_url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />` : (p && p.avatar || "👤"); }
   function signupsOf(e) {
     // 本機模式：signupIds 內可能含 'me'
     return (e.signupIds || []).map((sid) => sid === "me" ? { nickname: "你", avatar: "🙂" } : prof(sid));
@@ -32,7 +33,7 @@
     const signups = signupsOf(e);
     const cap = e.capacity || 0;
     const full = cap && signups.length >= cap;
-    const stack = signups.slice(0, 5).map(s => `<span class="mini">${s.avatar || "👤"}</span>`).join("");
+    const stack = signups.slice(0, 5).map(s => `<span class="mini" style="overflow:hidden;">${av(s)}</span>`).join("");
     return `<div class="event-card" data-id="${e.id}">
       <span class="ev-type">${esc(e.type)}</span>
       <div class="ev-title">${esc(e.title)}</div>
@@ -72,7 +73,7 @@
     const full = cap && signups.length >= cap;
     const joined = mySignups.includes(e.id);
     const attendees = signups.length
-      ? signups.map(s => `<div class="attendee"><span class="a-av">${s.avatar || "👤"}</span>${esc(s.nickname)}</div>`).join("")
+      ? signups.map(s => `<div class="attendee"><span class="a-av" style="overflow:hidden;">${av(s)}</span>${esc(s.nickname)}</div>`).join("")
       : '<div class="rev-empty">還沒有人報名，當第一個吧！</div>';
     const btn = joined
       ? `<button class="btn ghost" id="signBtn" style="width:100%;justify-content:center;">✓ 已報名（點此取消）</button>`
@@ -84,7 +85,7 @@
       <span class="ev-type">${esc(e.type)}</span>
       <h2 style="margin-top:12px;">${esc(e.title)}</h2>
       <div class="ev-host-card">
-        <div class="pc-avatar" style="width:44px;height:44px;font-size:22px;">${host.avatar || "👤"}</div>
+        <div class="pc-avatar" style="width:44px;height:44px;font-size:22px;overflow:hidden;">${av(host)}</div>
         <div><div style="font-weight:600;">${esc(host.nickname)}</div><div class="pc-school">發起人${host.school ? " · " + esc(host.school) : ""}</div></div>
       </div>
       <div class="meta-grid">
