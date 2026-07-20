@@ -12,7 +12,7 @@
       <a href="index.html" class="logo"><span class="dot"></span>Campus X</a>
       <nav class="nav-links">
         <a href="index.html">找計畫</a>
-        <a href="admin.html">後台</a>
+        <a href="track.html">查詢投稿進度</a>
       </nav>
     </div>
   </header>
@@ -105,7 +105,17 @@
         <div class="big">🎉</div>
         <h2>投稿成功，已送出審核！</h2>
         <p>審核通過後，你的計畫就會出現在 Campus X 計畫列表。</p>
-        <a href="index.html" class="btn ghost">回首頁看看</a>
+        <div class="track-code-box">
+          <span>你的查稿編號（請保存，用來查詢審核進度）</span>
+          <div class="track-code-row">
+            <code id="trackCodeText">—</code>
+            <button class="btn ghost sm" id="copyCodeBtn">📋 複製</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+          <a href="#" class="btn" id="goTrackBtn">查詢審核進度</a>
+          <a href="index.html" class="btn ghost">回首頁看看</a>
+        </div>
       </div>
     </div>
   </div>
@@ -166,7 +176,14 @@
       };
       btn.disabled = true; btn.textContent = "送出中…";
       try {
-        await window.DB.submitProgram(form);
+        const res = await window.DB.submitProgram(form);
+        // 顯示查稿編號
+        document.getElementById("trackCodeText").textContent = res.id;
+        document.getElementById("goTrackBtn").href = "track.html?code=" + encodeURIComponent(res.id);
+        document.getElementById("copyCodeBtn").onclick = async () => {
+          try { await navigator.clipboard.writeText(res.id); toast("已複製編號 📋"); }
+          catch { toast("複製失敗，請手動選取"); }
+        };
         document.getElementById("formWrap").style.display = "none";
         document.getElementById("successWrap").style.display = "block";
         window.scrollTo({ top: 0, behavior: "smooth" });

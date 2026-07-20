@@ -233,6 +233,23 @@ window.DB = (function () {
     if (error) throw error;
   }
 
+  // ========== 廠商查稿（用編號查投稿狀態）==========
+  async function getProgramStatus(id) {
+    const pid = String(id || "").trim();
+    if (!pid) return { found: false };
+    if (!sb) {
+      const p = localAllPrograms().find((x) => x.id === pid);
+      return p
+        ? { found: true, title: p.title, brand: p.brand, status: p.status, reject_reason: p.reject_reason || null }
+        : { found: false };
+    }
+    // 雲端：走 RPC（security definer，只回這一筆的狀態，不會外洩其他待審資料）
+    const { data, error } = await sb.rpc("get_program_status", { pid });
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    return row ? { found: true, ...row } : { found: false };
+  }
+
   // ========== Subscriptions ==========
   async function subscribe(email, categories = []) {
     if (!sb) return { local: true };
@@ -245,7 +262,7 @@ window.DB = (function () {
   return {
     MODE, configured: !!sb,
     initAuth, onAuth, signUp, signIn, signOut, getUser, isAdmin,
-    getPrograms, getPendingPrograms, submitProgram, approveProgram, rejectProgram,
+    getPrograms, getPendingPrograms, submitProgram, approveProgram, rejectProgram, getProgramStatus,
     getFavorites, toggleFavorite,
     getReviews, getPendingReviews, submitReview, approveReview, rejectReview,
     subscribe,

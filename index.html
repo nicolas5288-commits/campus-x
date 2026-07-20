@@ -80,7 +80,7 @@
     <div class="wrap foot-inner">
       <a href="#" class="logo"><span class="dot"></span>Campus X</a>
       <div>© 2026 Campus X · 台灣校園大使機會平台</div>
-      <div><a href="submit.html">廠商投稿</a> · <a href="admin.html">後台</a></div>
+      <div><a href="submit.html">廠商投稿</a> · <a href="track.html">查詢投稿進度</a> · <a href="admin.html">後台</a></div>
     </div>
   </footer>
 
@@ -156,6 +156,18 @@
         <button type="submit" class="btn" id="reviewSubmit" style="width:100%;justify-content:center;">送出（審核後上架）</button>
       </form>
     </div>
+  </div>
+
+  <!-- 計畫比較浮動列 -->
+  <div class="cmp-bar" id="cmpBar">
+    <span class="cmp-names" id="cmpNames"></span>
+    <button class="btn sm" id="cmpOpenBtn">開始比較</button>
+    <button class="cmp-clear" id="cmpClearBtn">清空</button>
+  </div>
+
+  <!-- 計畫比較 Modal -->
+  <div class="modal-mask" id="cmpMask">
+    <div class="modal cmp-modal" id="cmpBody"></div>
   </div>
 
   <div class="toast" id="toast"></div>

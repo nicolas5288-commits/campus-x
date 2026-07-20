@@ -77,7 +77,10 @@
         </div>
         <div class="card-foot">
           <span class="deadline ${dl.soon ? "soon" : ""}">${dl.text}</span>
-          <span class="btn ghost sm">看詳情</span>
+          <span style="display:flex;gap:6px;">
+            <button class="btn ghost sm cmp-add ${compareSet.has(p.id) ? "on" : ""}" data-cmp="${p.id}">${compareSet.has(p.id) ? "✓ 比較中" : "＋比較"}</button>
+            <span class="btn ghost sm">看詳情</span>
+          </span>
         </div>
       </div>`;
   }
@@ -95,7 +98,7 @@
 
     grid.querySelectorAll(".card").forEach((el) => {
       el.onclick = (e) => {
-        if (e.target.closest("[data-fav]")) return;
+        if (e.target.closest("[data-fav]") || e.target.closest("[data-cmp]")) return;
         openModal(el.dataset.id);
       };
     });
@@ -105,7 +108,78 @@
         await handleFav(btn.dataset.fav);
       };
     });
+    grid.querySelectorAll("[data-cmp]").forEach((btn) => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        toggleCompare(btn.dataset.cmp);
+      };
+    });
   }
+
+  // ---------- 計畫比較 ----------
+  const compareSet = new Set();
+  function toggleCompare(id) {
+    if (compareSet.has(id)) compareSet.delete(id);
+    else {
+      if (compareSet.size >= 3) { toast("最多同時比較 3 個計畫"); return; }
+      compareSet.add(id);
+    }
+    render();
+    renderCompareBar();
+  }
+  function renderCompareBar() {
+    const bar = document.getElementById("cmpBar");
+    if (compareSet.size === 0) { bar.classList.remove("show"); return; }
+    const names = [...compareSet]
+      .map((id) => livePrograms.find((p) => p.id === id))
+      .filter(Boolean)
+      .map((p) => `${p.emoji} ${p.brand}`)
+      .join("　vs　");
+    document.getElementById("cmpNames").textContent = `已選 ${compareSet.size}/3：${names}`;
+    bar.classList.add("show");
+  }
+  document.getElementById("cmpClearBtn").onclick = () => {
+    compareSet.clear();
+    render();
+    renderCompareBar();
+  };
+  document.getElementById("cmpOpenBtn").onclick = () => openCompare();
+
+  async function openCompare() {
+    const progs = [...compareSet].map((id) => livePrograms.find((p) => p.id === id)).filter(Boolean);
+    if (progs.length < 2) { toast("至少選 2 個計畫才能比較"); return; }
+    // 各計畫的學長姐平均推薦度
+    const ratings = await Promise.all(progs.map(async (p) => {
+      try {
+        const rs = await window.DB.getReviews(p.id);
+        if (!rs.length) return null;
+        return (rs.reduce((a, r) => a + (r.rating || 0), 0) / rs.length).toFixed(1);
+      } catch { return null; }
+    }));
+    const col = (fn) => progs.map((p, i) => `<td>${fn(p, i)}</td>`).join("");
+    document.getElementById("cmpBody").innerHTML = `
+      <button class="modal-close" id="cmpClose">✕</button>
+      <h2>計畫比較</h2>
+      <div class="cmp-table-wrap">
+        <table class="cmp-table">
+          <tr><th></th>${col((p) => `<div style="font-size:26px;">${p.emoji}</div><div class="c-title">${escapeHtml(p.title)}</div><div class="c-brand">${escapeHtml(p.brand)}</div>`)}</tr>
+          <tr><th>產業</th>${col((p) => escapeHtml(p.category))}</tr>
+          <tr><th>有薪</th>${col((p) => p.paid ? '<span class="tag paid">有薪</span>' : '<span class="tag unpaid">無薪</span>')}</tr>
+          <tr><th>地區</th>${col((p) => escapeHtml(p.location || "—"))}</tr>
+          <tr><th>任期</th>${col((p) => escapeHtml(p.term || "—"))}</tr>
+          <tr><th>截止日</th>${col((p) => escapeHtml(p.deadline || "長期招募"))}</tr>
+          <tr><th>招募對象</th>${col((p) => escapeHtml(p.eligibility || "—"))}</tr>
+          <tr><th>任務內容</th>${col((p) => (p.tasks || []).length ? `<ul>${p.tasks.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul>` : "—")}</tr>
+          <tr><th>大使福利</th>${col((p) => (p.benefits || []).length ? `<ul>${p.benefits.map((b) => `<li>${escapeHtml(b)}</li>`).join("")}</ul>` : "—")}</tr>
+          <tr><th>學長姐推薦</th>${col((_p, i) => ratings[i] ? `<span class="stars">★</span> ${ratings[i]} / 5` : "尚無心得")}</tr>
+          <tr><th>報名</th>${col((p) => `<a class="btn sm" href="${p.applyUrl}" target="_blank" rel="noopener">前往報名 ↗</a>`)}</tr>
+        </table>
+      </div>`;
+    document.getElementById("cmpMask").classList.add("open");
+    document.getElementById("cmpClose").onclick = closeCompare;
+  }
+  function closeCompare() { document.getElementById("cmpMask").classList.remove("open"); }
+  document.getElementById("cmpMask").onclick = (e) => { if (e.target.id === "cmpMask") closeCompare(); };
 
   // ---------- 收藏 ----------
   async function handleFav(id) {
@@ -314,7 +388,7 @@
     if (e.target.id === "modalMask") closeModal();
   };
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") { closeModal(); closeAuth(); closeReview(); }
+    if (e.key === "Escape") { closeModal(); closeAuth(); closeReview(); closeCompare(); }
   });
 
   // ---------- Toast ----------

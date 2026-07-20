@@ -102,6 +102,15 @@ create policy sub_insert on subscriptions for insert with check (true);
 create policy sub_admin_read on subscriptions for select using (is_admin());
 
 -- ============================================================
+-- 廠商查稿 RPC：知道編號的人可查該筆狀態（security definer 繞過 RLS，
+-- 但只回傳單筆的標題/狀態/退回原因，不會外洩其他待審資料）
+-- ============================================================
+create or replace function get_program_status(pid text)
+returns table(title text, brand text, status text, reject_reason text) as $$
+  select title, brand, status, reject_reason from programs where id = pid;
+$$ language sql stable security definer;
+
+-- ============================================================
 -- SEED 範例資料（10 筆 live + 1 筆 pending）
 -- ============================================================
 insert into programs (id, brand, emoji, category, title, summary, tasks, benefits, eligibility, term, paid, location, deadline, apply_url, status) values
