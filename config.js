@@ -7,7 +7,7 @@
  *    再把 ADMIN_EMAIL 改成你的（要跟 schema.sql 裡 is_admin() 的 email 一致）。
  */
 window.CAMPUSX_CONFIG = {
-  SUPABASE_URL: "YOUR_SUPABASE_URL",     // ← 換成你的（Supabase → Settings → API）
-  SUPABASE_KEY: "YOUR_SUPABASE_KEY",     // ← 換成你的（anon / publishable key）
+  SUPABASE_URL: "https://xjoggvwngsvowjnwwrnc.supabase.co",
+  SUPABASE_KEY: "sb_publishable_JQ0K7GNF7KbhzqNHQvHi-A_SWIaUwo4",
   ADMIN_EMAIL: "chiwen5288@gmail.com",   // Campus X 管理員（已設定）
 };
