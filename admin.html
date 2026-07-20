@@ -254,7 +254,7 @@
 
     // ---- 活動卡 ----
     function eventCard(e) {
-      const host = e.host ? e.host.nickname : (e.hostId === "me" ? "你（本機）" : e.hostId);
+      const host = e.hostName || (e.hostId === "me" ? "你（本機）" : "會員");
       return `<div class="queue-card" data-id="${e.id}">
         <span class="rev-type-badge">${esc(e.type)}</span>
         <h3 style="margin-top:8px;">${esc(e.title)}</h3>

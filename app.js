@@ -266,9 +266,11 @@
 
   // ---------- 學長姐怎麼說 ----------
   let reviewViewType = "interview";
+  let reviewAccounts = {};
   async function loadProgramReviews(p) {
     let reviews = [];
     try { reviews = await window.DB.getReviews(p.id); } catch { reviews = []; }
+    try { reviewAccounts = await window.DB.getAccountsMap(reviews.map((r) => r.user_id)); } catch { reviewAccounts = {}; }
     const tabs = document.getElementById("revViewTabs");
     if (!tabs) return; // modal 已關
     tabs.querySelectorAll(".rev-tab").forEach((t) => {
@@ -294,7 +296,11 @@
   function reviewItemHTML(r, p) {
     // 品牌名常已含「大使/校園大使」，去掉尾綴避免疊字（JLab 校園大使 → 前 JLab 大使）
     const shortBrand = (p.brand || "").replace(/\s*(校園)?大使\s*$/, "").trim();
-    const who = r.anonymous ? `前 ${shortBrand} 大使` : (r.nickname || "校園大使");
+    const acc = reviewAccounts[r.user_id];
+    const who = r.anonymous ? `前 ${shortBrand} 大使` : (acc?.nickname || "校園大使");
+    const avatar = (!r.anonymous && acc?.avatar_url)
+      ? `<img src="${escapeHtml(acc.avatar_url)}" alt="" style="width:20px;height:20px;border-radius:50%;object-fit:cover;vertical-align:middle;" />`
+      : "👤";
     const stars = "★".repeat(r.rating || 0) + "☆".repeat(5 - (r.rating || 0));
     const rows = r.type === "interview"
       ? [["面試流程", r.process], ["被問了什麼", r.questions], ["準備建議", r.tips], ["結果", r.result]]
@@ -302,7 +308,7 @@
     const body = rows.filter(([, v]) => v).map(([k, v]) =>
       `<div class="rev-q">${k}</div><div class="rev-a">${escapeHtml(v)}</div>`).join("");
     return `<div class="rev-item">
-      <div class="rev-who">👤 ${escapeHtml(who)} <span class="stars">${stars}</span></div>
+      <div class="rev-who">${avatar} ${escapeHtml(who)} <span class="stars">${stars}</span></div>
       ${body}
       ${r.extra ? `<div class="rev-q">補充</div><div class="rev-a">${escapeHtml(r.extra)}</div>` : ""}
     </div>`;

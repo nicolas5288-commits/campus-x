@@ -13,10 +13,9 @@
     const loginBtn = document.getElementById("loginBtn");
     if (!loginBtn) return;
 
-    const meta = user ? (user.user_metadata || {}) : {};
-    let nickname = user ? (meta.full_name || meta.name || (user.email || "").split("@")[0]) : "";
-    let profile = null;
-    if (user) { try { profile = await DB.getMyProfile(); } catch {} }
+    // 個人檔案（accounts）＝右上角身分來源，不用 Google 頭像
+    let account = null;
+    if (user) { try { account = await DB.getMyAccount(); } catch {} }
     // 若期間有更新的 render 進來，放棄這次（防並行造成重複頭貼）
     if (token !== renderToken) return;
 
@@ -25,18 +24,10 @@
     if (!user) { loginBtn.style.display = ""; return; }
     loginBtn.style.display = "none";
 
-    let avatarHtml;
-    if (profile && profile.avatar_url) {
-      nickname = profile.nickname || nickname;
-      avatarHtml = `<img src="${escapeHtml(profile.avatar_url)}" class="um-img" alt="" />`;
-    } else if (profile) {
-      nickname = profile.nickname || nickname;
-      avatarHtml = `<span class="um-emoji">${escapeHtml(profile.avatar || "👤")}</span>`;
-    } else if (meta.avatar_url || meta.picture) {
-      avatarHtml = `<img src="${escapeHtml(meta.avatar_url || meta.picture)}" class="um-img" referrerpolicy="no-referrer" alt="" />`;
-    } else {
-      avatarHtml = `<span class="um-emoji">${escapeHtml((nickname[0] || "?").toUpperCase())}</span>`;
-    }
+    const nickname = (account && account.nickname) || (user.email || "").split("@")[0] || "會員";
+    const avatarHtml = (account && account.avatar_url)
+      ? `<img src="${escapeHtml(account.avatar_url)}" class="um-img" alt="" />`
+      : `<span class="um-emoji">${escapeHtml((nickname[0] || "?").toUpperCase())}</span>`;
 
     const menu = document.createElement("div");
     menu.id = "userMenu";
@@ -44,6 +35,7 @@
     menu.innerHTML = `
       <button class="um-trigger" type="button">${avatarHtml}<span class="um-name">${escapeHtml(nickname)}</span><span class="um-caret">▾</span></button>
       <div class="um-dropdown">
+        <a href="member.html">👤 個人檔案</a>
         <a href="member.html">⭐ 我的收藏</a>
         <a href="network.html">🪪 大使名片</a>
         ${DB.isAdmin && DB.isAdmin() ? '<a href="admin.html">🛠️ 審核後台</a>' : ""}

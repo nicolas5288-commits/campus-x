@@ -322,6 +322,42 @@ window.DB = (function () {
     if (error) throw error;
     return { ok: true };
   }
+  // ========== 個人檔案 accounts（會員基本身分，跟大使名片分開）==========
+  async function getMyAccount() {
+    if (!sb) {
+      const s = loadStore();
+      return s.account || null;
+    }
+    if (!currentUser) return null;
+    const { data, error } = await sb.from("accounts").select("*").eq("user_id", currentUser.id).maybeSingle();
+    if (error) throw error;
+    return data || null;
+  }
+  async function saveAccount(form) {
+    // form: { nickname, avatar_url }
+    if (!sb) {
+      const s = loadStore();
+      s.account = { ...(s.account || {}), ...form };
+      saveStore(s);
+      return { ok: true };
+    }
+    if (!currentUser) throw new Error("請先登入");
+    const row = { user_id: currentUser.id, ...form };
+    const { error } = await sb.from("accounts").upsert(row, { onConflict: "user_id" });
+    if (error) throw error;
+    return { ok: true };
+  }
+  // 一批 user_id → {user_id: {nickname, avatar_url}}（公開處顯示身分用）
+  async function getAccountsMap(userIds) {
+    const ids = [...new Set((userIds || []).filter(Boolean))];
+    if (!sb || !ids.length) return {};
+    const { data, error } = await sb.from("accounts").select("user_id, nickname, avatar_url").in("user_id", ids);
+    if (error) return {};
+    const map = {};
+    (data || []).forEach((a) => { map[a.user_id] = a; });
+    return map;
+  }
+
   // 上傳前壓縮：正方形置中裁切、縮到 size、JPEG（沿用購物趣做法）
   function compressImage(file, size = 400, quality = 0.85) {
     return new Promise((resolve) => {
@@ -389,17 +425,28 @@ window.DB = (function () {
     else s.eventOverrides[id] = { status };
     saveStore(s);
   }
+  // 雲端活動 row → 前端格式（跟本機假資料同 shape：hostId/signupIds）
+  function normalizeEvent(e) {
+    return {
+      id: e.id, hostId: e.host_user_id, title: e.title, type: e.type,
+      description: e.description, eventAt: e.event_at, locationType: e.location_type,
+      location: e.location, capacity: e.capacity, status: e.status,
+      signupIds: (e.event_signups || []).map((s) => s.user_id),
+    };
+  }
   async function getEvents() {
     if (!sb) return localAllEvents().filter((e) => e.status === "live");
-    const { data, error } = await sb.from("events").select("*, host:profiles!events_host_user_id_fkey(*), event_signups(user_id)").eq("status", "live").order("event_at", { ascending: true });
+    const { data, error } = await sb.from("events").select("*, event_signups(user_id)").eq("status", "live").order("event_at", { ascending: true });
     if (error) throw error;
-    return data || [];
+    return (data || []).map(normalizeEvent);
   }
   async function getPendingEvents() {
     if (!sb) return localAllEvents().filter((e) => e.status === "pending");
-    const { data, error } = await sb.from("events").select("*, host:profiles!events_host_user_id_fkey(*)").eq("status", "pending");
+    const { data, error } = await sb.from("events").select("*, event_signups(user_id)").eq("status", "pending").order("created_at", { ascending: true });
     if (error) throw error;
-    return data || [];
+    const rows = (data || []).map(normalizeEvent);
+    const map = await getAccountsMap(rows.map((r) => r.hostId));
+    return rows.map((r) => ({ ...r, hostName: map[r.hostId]?.nickname || "會員" }));
   }
   async function createEvent(form) {
     if (!sb) {
@@ -518,6 +565,7 @@ window.DB = (function () {
     getFavorites, toggleFavorite,
     getReviews, getPendingReviews, submitReview, approveReview, rejectReview,
     getProfiles, getPendingProfiles, getMyProfile, saveProfile, approveProfile, rejectProfile, uploadAvatar,
+    getMyAccount, saveAccount, getAccountsMap,
     getEvents, getPendingEvents, createEvent, approveEvent, rejectEvent, toggleSignup, localMySignups,
     submitWish, getAdminWishes, getAdminStats,
     subscribe,

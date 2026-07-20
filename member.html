@@ -31,8 +31,26 @@
       <button class="btn" id="loginCta">使用 Google 登入</button>
     </div>
 
-    <div id="favWrap" style="display:none;">
-      <div class="sub" id="favCount" style="color:var(--ink-soft);font-size:14.5px;margin-bottom:18px;"></div>
+    <div id="memberWrap" style="display:none;">
+      <!-- 個人檔案 -->
+      <div class="form-card" style="margin-bottom:30px;">
+        <h2 style="font-size:20px;margin-bottom:4px;">👤 個人檔案</h2>
+        <p class="auth-sub" style="margin-bottom:18px;">設定你的暱稱和頭貼，會顯示在右上角、心得、活動報名。</p>
+        <div class="avatar-upload" style="margin-bottom:18px;">
+          <div class="avatar-preview" id="accAvatarPreview">🙂</div>
+          <div>
+            <label class="btn ghost sm" style="cursor:pointer;">上傳頭貼<input type="file" id="accAvatarFile" accept="image/*" hidden /></label>
+            <button type="button" class="btn ghost sm" id="accAvatarClear" style="display:none;">移除照片</button>
+            <div class="hint" style="margin-top:6px;">照片會自動壓縮</div>
+          </div>
+        </div>
+        <div class="field"><label><span>暱稱</span><input type="text" id="accNickname" maxlength="20" placeholder="給自己取個名字（1-20 字）" /></label></div>
+        <button class="btn" id="accSave" style="width:100%;justify-content:center;">儲存個人檔案</button>
+      </div>
+
+      <!-- 我的收藏 -->
+      <h2 style="font-size:20px;margin-bottom:4px;">⭐ 我的收藏</h2>
+      <div class="sub" id="favCount" style="color:var(--ink-soft);font-size:14.5px;margin:4px 0 18px;"></div>
       <div class="grid" id="favGrid"></div>
       <div class="admin-empty" id="favEmpty" style="display:none;">還沒有收藏任何計畫。<a href="index.html">去逛逛計畫 →</a></div>
     </div>

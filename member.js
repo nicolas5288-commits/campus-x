@@ -47,9 +47,62 @@
   }
 
   function showLoggedIn(yes) {
-    document.getElementById("favWrap").style.display = yes ? "block" : "none";
+    document.getElementById("memberWrap").style.display = yes ? "block" : "none";
     document.getElementById("needLogin").style.display = yes ? "none" : "block";
   }
+
+  // ---------- 個人檔案 ----------
+  let accPickedFile = null, accPreviewUrl = null;
+  const accPreview = document.getElementById("accAvatarPreview");
+  const accClear = document.getElementById("accAvatarClear");
+  function toPreview(file) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+        const out = Math.min(400, side);
+        const c = document.createElement("canvas"); c.width = out; c.height = out;
+        c.getContext("2d").drawImage(img, sx, sy, side, side, 0, 0, out, out);
+        resolve(c.toDataURL("image/jpeg", 0.85)); URL.revokeObjectURL(img.src);
+      };
+      img.onerror = () => resolve(null);
+      img.src = URL.createObjectURL(file);
+    });
+  }
+  document.getElementById("accAvatarFile").onchange = async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    accPickedFile = f; accPreviewUrl = await toPreview(f);
+    accPreview.innerHTML = accPreviewUrl ? `<img src="${accPreviewUrl}" alt="" />` : "🙂";
+    accClear.style.display = "";
+  };
+  accClear.onclick = () => {
+    accPickedFile = null; accPreviewUrl = null;
+    document.getElementById("accAvatarFile").value = "";
+    accClear.style.display = "none";
+    loadAccount();
+  };
+  async function loadAccount() {
+    let acc = null;
+    try { acc = await DB.getMyAccount(); } catch {}
+    document.getElementById("accNickname").value = acc?.nickname || "";
+    if (acc?.avatar_url) { accPreview.innerHTML = `<img src="${acc.avatar_url}" alt="" />`; accClear.style.display = ""; }
+    else { accPreview.innerHTML = "🙂"; accClear.style.display = "none"; }
+  }
+  document.getElementById("accSave").onclick = async () => {
+    const btn = document.getElementById("accSave");
+    const nickname = document.getElementById("accNickname").value.trim();
+    btn.disabled = true; btn.textContent = "儲存中…";
+    try {
+      const form = { nickname };
+      if (accPickedFile) { btn.textContent = "上傳頭貼中…"; form.avatar_url = await DB.uploadAvatar(accPickedFile); }
+      await DB.saveAccount(form);
+      accPickedFile = null;
+      toast("個人檔案已儲存 ✓");
+      loadAccount();
+    } catch (e) { toast(e.message || "儲存失敗"); }
+    finally { btn.disabled = false; btn.textContent = "儲存個人檔案"; }
+  };
 
   document.getElementById("loginCta").onclick = async () => {
     try { await DB.signInWithGoogle(); } catch (e) { toast(e.message || "登入失敗"); }
@@ -66,7 +119,7 @@
       // 本機模式沒有真登入，直接顯示收藏（localStorage）
       const loggedIn = DB.configured ? !!user : true;
       showLoggedIn(loggedIn);
-      if (loggedIn) renderFavs();
+      if (loggedIn) { renderFavs(); loadAccount(); }
     });
     await DB.initAuth();
   }

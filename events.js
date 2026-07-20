@@ -21,7 +21,8 @@
   // 發起表單類型
   (window.EVENT_TYPES || []).forEach((t) => { const o = document.createElement("option"); o.value = t; o.textContent = t; document.getElementById("ceType").appendChild(o); });
 
-  function prof(id) { return profileMap[id] || { nickname: "大使", avatar: "👤" }; }
+  let accountMap = {};
+  function prof(id) { return accountMap[id] || profileMap[id] || { nickname: "大使", avatar: "👤" }; }
   function av(p) { return p && p.avatar_url ? `<img src="${esc(p.avatar_url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />` : (p && p.avatar || "👤"); }
   function signupsOf(e) {
     // 本機模式：signupIds 內可能含 'me'
@@ -157,7 +158,16 @@
       const profs = await DB.getProfiles();
       profileMap = {};
       profs.forEach((p) => { profileMap[p.id] = p; });
-      mySignups = DB.MODE === "local" ? DB.localMySignups() : [];
+      // 個人檔案身分（雲端）：發起人＋報名者
+      const ids = [];
+      events.forEach((e) => { ids.push(e.hostId); (e.signupIds || []).forEach((s) => ids.push(s)); });
+      try { accountMap = await DB.getAccountsMap(ids); } catch { accountMap = {}; }
+      // 我的報名
+      if (DB.MODE === "local") { mySignups = DB.localMySignups(); }
+      else {
+        const uid = DB.getUser()?.id;
+        mySignups = uid ? events.filter((e) => (e.signupIds || []).includes(uid)).map((e) => e.id) : [];
+      }
     } catch (err) { console.error(err); events = []; }
   }
   async function boot() {
