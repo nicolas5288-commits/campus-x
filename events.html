@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>大使活動 · Campus X</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="index.html" class="logo"><span class="dot"></span>Campus X</a>
+      <nav class="nav-links">
+        <a href="index.html">找計畫</a>
+        <a href="network.html">人脈網</a>
+        <a href="events.html">活動</a>
+        <a href="#" class="btn ghost sm" id="loginBtn">登入 / 註冊</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page" style="max-width:1120px;">
+    <div class="net-intro">
+      <div>
+        <h2>🎪 大使活動</h2>
+        <p>面試攻略分享、同梯小聚、校際交流——線下見過面才是真人脈。認證大使可以發起活動，有名片就能報名。</p>
+      </div>
+      <button class="btn" id="createEventBtn">＋ 發起活動</button>
+    </div>
+
+    <div class="filters">
+      <div class="filter-row">
+        <div class="select-box"><select id="typeSel"></select></div>
+      </div>
+    </div>
+    <div class="sub" id="evCount" style="color:var(--ink-soft);font-size:14.5px;margin-bottom:18px;"></div>
+
+    <div class="event-grid" id="eventGrid"></div>
+    <div class="admin-empty" id="evEmpty" style="display:none;">目前沒有這類活動，發起一場吧 🎉</div>
+  </div>
+
+  <!-- 活動詳情 modal -->
+  <div class="modal-mask" id="emMask"><div class="modal" id="emBody"></div></div>
+
+  <!-- 發起活動 modal -->
+  <div class="modal-mask" id="ceMask">
+    <div class="modal" id="ceBody">
+      <button class="modal-close" id="ceClose">✕</button>
+      <h2>發起活動</h2>
+      <p class="auth-sub">送出後由 Campus X 審核，通過就會出現在活動牆。</p>
+      <div class="safety-tip">💡 建議：約公共場所、白天時段，第一次見面人多比較安心。</div>
+      <form id="eventForm" style="margin-top:8px;">
+        <div class="field"><label><span>活動主題 <span class="hint">必填</span></span><input type="text" name="title" required placeholder="例：校園大使面試攻略分享會" /></label></div>
+        <div class="form-row">
+          <div class="field"><label><span>活動類型</span><select name="type" id="ceType"></select></label></div>
+          <div class="field"><label><span>人數上限</span><input type="number" name="capacity" min="2" value="15" /></label></div>
+        </div>
+        <div class="field"><label><span>活動說明 <span class="hint">必填</span></span><textarea name="description" required placeholder="想找誰來？做什麼？"></textarea></label></div>
+        <div class="form-row">
+          <div class="field"><label><span>時間</span><input type="text" name="eventAt" placeholder="例：2026-08-20 19:00" /></label></div>
+          <div class="field"><label><span>形式</span>
+            <select name="locationType"><option value="offline">線下實體</option><option value="online">線上</option></select></label></div>
+        </div>
+        <div class="field"><label><span>地點 <span class="hint">線下寫地區、線上寫平台</span></span><input type="text" name="location" placeholder="例：台北・信義區 / Google Meet" /></label></div>
+        <div class="auth-err" id="ceErr"></div>
+        <button type="submit" class="btn" id="ceSubmit" style="width:100%;justify-content:center;">送出審核</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="mode-badge" id="modeBadge"></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="data.js"></script>
+  <script src="db.js"></script>
+  <script src="events.js"></script>
+</body>
+</html>

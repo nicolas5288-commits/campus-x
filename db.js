@@ -22,7 +22,11 @@ window.DB = (function () {
   };
   function loadStore() {
     const d = JSON.parse(localStorage.getItem(LS.store) || "{}");
-    return { submitted: d.submitted || [], overrides: d.overrides || {}, reviews: d.reviews || [] };
+    return {
+      submitted: d.submitted || [], overrides: d.overrides || {}, reviews: d.reviews || [],
+      profiles: d.profiles || [], profileOverrides: d.profileOverrides || {},
+      events: d.events || [], eventOverrides: d.eventOverrides || {}, eventSignups: d.eventSignups || {},
+    };
   }
   function saveStore(s) {
     localStorage.setItem(LS.store, JSON.stringify(s));
@@ -250,6 +254,165 @@ window.DB = (function () {
     return row ? { found: true, ...row } : { found: false };
   }
 
+  // ========== 名片牆 profiles ==========
+  // 本機：合併 data.js 的 PROFILES + localStorage 使用者建立的，套用 override 狀態
+  function localAllProfiles() {
+    const s = loadStore();
+    const base = (window.PROFILES || []).map((p) => ({ ...p }));
+    const all = base.concat((s.profiles || []).map((p) => ({ ...p })));
+    return all.map((p) => {
+      const ov = (s.profileOverrides || {})[p.id];
+      return ov ? { ...p, status: ov.status } : p;
+    });
+  }
+  function localSetProfileStatus(id, status) {
+    const s = loadStore();
+    s.profileOverrides = s.profileOverrides || {};
+    const own = (s.profiles || []).find((p) => p.id === id);
+    if (own) own.status = status;
+    else s.profileOverrides[id] = { status };
+    saveStore(s);
+  }
+  async function getProfiles() {
+    if (!sb) return localAllProfiles().filter((p) => p.status === "live");
+    const { data, error } = await sb.from("profiles").select("*").eq("status", "live").order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  }
+  async function getPendingProfiles() {
+    if (!sb) return localAllProfiles().filter((p) => p.status === "pending");
+    const { data, error } = await sb.from("profiles").select("*").eq("status", "pending");
+    if (error) throw error;
+    return data || [];
+  }
+  // 目前使用者自己的名片（本機模式用 localStorage 的第一張自建）
+  async function getMyProfile() {
+    if (!sb) {
+      const s = loadStore();
+      return (s.profiles || [])[0] || null;
+    }
+    if (!currentUser) return null;
+    const { data, error } = await sb.from("profiles").select("*").eq("user_id", currentUser.id).maybeSingle();
+    if (error) throw error;
+    return data || null;
+  }
+  async function saveProfile(form) {
+    // 建立/更新名片（送出後為 pending 待審）
+    if (!sb) {
+      const s = loadStore();
+      s.profiles = s.profiles || [];
+      const existing = s.profiles[0];
+      if (existing) Object.assign(existing, form, { status: "pending" });
+      else s.profiles.push({ ...form, id: "mp-" + Date.now(), badges: [], status: "pending" });
+      saveStore(s);
+      return { ok: true };
+    }
+    if (!currentUser) throw new Error("請先登入");
+    const row = { ...form, user_id: currentUser.id, status: "pending" };
+    const { error } = await sb.from("profiles").upsert(row, { onConflict: "user_id" });
+    if (error) throw error;
+    return { ok: true };
+  }
+  async function approveProfile(id) {
+    if (!sb) return localSetProfileStatus(id, "live");
+    const { error } = await sb.from("profiles").update({ status: "live" }).eq("id", id);
+    if (error) throw error;
+  }
+  async function rejectProfile(id) {
+    if (!sb) return localSetProfileStatus(id, "rejected");
+    const { error } = await sb.from("profiles").update({ status: "rejected" }).eq("id", id);
+    if (error) throw error;
+  }
+
+  // ========== 活動 events ==========
+  function localAllEvents() {
+    const s = loadStore();
+    const base = (window.EVENTS || []).map((e) => ({ ...e }));
+    const all = base.concat((s.events || []).map((e) => ({ ...e })));
+    return all.map((e) => {
+      const ov = (s.eventOverrides || {})[e.id];
+      const signups = (s.eventSignups || {})[e.id];
+      let out = e;
+      if (ov) out = { ...out, status: ov.status };
+      if (signups) out = { ...out, signupIds: Array.from(new Set([...(out.signupIds || []), ...signups])) };
+      return out;
+    });
+  }
+  function localSetEventStatus(id, status) {
+    const s = loadStore();
+    s.eventOverrides = s.eventOverrides || {};
+    const own = (s.events || []).find((e) => e.id === id);
+    if (own) own.status = status;
+    else s.eventOverrides[id] = { status };
+    saveStore(s);
+  }
+  async function getEvents() {
+    if (!sb) return localAllEvents().filter((e) => e.status === "live");
+    const { data, error } = await sb.from("events").select("*, host:profiles!events_host_user_id_fkey(*), event_signups(user_id)").eq("status", "live").order("event_at", { ascending: true });
+    if (error) throw error;
+    return data || [];
+  }
+  async function getPendingEvents() {
+    if (!sb) return localAllEvents().filter((e) => e.status === "pending");
+    const { data, error } = await sb.from("events").select("*, host:profiles!events_host_user_id_fkey(*)").eq("status", "pending");
+    if (error) throw error;
+    return data || [];
+  }
+  async function createEvent(form) {
+    if (!sb) {
+      const s = loadStore();
+      s.events = s.events || [];
+      s.events.push({ ...form, id: "me-" + Date.now(), signupIds: [], status: "pending" });
+      saveStore(s);
+      return { ok: true };
+    }
+    if (!currentUser) throw new Error("請先登入");
+    const row = { ...form, host_user_id: currentUser.id, status: "pending" };
+    const { error } = await sb.from("events").insert(row);
+    if (error) throw error;
+    return { ok: true };
+  }
+  async function approveEvent(id) {
+    if (!sb) return localSetEventStatus(id, "live");
+    const { error } = await sb.from("events").update({ status: "live" }).eq("id", id);
+    if (error) throw error;
+  }
+  async function rejectEvent(id) {
+    if (!sb) return localSetEventStatus(id, "rejected");
+    const { error } = await sb.from("events").update({ status: "rejected" }).eq("id", id);
+    if (error) throw error;
+  }
+  // 報名（本機模式用固定 demo 身分 'me'）
+  async function toggleSignup(eventId) {
+    if (!sb) {
+      const s = loadStore();
+      s.eventSignups = s.eventSignups || {};
+      const arr = s.eventSignups[eventId] || [];
+      const me = "me";
+      const i = arr.indexOf(me);
+      if (i >= 0) arr.splice(i, 1);
+      else arr.push(me);
+      s.eventSignups[eventId] = arr;
+      saveStore(s);
+      return arr.includes(me);
+    }
+    if (!currentUser) throw new Error("請先登入");
+    const { data: existing } = await sb.from("event_signups").select("*").eq("event_id", eventId).eq("user_id", currentUser.id).maybeSingle();
+    if (existing) {
+      await sb.from("event_signups").delete().eq("event_id", eventId).eq("user_id", currentUser.id);
+      return false;
+    }
+    await sb.from("event_signups").insert({ event_id: eventId, user_id: currentUser.id });
+    return true;
+  }
+  // 本機模式：我報名了哪些活動
+  function localMySignups() {
+    const s = loadStore();
+    const out = [];
+    Object.entries(s.eventSignups || {}).forEach(([eid, arr]) => { if (arr.includes("me")) out.push(eid); });
+    return out;
+  }
+
   // ========== Subscriptions ==========
   async function subscribe(email, categories = []) {
     if (!sb) return { local: true };
@@ -265,6 +428,8 @@ window.DB = (function () {
     getPrograms, getPendingPrograms, submitProgram, approveProgram, rejectProgram, getProgramStatus,
     getFavorites, toggleFavorite,
     getReviews, getPendingReviews, submitReview, approveReview, rejectReview,
+    getProfiles, getPendingProfiles, getMyProfile, saveProfile, approveProfile, rejectProfile,
+    getEvents, getPendingEvents, createEvent, approveEvent, rejectEvent, toggleSignup, localMySignups,
     subscribe,
     CATEGORIES: (window.CATEGORIES || []).filter((c) => c !== "全部"),
   };

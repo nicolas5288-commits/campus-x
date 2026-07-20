@@ -238,3 +238,119 @@ window.CATEGORIES = [
   "全部", "3C 科技", "軟體工具", "美妝", "消費品", "時尚配件",
   "餐飲外送", "金融", "旅遊", "教育", "媒體／職涯"
 ];
+
+// ===== 大使人脈網：名片假資料 =====
+// status: pending / live / rejected；badges 可含 'verified'（認證）'founding'（創始）
+window.PROFILES = [
+  {
+    id: "p-anna", nickname: "Anna 劉", avatar: "🦊", school: "國立政治大學", grade: "大三",
+    headline: "做過 3 個計畫的斜槓大使，最愛跟人聊社群經營",
+    skills: ["社群經營", "短影音", "活動企劃"],
+    igUrl: "https://instagram.com/", contactOpen: true,
+    experiences: [
+      { programName: "JLab 校園大使", cohort: "第 1 屆", year: "2025" },
+      { programName: "foodpanda 校園大使", cohort: "第 3 屆", year: "2024" }
+    ],
+    badges: ["verified", "founding"], status: "live"
+  },
+  {
+    id: "p-kevin", nickname: "Kevin", avatar: "🐻", school: "國立台灣大學", grade: "大四",
+    headline: "金融業實習中，歡迎問我銀行系校園大使的面試",
+    skills: ["簡報", "數據分析", "公關"],
+    igUrl: "https://instagram.com/", contactOpen: true,
+    experiences: [{ programName: "永豐銀行校園大使", cohort: "第 3 屆", year: "2025" }],
+    badges: ["verified"], status: "live"
+  },
+  {
+    id: "p-mia", nickname: "Mia 陳", avatar: "🐰", school: "國立成功大學", grade: "大二",
+    headline: "美妝控，ETUDE 甜派員，喜歡辦南部的大使聚會",
+    skills: ["美妝內容", "攝影", "文案"],
+    igUrl: "https://instagram.com/", contactOpen: true,
+    experiences: [{ programName: "ETUDE 校園甜派員", cohort: "第 2 屆", year: "2025" }],
+    badges: ["verified", "founding"], status: "live"
+  },
+  {
+    id: "p-leo", nickname: "Leo", avatar: "🐺", school: "國立清華大學", grade: "碩一",
+    headline: "工具控，Notion 校園領袖，可以教你把履歷做得很好看",
+    skills: ["Notion", "生產力工具", "工作坊帶領"],
+    igUrl: "https://instagram.com/", contactOpen: false,
+    experiences: [{ programName: "Notion 校園領袖", cohort: "第 1 屆", year: "2025" }],
+    badges: ["verified"], status: "live"
+  },
+  {
+    id: "p-sana", nickname: "Sana", avatar: "🐱", school: "輔仁大學", grade: "大三",
+    headline: "時尚配件品牌大使，穿搭與拍攝合作找我聊",
+    skills: ["穿搭", "拍攝", "選品"],
+    igUrl: "https://instagram.com/", contactOpen: true,
+    experiences: [{ programName: "ROBINMAY 校園大使", cohort: "第 2 屆", year: "2025" }],
+    badges: ["founding"], status: "live"
+  },
+  {
+    id: "p-jay", nickname: "Jay 林", avatar: "🦁", school: "國立政治大學", grade: "大四",
+    headline: "104 遠距實習組，職涯內容製作，樂意分享求職心得",
+    skills: ["Podcast", "職涯諮詢", "剪輯"],
+    igUrl: "https://instagram.com/", contactOpen: true,
+    experiences: [{ programName: "104 校園大使", cohort: "社群播客組", year: "2025" }],
+    badges: ["verified"], status: "live"
+  },
+  {
+    id: "p-wei", nickname: "Wei", avatar: "🐨", school: "國立台灣大學", grade: "大二",
+    headline: "旅遊魂，StarRoad 大使，想揪跨校的大使一起出遊",
+    skills: ["旅遊企劃", "社群", "外語"],
+    igUrl: "https://instagram.com/", contactOpen: true,
+    experiences: [{ programName: "StarRoad 校園大使", cohort: "第 4 屆", year: "2025" }],
+    badges: [], status: "live"
+  },
+  {
+    id: "p-demo-pending", nickname: "（待審名片範例）", avatar: "🆕", school: "某大學", grade: "大一",
+    headline: "這是一張剛建立、還沒審核的名片。",
+    skills: ["範例"], igUrl: "", contactOpen: false,
+    experiences: [{ programName: "某計畫", cohort: "第 1 屆", year: "2026" }],
+    badges: [], status: "pending"
+  }
+];
+
+// ===== 活動假資料 =====
+// type 見 EVENT_TYPES；status: pending / live / rejected / done
+window.EVENTS = [
+  {
+    id: "e-01", hostId: "p-anna", title: "校園大使面試攻略分享會（線上）",
+    type: "面試攻略分享會",
+    description: "找了幾個不同品牌的大使，一起聊面試都被問什麼、履歷怎麼寫。歡迎正在申請的學弟妹來。",
+    eventAt: "2026-08-05 19:30", locationType: "online", location: "Google Meet（報名後寄連結）",
+    capacity: 30, signupIds: ["p-kevin", "p-mia", "p-jay", "p-wei"], status: "live"
+  },
+  {
+    id: "e-02", hostId: "p-mia", title: "南部大使小聚・台南美食場",
+    type: "純吃飯哈拉",
+    description: "南部的大使們出來吃個飯認識一下！這次選台南國華街，白天場，吃完可以順便逛。",
+    eventAt: "2026-08-10 12:00", locationType: "offline", location: "台南・國華街（報名後公布集合點）",
+    capacity: 8, signupIds: ["p-sana"], status: "live"
+  },
+  {
+    id: "e-03", hostId: "p-anna", title: "JLab 第 1 屆同梯聚：一年後我們都在幹嘛",
+    type: "同計畫同梯聚",
+    description: "JLab 第一屆的夥伴們，一年沒見了！來更新一下近況，順便交換各自的實習/工作情報。",
+    eventAt: "2026-08-18 18:30", locationType: "offline", location: "台北・信義區（餐廳待訂）",
+    capacity: 15, signupIds: ["p-kevin"], status: "live"
+  },
+  {
+    id: "e-04", hostId: "p-jay", title: "校際交流・履歷健檢工作坊",
+    type: "校際交流",
+    description: "帶大家用 Notion 做出好看的履歷，現場互相健檢。跨校參加，認識不同學校的大使。",
+    eventAt: "2026-08-25 14:00", locationType: "offline", location: "台北・政大公企中心",
+    capacity: 20, signupIds: ["p-leo", "p-wei", "p-mia"], status: "live"
+  },
+  {
+    id: "e-demo-pending", hostId: "p-kevin", title: "（待審活動範例）某聚會",
+    type: "純吃飯哈拉",
+    description: "這是一筆剛發起、還沒審核的活動。",
+    eventAt: "2026-09-01 19:00", locationType: "offline", location: "待定",
+    capacity: 10, signupIds: [], status: "pending"
+  }
+];
+
+// 篩選/表單用清單
+window.SCHOOLS = ["全部", "國立政治大學", "國立台灣大學", "國立成功大學", "國立清華大學", "輔仁大學"];
+window.SKILL_TAGS = ["社群經營", "短影音", "活動企劃", "簡報", "數據分析", "公關", "美妝內容", "攝影", "文案", "Notion", "生產力工具", "穿搭", "拍攝", "選品", "Podcast", "職涯諮詢", "剪輯", "旅遊企劃", "外語"];
+window.EVENT_TYPES = ["面試攻略分享會", "同計畫同梯聚", "校際交流", "廠商見面會", "純吃飯哈拉"];

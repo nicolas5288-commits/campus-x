@@ -102,6 +102,73 @@ create policy sub_insert on subscriptions for insert with check (true);
 create policy sub_admin_read on subscriptions for select using (is_admin());
 
 -- ============================================================
+-- 大使人脈網：profiles 名片 / events 活動 / event_signups 報名
+-- ============================================================
+create table profiles (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) unique not null,
+  nickname text not null,
+  avatar text default '👤',
+  school text, grade text,
+  headline text,
+  skills text[] default '{}',
+  experiences jsonb default '[]',   -- [{programName, cohort, year}]
+  ig_url text,
+  contact_open boolean not null default false,
+  badges text[] default '{}',       -- 'verified' / 'founding'（由管理員授予）
+  status text not null default 'pending' check (status in ('pending','live','rejected')),
+  created_at timestamptz default now()
+);
+
+create table events (
+  id uuid primary key default gen_random_uuid(),
+  host_user_id uuid references auth.users(id) not null,
+  title text not null,
+  type text not null,
+  description text,
+  event_at timestamptz,
+  location_type text default 'offline' check (location_type in ('online','offline')),
+  location text,
+  capacity int,
+  status text not null default 'pending' check (status in ('pending','live','rejected','done')),
+  created_at timestamptz default now()
+);
+
+create table event_signups (
+  event_id uuid references events(id) on delete cascade not null,
+  user_id uuid references auth.users(id) not null,
+  created_at timestamptz default now(),
+  primary key (event_id, user_id)
+);
+
+alter table profiles enable row level security;
+alter table events enable row level security;
+alter table event_signups enable row level security;
+
+-- profiles：大家看 live；本人看自己的；管理員看全部
+create policy prof_read on profiles for select using (status = 'live' or auth.uid() = user_id or is_admin());
+create policy prof_upsert on profiles for insert with check (auth.uid() = user_id and status = 'pending');
+create policy prof_update_own on profiles for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy prof_admin on profiles for update using (is_admin());
+
+-- events：大家看 live；本人看自己的；管理員看全部
+create policy ev_read on events for select using (status = 'live' or auth.uid() = host_user_id or is_admin());
+-- 發起需為「認證大使」（badges 含 verified 的 live 名片）
+create policy ev_insert on events for insert with check (
+  status = 'pending' and auth.uid() = host_user_id and exists (
+    select 1 from profiles p where p.user_id = auth.uid() and p.status = 'live' and 'verified' = any(p.badges)
+  )
+);
+create policy ev_admin on events for update using (is_admin());
+
+-- event_signups：報名需有 live 名片；只能操作自己的；報名者名單所有登入者可讀（看誰會去）
+create policy sign_read on event_signups for select using (true);
+create policy sign_insert on event_signups for insert with check (
+  auth.uid() = user_id and exists (select 1 from profiles p where p.user_id = auth.uid() and p.status = 'live')
+);
+create policy sign_delete on event_signups for delete using (auth.uid() = user_id);
+
+-- ============================================================
 -- 廠商查稿 RPC：知道編號的人可查該筆狀態（security definer 繞過 RLS，
 -- 但只回傳單筆的標題/狀態/退回原因，不會外洩其他待審資料）
 -- ============================================================

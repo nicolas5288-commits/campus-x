@@ -294,6 +294,59 @@ header.nav {
 .cmp-table td ul { margin: 0; padding-left: 16px; }
 .cmp-table td ul li { font-size: 13.5px; margin-bottom: 3px; }
 
+/* ===== 名片牆 ===== */
+.net-intro { background: linear-gradient(135deg, #111, #333); color: #fff; border-radius: 18px; padding: 30px 32px; margin-bottom: 26px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.net-intro h2 { font-size: 22px; letter-spacing: -.02em; }
+.net-intro p { color: #bbb; font-size: 14.5px; margin-top: 6px; max-width: 460px; }
+.net-intro .btn { background: #fff; color: #111; border-color: #fff; white-space: nowrap; }
+.profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.profile-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); cursor: pointer; transition: .2s; display: flex; flex-direction: column; gap: 12px; }
+.profile-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); border-color: var(--line-strong); }
+.pc-top { display: flex; gap: 12px; align-items: center; }
+.pc-avatar { width: 54px; height: 54px; border-radius: 50%; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; }
+.pc-name { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pc-school { font-size: 13px; color: var(--ink-soft); }
+.pc-headline { font-size: 14px; color: var(--ink-soft); line-height: 1.5; flex: 1; }
+.pc-skills { display: flex; gap: 6px; flex-wrap: wrap; }
+.badge-v, .badge-f { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
+.badge-v { background: #e9f2ff; color: #2563c9; }
+.badge-f { background: #fff4e0; color: #c97a12; }
+.pc-exp { font-size: 12.5px; color: var(--ink-soft); border-top: 1px solid var(--line); padding-top: 10px; }
+
+/* 名片詳情 modal */
+.pm-head { display: flex; gap: 16px; align-items: center; margin-bottom: 6px; }
+.pm-avatar { width: 68px; height: 68px; border-radius: 50%; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 34px; }
+.pm-exp-item { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; font-size: 14px; }
+.pm-exp-item b { font-weight: 600; }
+.contact-locked { color: var(--ink-soft); font-size: 13.5px; background: var(--bg-soft); border-radius: 10px; padding: 12px 14px; text-align: center; }
+
+/* ===== 活動牆 ===== */
+.event-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.event-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); cursor: pointer; transition: .2s; display: flex; flex-direction: column; gap: 12px; }
+.event-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+.ev-type { display: inline-block; font-size: 12px; padding: 4px 11px; border-radius: 999px; background: var(--accent-soft); color: var(--ink-soft); font-weight: 600; align-self: flex-start; }
+.ev-title { font-size: 18px; font-weight: 700; letter-spacing: -.01em; line-height: 1.35; }
+.ev-meta { display: flex; flex-direction: column; gap: 5px; font-size: 13.5px; color: var(--ink-soft); }
+.ev-meta .row { display: flex; align-items: center; gap: 7px; }
+.ev-foot { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 12px; }
+.ev-hosts { display: flex; align-items: center; }
+.signup-stack { display: flex; align-items: center; }
+.signup-stack .mini { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); border: 2px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-left: -8px; }
+.signup-stack .mini:first-child { margin-left: 0; }
+.signup-count { font-size: 13px; color: var(--ink-soft); margin-left: 8px; }
+.ev-cap { font-size: 12.5px; color: var(--ink-soft); }
+.ev-cap.full { color: #d64545; font-weight: 600; }
+
+/* 活動詳情 modal 報名者 */
+.attendee-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.attendee { display: flex; align-items: center; gap: 8px; background: var(--bg-soft); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px 5px 6px; font-size: 13px; }
+.attendee .a-av { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.ev-host-card { display: flex; align-items: center; gap: 12px; background: var(--bg-soft); border: 1px solid var(--line); border-radius: 12px; padding: 12px 15px; margin: 6px 0 4px; }
+.safety-tip { font-size: 12.5px; color: var(--ink-soft); background: #fffbe9; border: 1px solid #f2e6b8; border-radius: 10px; padding: 10px 13px; margin: 12px 0; }
+
+@media (max-width: 900px) { .profile-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px) { .profile-grid, .event-grid { grid-template-columns: 1fr; } }
+
 /* ===== Subscribe band ===== */
 .subscribe {
   background: #111; color: #fff; border-radius: 22px; padding: 52px 40px; text-align: center; margin: 64px 0;

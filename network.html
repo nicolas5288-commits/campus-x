@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>大使人脈網 · Campus X</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="index.html" class="logo"><span class="dot"></span>Campus X</a>
+      <nav class="nav-links">
+        <a href="index.html">找計畫</a>
+        <a href="network.html">人脈網</a>
+        <a href="events.html">活動</a>
+        <a href="#" class="btn ghost sm" id="loginBtn">登入 / 註冊</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page" style="max-width:1120px;">
+    <div class="net-intro">
+      <div>
+        <h2>🕸️ 大使人脈網</h2>
+        <p>做過或正在做校園大使的人都在這。找同校前輩問攻略、跨校認識夥伴，建一張名片讓別人找到你。</p>
+      </div>
+      <button class="btn" id="createProfileBtn">＋ 建立我的名片</button>
+    </div>
+
+    <div class="filters">
+      <div class="filter-row">
+        <div class="select-box"><select id="schoolSel"></select></div>
+        <div class="select-box"><select id="skillSel"></select></div>
+        <div class="search-box">🔍 <input type="text" id="netSearch" placeholder="搜尋名字、學校、專長…" /></div>
+      </div>
+    </div>
+    <div class="sub" id="netCount" style="color:var(--ink-soft);font-size:14.5px;margin-bottom:18px;"></div>
+
+    <div class="profile-grid" id="profileGrid"></div>
+    <div class="admin-empty" id="netEmpty" style="display:none;">找不到符合的大使，換個條件試試 🔍</div>
+  </div>
+
+  <!-- 名片詳情 modal -->
+  <div class="modal-mask" id="pmMask"><div class="modal" id="pmBody"></div></div>
+
+  <!-- 建立/編輯名片 modal -->
+  <div class="modal-mask" id="editMask">
+    <div class="modal" id="editBody">
+      <button class="modal-close" id="editClose">✕</button>
+      <h2 id="editTitle">建立我的名片</h2>
+      <p class="auth-sub">填好送出後由 Campus X 審核，通過就會出現在人脈網。</p>
+      <form id="profileForm" style="margin-top:16px;">
+        <div class="form-row">
+          <div class="field"><label><span>暱稱 <span class="hint">必填</span></span><input type="text" name="nickname" required placeholder="想被叫什麼" /></label></div>
+          <div class="field"><span>頭像</span><div class="emoji-picker" id="avatarPicker"></div></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label><span>學校</span><input type="text" name="school" placeholder="例：國立政治大學" /></label></div>
+          <div class="field"><label><span>年級</span><input type="text" name="grade" placeholder="例：大三" /></label></div>
+        </div>
+        <div class="field"><label><span>一句話介紹自己 <span class="hint">必填</span></span><input type="text" name="headline" required placeholder="例：做過 3 個計畫，最愛聊社群經營" /></label></div>
+        <div class="field"><label><span>專長 <span class="hint">用逗號分隔，例：社群經營, 短影音</span></span><input type="text" name="skills" placeholder="社群經營, 攝影, 文案" /></label></div>
+        <div class="field"><label><span>做過的計畫 <span class="hint">一行一個，格式：計畫名 / 第X屆 / 年份</span></span>
+          <textarea name="experiences" placeholder="JLab 校園大使 / 第 1 屆 / 2025&#10;foodpanda 校園大使 / 第 3 屆 / 2024"></textarea></label></div>
+        <div class="field"><label><span>IG 連結 <span class="hint">選填，開放聯繫才會顯示</span></span><input type="url" name="igUrl" placeholder="https://instagram.com/你的帳號" /></label></div>
+        <label class="check-line" style="margin:4px 0 16px;"><input type="checkbox" name="contactOpen" checked /> 開放讓別人透過 IG 聯繫我</label>
+        <div class="auth-err" id="editErr"></div>
+        <button type="submit" class="btn" id="editSubmit" style="width:100%;justify-content:center;">送出審核</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="mode-badge" id="modeBadge"></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="data.js"></script>
+  <script src="db.js"></script>
+  <script src="network.js"></script>
+</body>
+</html>

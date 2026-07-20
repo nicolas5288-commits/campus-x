@@ -39,6 +39,8 @@
       <div class="admin-tabs">
         <button class="admin-tab active" data-tab="programs">廠商投稿 <span class="badge" id="badgeP" style="display:none;">0</span></button>
         <button class="admin-tab" data-tab="reviews">學生心得 <span class="badge" id="badgeR" style="display:none;">0</span></button>
+        <button class="admin-tab" data-tab="profiles">大使名片 <span class="badge" id="badgeN" style="display:none;">0</span></button>
+        <button class="admin-tab" data-tab="events">活動 <span class="badge" id="badgeE" style="display:none;">0</span></button>
         <button class="btn ghost sm" id="adLogout" style="margin-left:auto;">登出</button>
       </div>
       <div id="queue"></div>
@@ -140,13 +142,27 @@
             ? list.map(programCard).join("")
             : '<div class="admin-empty">目前沒有待審的投稿 🎉</div>';
           bindProgramActions();
-        } else {
+        } else if (tab === "reviews") {
           const list = await DB.getPendingReviews();
           updateBadge("badgeR", list.length);
           queue.innerHTML = list.length
             ? list.map(reviewCard).join("")
             : '<div class="admin-empty">目前沒有待審的心得 🎉</div>';
           bindReviewActions();
+        } else if (tab === "profiles") {
+          const list = await DB.getPendingProfiles();
+          updateBadge("badgeN", list.length);
+          queue.innerHTML = list.length
+            ? list.map(profileCard).join("")
+            : '<div class="admin-empty">目前沒有待審的名片 🎉</div>';
+          bindProfileActions();
+        } else if (tab === "events") {
+          const list = await DB.getPendingEvents();
+          updateBadge("badgeE", list.length);
+          queue.innerHTML = list.length
+            ? list.map(eventCard).join("")
+            : '<div class="admin-empty">目前沒有待審的活動 🎉</div>';
+          bindEventActions();
         }
       } catch (err) {
         queue.innerHTML = `<div class="admin-empty">載入失敗：${esc(err.message)}</div>`;
@@ -161,6 +177,65 @@
     async function refreshBadges() {
       try { updateBadge("badgeP", (await DB.getPendingPrograms()).length); } catch {}
       try { updateBadge("badgeR", (await DB.getPendingReviews()).length); } catch {}
+      try { updateBadge("badgeN", (await DB.getPendingProfiles()).length); } catch {}
+      try { updateBadge("badgeE", (await DB.getPendingEvents()).length); } catch {}
+    }
+
+    // ---- 名片卡 ----
+    function profileCard(p) {
+      return `<div class="queue-card" data-id="${p.id}">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="pc-avatar">${p.avatar || "👤"}</div>
+          <div style="flex:1;"><h3>${esc(p.nickname)}</h3><div class="q-brand">${esc(p.school || "")} ${esc(p.grade || "")}</div></div>
+        </div>
+        <div class="q-section"><b>介紹</b><div>${esc(p.headline || "")}</div></div>
+        ${(p.skills && p.skills.length) ? `<div class="q-section"><b>專長</b><div>${p.skills.map(esc).join("、")}</div></div>` : ""}
+        ${(p.experiences && p.experiences.length) ? `<div class="q-section"><b>經歷</b><div>${p.experiences.map(e => esc(e.programName) + (e.cohort ? "（" + esc(e.cohort) + "）" : "")).join("、")}</div></div>` : ""}
+        <div class="q-section"><b>IG</b><div>${p.igUrl ? esc(p.igUrl) + (p.contactOpen ? "（開放聯繫）" : "（未開放）") : "未填"}</div></div>
+        <div class="q-actions">
+          <button class="btn approve" data-napprove="${p.id}">✓ 通過上架</button>
+          <button class="btn reject" data-nreject="${p.id}">✕ 退回</button>
+        </div>
+      </div>`;
+    }
+    function bindProfileActions() {
+      document.querySelectorAll("[data-napprove]").forEach(b => b.onclick = async () => {
+        b.disabled = true; await DB.approveProfile(b.dataset.napprove); toast("名片已通過 ✓"); loadQueue();
+      });
+      document.querySelectorAll("[data-nreject]").forEach(b => b.onclick = async () => {
+        if (!confirm("確定退回這張名片？")) return;
+        b.disabled = true; await DB.rejectProfile(b.dataset.nreject); toast("已退回"); loadQueue();
+      });
+    }
+
+    // ---- 活動卡 ----
+    function eventCard(e) {
+      const host = e.host ? e.host.nickname : (e.hostId === "me" ? "你（本機）" : e.hostId);
+      return `<div class="queue-card" data-id="${e.id}">
+        <span class="rev-type-badge">${esc(e.type)}</span>
+        <h3 style="margin-top:8px;">${esc(e.title)}</h3>
+        <div class="q-brand">發起人：${esc(host)}</div>
+        <div class="q-meta">
+          <span class="tag">🗓️ ${esc(e.eventAt || "待定")}</span>
+          <span class="tag">${e.locationType === "online" ? "線上" : "線下"}</span>
+          <span class="tag">📍 ${esc(e.location || "待定")}</span>
+          <span class="tag">上限 ${e.capacity || "—"}</span>
+        </div>
+        <div class="q-section"><b>說明</b><div>${esc(e.description || "")}</div></div>
+        <div class="q-actions">
+          <button class="btn approve" data-eapprove="${e.id}">✓ 通過上架</button>
+          <button class="btn reject" data-ereject="${e.id}">✕ 退回</button>
+        </div>
+      </div>`;
+    }
+    function bindEventActions() {
+      document.querySelectorAll("[data-eapprove]").forEach(b => b.onclick = async () => {
+        b.disabled = true; await DB.approveEvent(b.dataset.eapprove); toast("活動已通過 ✓"); loadQueue();
+      });
+      document.querySelectorAll("[data-ereject]").forEach(b => b.onclick = async () => {
+        if (!confirm("確定退回這場活動？")) return;
+        b.disabled = true; await DB.rejectEvent(b.dataset.ereject); toast("已退回"); loadQueue();
+      });
     }
 
     function bindProgramActions() {
