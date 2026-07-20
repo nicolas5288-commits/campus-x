@@ -437,6 +437,10 @@
   });
   document.getElementById("authClose").onclick = closeAuth;
   authMask.onclick = (e) => { if (e.target.id === "authMask") closeAuth(); };
+  document.getElementById("googleBtn").onclick = async () => {
+    try { await window.DB.signInWithGoogle(); }
+    catch (err) { document.getElementById("authErr").textContent = err.message || "Google 登入失敗"; }
+  };
 
   document.getElementById("authForm").onsubmit = async (e) => {
     e.preventDefault();

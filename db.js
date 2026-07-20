@@ -93,6 +93,14 @@ window.DB = (function () {
     if (error) throw error;
     return data;
   }
+  async function signInWithGoogle() {
+    if (!sb) throw new Error("尚未設定 Supabase，無法登入");
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: location.href.split("#")[0].split("?")[0] },
+    });
+    if (error) throw error;
+  }
   async function signOut() { if (sb) await sb.auth.signOut(); }
   function getUser() { return currentUser; }
   function isAdmin() {
@@ -425,7 +433,7 @@ window.DB = (function () {
 
   return {
     MODE, configured: !!sb,
-    initAuth, onAuth, signUp, signIn, signOut, getUser, isAdmin,
+    initAuth, onAuth, signUp, signIn, signInWithGoogle, signOut, getUser, isAdmin,
     getPrograms, getPendingPrograms, submitProgram, approveProgram, rejectProgram, getProgramStatus,
     getFavorites, toggleFavorite,
     getReviews, getPendingReviews, submitReview, approveReview, rejectReview,

@@ -137,8 +137,12 @@
     finally { btn.disabled = false; btn.textContent = "送出審核"; }
   };
 
-  // 登入按鈕
-  document.getElementById("loginBtn").onclick = (e) => { e.preventDefault(); toast(DB.configured ? "請用計畫頁的登入視窗登入 🔑" : "會員系統需先設定 Supabase"); };
+  // 登入按鈕（Google 登入）
+  document.getElementById("loginBtn").onclick = async (e) => {
+    e.preventDefault();
+    if (!DB.configured) { toast("會員系統需先設定 Supabase"); return; }
+    try { await DB.signInWithGoogle(); } catch (err) { toast(err.message || "登入失敗"); }
+  };
 
   // 啟動
   async function boot() {
