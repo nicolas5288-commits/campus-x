@@ -142,6 +142,12 @@ header.nav {
 .card-foot { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--line); }
 .deadline { font-size: 13px; color: var(--ink-soft); }
 .deadline.soon { color: #d64545; font-weight: 600; }
+.deadline.closed { color: #999; }
+.recruit-banner { font-size: 13.5px; border-radius: 10px; padding: 10px 14px; margin: 14px 0; }
+.recruit-banner.open { background: var(--paid-bg); color: var(--paid); border: 1px solid #cdeadd; }
+.recruit-banner.closed { background: #fdeaea; color: #b53535; border: 1px solid #f2cdcd; }
+.source-line { margin-top: 14px; font-size: 12px; color: var(--ink-soft); text-align: center; }
+.source-line a { text-decoration: underline; }
 
 .empty { text-align: center; padding: 60px 0; color: var(--ink-soft); }
 

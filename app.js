@@ -56,6 +56,10 @@
   function cardHTML(p) {
     const isFav = favSet.has(p.id);
     const dl = fmtDeadline(p.deadline);
+    // 非招募中：不顯示倒數，改標明狀態
+    const statusSpan = p.recruiting === false
+      ? `<span class="deadline closed">${p.deadline ? "本梯已截止" : "招募時間見官方"}</span>`
+      : `<span class="deadline ${dl.soon ? "soon" : ""}">${dl.text}</span>`;
     const paidTag = p.paid
       ? '<span class="tag paid">有薪</span>'
       : '<span class="tag unpaid">無薪</span>';
@@ -76,7 +80,7 @@
           <span class="tag">${p.location}</span>
         </div>
         <div class="card-foot">
-          <span class="deadline ${dl.soon ? "soon" : ""}">${dl.text}</span>
+          ${statusSpan}
           <span style="display:flex;gap:6px;">
             <button class="btn ghost sm cmp-add ${compareSet.has(p.id) ? "on" : ""}" data-cmp="${p.id}">${compareSet.has(p.id) ? "✓ 比較中" : "＋比較"}</button>
             <span class="btn ghost sm">看詳情</span>
@@ -216,24 +220,28 @@
       <div class="m-brand">${p.brand}</div>
       <div class="m-tags">${paidTag}<span class="tag">${p.category}</span><span class="tag">${p.location}</span></div>
       <p style="color:var(--ink-soft);font-size:15.5px;">${p.summary}</p>
+      ${p.recruiting === false
+        ? `<div class="recruit-banner closed">🔴 ${p.recruitNote || "本梯報名已截止"}</div>`
+        : (p.recruitNote ? `<div class="recruit-banner open">🟢 ${p.recruitNote}</div>` : "")}
 
       <div class="meta-grid">
         <div class="m"><span>招募對象</span><b>${p.eligibility || "—"}</b></div>
         <div class="m"><span>任期</span><b>${p.term || "—"}</b></div>
         <div class="m"><span>地區</span><b>${p.location || "—"}</b></div>
-        <div class="m"><span>報名截止</span><b>${p.deadline || "長期招募"}</b></div>
+        <div class="m"><span>報名狀態</span><b>${p.recruiting === false ? (p.deadline ? "已截止 " + p.deadline : "見官方公告") : (p.deadline || "隨到隨審")}</b></div>
       </div>
 
       <h4>任務內容</h4>
       <ul>${(p.tasks || []).map((t) => `<li>${t}</li>`).join("")}</ul>
 
       <h4>大使福利</h4>
-      <div class="benefit-pills">${(p.benefits || []).map((b) => `<span>${b}</span>`).join("")}</div>
+      <div class="benefit-pills">${(p.benefits || []).length ? p.benefits.map((b) => `<span>${b}</span>`).join("") : '<span style="background:var(--accent-soft);color:var(--ink-soft);">詳見官方頁</span>'}</div>
 
       <div class="modal-actions">
-        <a href="${p.applyUrl}" target="_blank" rel="noopener" class="btn">前往報名 ↗</a>
+        <a href="${p.applyUrl}" target="_blank" rel="noopener" class="btn">${p.recruiting === false ? "查看官方頁 ↗" : "前往報名 ↗"}</a>
         <button class="btn ghost" id="modalFav" data-fav="${p.id}" data-id="${p.id}">${favSet.has(p.id) ? "♥ 已收藏" : "♡ 收藏"}</button>
       </div>
+      ${p.sourceUrl ? `<div class="source-line">資料來源：<a href="${p.sourceUrl}" target="_blank" rel="noopener">官方頁面 ↗</a>　·　查證日 2026-07-20</div>` : ""}
 
       <div class="reviews-block">
         <div class="reviews-head">

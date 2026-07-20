@@ -1,216 +1,223 @@
-// 校園大使計畫範例資料（Phase 1 假資料，Phase 2 改由 Supabase 提供）
-// 依真實計畫改編：JLab、foodpanda、聯合利華、永豐銀行、Notion、ETUDE、ROBINMAY、104、敦煌書局、StarRoad
-// status: pending(待審) / live(上架) / rejected(退回) / closed(已截止)
+// Campus X 計畫資料
+// ⚠️ 真實資料：以下計畫皆為真實存在、由公開官方頁面查證（附 sourceUrl）。
+// 只填查證到的欄位；查不到的留空，不臆測。資料抓取日 2026-07-20。
+// recruiting=true 現正招募 / false 本梯已截止或時間未定（每年多為固定梯次）。
+// status: pending(待審) / live(上架顯示) / rejected(退回)
 
 window.PROGRAMS = [
   {
-    id: "jlab-01",
-    brand: "JLab 校園大使",
-    emoji: "🎧",
+    id: "itri-2026",
+    brand: "工業技術研究院 ITRI",
+    emoji: "🔬",
     category: "3C 科技",
-    title: "第 1 屆 JLab 校園大使招募",
-    summary: "耳機品牌校園推廣，新品搶先體驗＋每月任務獎金。",
+    title: "工研院 第四屆校園大使",
+    summary: "把科技研發轉譯成大眾易懂內容，經營社群、串聯校園與工研院資源。",
     tasks: [
-      "在校園與個人社群分享 JLab 產品使用心得",
-      "完成每月指定推廣任務（貼文、限動、開箱）",
-      "回饋校園使用者真實反饋給品牌"
+      "研發體驗推廣：參與工研院各單位活動，將科技研發轉化為學生易懂資訊",
+      "社群經營與內容創作：經營 LINE@、Instagram，短影音製作",
+      "校園連接器：參與線上與實體活動，串聯校園與工研院資源"
     ],
-    benefits: ["每月任務獎金", "新品耳機搶先體驗", "專業形象照拍攝", "結業證明"],
-    eligibility: "全台大專院校在學學生",
-    term: "一學期（可續任）",
+    benefits: ["時薪 220 元", "遠距工作（每月至少 4 小時）", "走進科技研發場域", "個人影響力經營"],
+    eligibility: "大專院校在校生（不限科系，跨領域尤佳）；影音剪輯/社群/文案/社團幹部經驗加分",
+    term: "2026/7 – 2027/7",
     paid: true,
-    location: "全台",
-    deadline: "2026-08-31",
-    applyUrl: "https://example.com/apply/jlab",
+    location: "遠距",
+    deadline: null,
+    recruiting: true,
+    recruitNote: "隨到隨審，建議儘早投遞",
+    applyUrl: "https://forms.gle/XhFj2sX8i1zbfLee9",
+    sourceUrl: "https://indigenous-osa.ntunhs.edu.tw/p/406-1049-82569,r2156.php?Lang=zh-tw",
     status: "live"
   },
   {
-    id: "foodpanda-01",
-    brand: "foodpanda",
-    emoji: "🐼",
-    category: "餐飲外送",
-    title: "foodpanda 校園大使",
-    summary: "積極、勇於挑戰、有團隊精神者優先，萬元結業獎金。",
+    id: "advantech-2026",
+    brand: "研華科技 Advantech",
+    emoji: "💡",
+    category: "3C 科技",
+    title: "研華科技 第三屆校園大使",
+    summary: "推廣研華雇主品牌、擔任研華與校園橋樑，跨校專案含影片拍攝剪輯。",
     tasks: [
-      "校園內品牌推廣與活動擺攤",
-      "協助校園行銷專案執行",
-      "回報校園市場觀察"
+      "發揮個人社群影響力，推廣研華雇主品牌",
+      "擔任研華與校園間的橋樑，舉辦實體校園或企業活動",
+      "跨校專案規劃與執行：創意企劃、活動規劃、影片拍攝剪輯"
     ],
-    benefits: ["萬元結業獎金", "結業證書", "內部職缺優先面試", "主管推薦信", "履歷健檢"],
-    eligibility: "全台大專院校在學學生",
-    term: "一學年",
+    benefits: ["萬元以上獎學金（總獎金最多約 4 萬元）", "與實習生共同課程（企業參訪、職涯講座）", "履歷健檢、模擬面試", "大使證書＋研華獨家好禮", "高階主管餐敘、建立人脈"],
+    eligibility: "2027/4/30 前有在學學籍（含研究所），不限學校科系",
+    term: "2026/6 – 2027/4",
     paid: true,
     location: "全台",
-    deadline: "2026-09-15",
-    applyUrl: "https://example.com/apply/foodpanda",
+    deadline: "2026-04-26",
+    recruiting: false,
+    recruitNote: "本梯報名已截止（每年約 3 月開放，可追官方 IG）",
+    applyUrl: "https://forms.gle/AtyqpNehJsYkqoSs6",
+    sourceUrl: "https://mse.site.nthu.edu.tw/p/405-1298-306712,c16775.php?Lang=zh-tw",
     status: "live"
   },
   {
-    id: "unilever-01",
+    id: "wits-2026",
+    brand: "緯創軟體 WITS",
+    emoji: "💻",
+    category: "軟體工具",
+    title: "2026 WITS 校園大使計畫",
+    summary: "軟體公司校園大使，分雇主品牌、校園經營、國際人才三組別。",
+    tasks: [
+      "雇主品牌組：規劃品牌內容活動，推廣 WITS 雇主品牌形象",
+      "校園經營組：擔任 WITS 與校園社群橋樑，推廣招募與實習",
+      "國際人才組：規劃 WITS 國際人才計畫，連結國際人才社群"
+    ],
+    benefits: ["完成任務累積點數兌換獎勵金", "跨校夥伴企劃合作", "相見歡與結業典禮"],
+    eligibility: "國內公私立大專院校在學學生，不限科系與國籍",
+    term: "2026/2 – 2026/5",
+    paid: true,
+    location: "全台",
+    deadline: "2026-01-02",
+    recruiting: false,
+    recruitNote: "本梯報名已截止",
+    applyUrl: "https://forms.gle/doRcQtdP8x6Mkvi87",
+    sourceUrl: "https://oga.site.nthu.edu.tw/p/406-1524-301109,r9308.php?Lang=zh-tw",
+    status: "live"
+  },
+  {
+    id: "roots-2026",
+    brand: "Roots",
+    emoji: "🦫",
+    category: "時尚配件",
+    title: "Roots 2026 校園穿搭大使",
+    summary: "服飾品牌校園穿搭大使，每月萬元商品額度、搶先穿新系列。",
+    tasks: ["分享 Roots 穿搭內容（OOTD）", "在社群推廣品牌"],
+    benefits: ["每月 $5,000 商品額度", "搶先穿到品牌最新系列", "照片有機會在官方 IG/FB 曝光"],
+    eligibility: "穿搭控學生（詳細條件見官方）",
+    term: "",
+    paid: false,
+    location: "全台",
+    deadline: null,
+    recruiting: false,
+    recruitNote: "近期招募，報名時間以官方 FB 公告為準",
+    applyUrl: "https://www.facebook.com/RootsTaiwan",
+    sourceUrl: "https://www.facebook.com/RootsTaiwan",
+    status: "live"
+  },
+  {
+    id: "sstandc-2026",
+    brand: "SST&C",
+    emoji: "👗",
+    category: "時尚配件",
+    title: "SST&C 校園大使",
+    summary: "時尚品牌校園大使，透過社群傳遞品牌與穿搭風格。",
+    tasks: [
+      "透過社群傳遞 SST&C 品牌理念與穿搭風格",
+      "參與內部會議，與跨校夥伴進行企劃發想與執行"
+    ],
+    benefits: ["報名即贈 500 購物金", "最高享 2 萬元好禮", "跨校合作培養行銷力"],
+    eligibility: "熱愛時尚、喜愛分享的學生",
+    term: "",
+    paid: false,
+    location: "全台",
+    deadline: null,
+    recruiting: false,
+    recruitNote: "開放時間以官方頁為準",
+    applyUrl: "https://shop.sstandc.com/page/campus",
+    sourceUrl: "https://shop.sstandc.com/page/campus",
+    status: "live"
+  },
+  {
+    id: "adecco-2026",
+    brand: "藝珂 Adecco",
+    emoji: "💼",
+    category: "媒體／職涯",
+    title: "2026 第三屆藝珂校園大使計畫",
+    summary: "人力資源品牌校園大使，職場探索、雇主品牌調查、業界導師交流。",
+    tasks: ["參與雇主品牌調查專案", "社群經營", "校園活動企劃與執行"],
+    benefits: ["專屬培訓", "業界導師交流", "職場實戰經驗"],
+    eligibility: "全台大專院校學生",
+    term: "",
+    paid: false,
+    location: "全台",
+    deadline: null,
+    recruiting: false,
+    recruitNote: "報名時間以官方頁為準",
+    applyUrl: "https://www.adecco.com/zh-tw/campus-ambassador-2026",
+    sourceUrl: "https://www.adecco.com/zh-tw/campus-ambassador-2026",
+    status: "live"
+  },
+  {
+    id: "semi-2026",
+    brand: "SEMI Taiwan",
+    emoji: "🔧",
+    category: "3C 科技",
+    title: "2026 SEMI 校園大使",
+    summary: "半導體展會（SEMICON）校園大使，展前培訓＋展會導覽執行，遴選 10 名。",
+    tasks: ["參與展前培訓", "SEMICON 展會期間學生導覽與現場執行"],
+    benefits: ["培養溝通表達能力", "產業理解", "半導體業界連結"],
+    eligibility: "學生（2026 年預計遴選 10 名）",
+    term: "",
+    paid: false,
+    location: "全台",
+    deadline: null,
+    recruiting: false,
+    recruitNote: "報名時間以官方頁為準",
+    applyUrl: "https://semicontaiwan.org/zh/Campus_Ambassador_Program_2026",
+    sourceUrl: "https://semicontaiwan.org/zh/Campus_Ambassador_Program_2026",
+    status: "live"
+  },
+  {
+    id: "glo-2026",
+    brand: "GLO",
+    emoji: "🌍",
+    category: "教育",
+    title: "GLO 第六屆校園大使計畫",
+    summary: "國際領導組織校園大使，累積國際人脈與作品集、強化履歷。",
+    tasks: ["參與並推廣 GLO 活動與內容"],
+    benefits: ["一對一 Mentorship", "免費 GLO 活動門票", "行銷培訓", "官方結業證書"],
+    eligibility: "全國高中生和大學生，須年滿 18 歲，不需經驗",
+    term: "2026/2 – 2026/7",
+    paid: false,
+    location: "全台",
+    deadline: "2026-01-25",
+    recruiting: false,
+    recruitNote: "本梯報名已截止（每年招募）",
+    applyUrl: "https://www.gloleadership.org/zh/student-ambassador",
+    sourceUrl: "https://www.gloleadership.org/zh/student-ambassador",
+    status: "live"
+  },
+  {
+    id: "frusirnana-2026",
+    brand: "美膚娜娜 FRUSIRNANA",
+    emoji: "💄",
+    category: "美妝",
+    title: "2026 美膚娜娜 第四屆校園大使",
+    summary: "美妝保養品牌大使，搶先試用新品、參與品牌行銷過程。",
+    tasks: ["試用新品並回饋", "參與品牌行銷過程"],
+    benefits: ["搶先試用新品", "參與美妝品牌行銷"],
+    eligibility: "對美妝保養產業有興趣的學生",
+    term: "",
+    paid: false,
+    location: "全台",
+    deadline: null,
+    recruiting: false,
+    recruitNote: "報名時間以官方頁為準",
+    applyUrl: "https://frusirnana.co/activities",
+    sourceUrl: "https://frusirnana.co/post/1738/",
+    status: "live"
+  },
+  {
+    id: "unilever-2026",
     brand: "聯合利華 Unilever",
     emoji: "🧴",
     category: "消費品",
     title: "2026 聯合利華校園大使",
-    summary: "作為品牌與校園人才的橋樑，參與雇主品牌推廣。",
-    tasks: [
-      "校園招募、雇主品牌推廣",
-      "線上與線下校園活動規劃與執行",
-      "用鏡頭與創意讓品牌走進學生"
-    ],
-    benefits: ["實習機會", "品牌活動參與", "職涯資源", "推薦函"],
-    eligibility: "大學三年級以上（含研究所）",
-    term: "一學年",
-    paid: true,
-    location: "北部為主",
-    deadline: "2026-08-20",
-    applyUrl: "https://example.com/apply/unilever",
-    status: "live"
-  },
-  {
-    id: "sinopac-01",
-    brand: "永豐銀行",
-    emoji: "🏦",
-    category: "金融",
-    title: "永豐銀行第三屆校園大使",
-    summary: "經營人資官方 IG、策劃校園活動，擔任品牌與校方橋樑。",
-    tasks: [
-      "經營永豐人資官方 IG",
-      "策劃與執行校園活動專案",
-      "擔任品牌與校方間的溝通橋樑"
-    ],
-    benefits: ["大使專屬福利", "金融業實習機會", "職涯輔導", "結業證明"],
-    eligibility: "全台大專院校在學學生",
-    term: "一學年",
-    paid: true,
-    location: "全台",
-    deadline: "2026-08-10",
-    applyUrl: "https://example.com/apply/sinopac",
-    status: "live"
-  },
-  {
-    id: "notion-01",
-    brand: "Notion Campus Leaders",
-    emoji: "📝",
-    category: "軟體工具",
-    title: "Notion 校園領袖計畫",
-    summary: "在校內推廣 Notion，舉辦工作坊，建立校園社群。",
-    tasks: [
-      "在校內推廣 Notion 使用",
-      "舉辦 Notion 工作坊與教學",
-      "建立並經營校園使用者社群"
-    ],
-    benefits: ["Notion 官方認證", "全球社群人脈", "獨家周邊", "履歷加分"],
-    eligibility: "全台大專院校在學學生",
-    term: "一學期",
+    summary: "作為聯合利華與校園人才的橋樑，參與雇主品牌推廣與校園活動。",
+    tasks: ["校園招募、雇主品牌推廣", "線上與線下校園活動規劃與執行"],
+    benefits: [],
+    eligibility: "大專院校在學學生",
+    term: "",
     paid: false,
     location: "全台",
-    deadline: "2026-07-31",
-    applyUrl: "https://example.com/apply/notion",
-    status: "live"
-  },
-  {
-    id: "etude-01",
-    brand: "ETUDE 伊蒂之屋",
-    emoji: "💄",
-    category: "美妝",
-    title: "ETUDE 校園甜派員",
-    summary: "美妝品牌校園推廣，新品體驗＋社群分享。",
-    tasks: [
-      "校園社群美妝內容分享",
-      "新品體驗與心得回饋",
-      "協助校園活動推廣"
-    ],
-    benefits: ["新品試用", "品牌贈品", "社群曝光", "結業證明"],
-    eligibility: "全台大專院校在學學生",
-    term: "一學期",
-    paid: false,
-    location: "全台",
-    deadline: "2026-07-25",
-    applyUrl: "https://example.com/apply/etude",
-    status: "live"
-  },
-  {
-    id: "robinmay-01",
-    brand: "ROBINMAY",
-    emoji: "👜",
-    category: "時尚配件",
-    title: "ROBINMAY 校園大使",
-    summary: "包款品牌校園推廣，穿搭內容創作。",
-    tasks: [
-      "品牌包款穿搭內容創作",
-      "校園社群推廣",
-      "活動協助"
-    ],
-    benefits: ["產品贈送", "拍攝合作機會", "社群曝光"],
-    eligibility: "全台大專院校在學學生",
-    term: "一學期",
-    paid: false,
-    location: "全台",
-    deadline: "2026-08-05",
-    applyUrl: "https://example.com/apply/robinmay",
-    status: "live"
-  },
-  {
-    id: "104-01",
-    brand: "104 人力銀行",
-    emoji: "💼",
-    category: "媒體／職涯",
-    title: "104 校園大使（社群播客／品牌公關／職涯課程）",
-    summary: "全遠距實習，提早累積職場經驗。分社群、公關、課程三組。",
-    tasks: [
-      "社群播客內容製作",
-      "品牌公關專案協助",
-      "職涯課程規劃支援"
-    ],
-    benefits: ["全遠距實習", "職場經驗", "實習證明", "職涯資源"],
-    eligibility: "大學生、專科生及研究生",
-    term: "一學年",
-    paid: true,
-    location: "遠距",
-    deadline: "2026-09-30",
-    applyUrl: "https://example.com/apply/104",
-    status: "live"
-  },
-  {
-    id: "starroad-01",
-    brand: "StarRoad × Skyline",
-    emoji: "✈️",
-    category: "旅遊",
-    title: "StarRoad 第四屆校園大使",
-    summary: "參與品牌營運與社群經營，表現優異可獲實習與推薦函。",
-    tasks: [
-      "品牌營運參與",
-      "社群經營",
-      "校園推廣活動"
-    ],
-    benefits: ["品牌系統實習機會", "主品牌 Skyline 機會補助", "年度推薦函"],
-    eligibility: "全台大專院校在學學生",
-    term: "一學年",
-    paid: false,
-    location: "全台",
-    deadline: "2026-08-18",
-    applyUrl: "https://example.com/apply/starroad",
-    status: "live"
-  },
-  {
-    id: "dunhuang-01",
-    brand: "敦煌書局",
-    emoji: "📚",
-    category: "教育",
-    title: "2026 敦煌校園大使招募計畫",
-    summary: "全台大專院校大一到大三學生皆可報名，任期學年制。",
-    tasks: [
-      "校園語言學習資源推廣",
-      "社群內容經營",
-      "校園活動協助"
-    ],
-    benefits: ["產品資源", "社群曝光", "結業證明"],
-    eligibility: "全台大專院校大一到大三學生",
-    term: "一學年",
-    paid: false,
-    location: "全台",
-    deadline: "2026-07-22",
-    applyUrl: "https://example.com/apply/dunhuang",
+    deadline: "2026-07-13",
+    recruiting: false,
+    recruitNote: "本梯報名已截止（每年招募，可追官方 IG）",
+    applyUrl: "https://www.instagram.com/p/DZZu6UsmnEh/",
+    sourceUrl: "https://www.instagram.com/p/DZZu6UsmnEh/",
     status: "live"
   },
   // 一筆待審範例（給後台 Phase 3 用）
@@ -228,6 +235,7 @@ window.PROGRAMS = [
     paid: true,
     location: "全台",
     deadline: "2026-10-01",
+    recruiting: true,
     applyUrl: "https://example.com/apply/demo",
     status: "pending"
   }
@@ -239,7 +247,7 @@ window.CATEGORIES = [
   "餐飲外送", "金融", "旅遊", "教育", "媒體／職涯"
 ];
 
-// ===== 大使人脈網：名片假資料 =====
+// ===== 大使人脈網：名片假資料（示範用，非真實個人）=====
 // status: pending / live / rejected；badges 可含 'verified'（認證）'founding'（創始）
 window.PROFILES = [
   {
@@ -248,57 +256,57 @@ window.PROFILES = [
     skills: ["社群經營", "短影音", "活動企劃"],
     igUrl: "https://instagram.com/", contactOpen: true,
     experiences: [
-      { programName: "JLab 校園大使", cohort: "第 1 屆", year: "2025" },
-      { programName: "foodpanda 校園大使", cohort: "第 3 屆", year: "2024" }
+      { programName: "工研院校園大使", cohort: "第 4 屆", year: "2026" },
+      { programName: "SST&C 校園大使", cohort: "第 1 屆", year: "2025" }
     ],
     badges: ["verified", "founding"], status: "live"
   },
   {
     id: "p-kevin", nickname: "Kevin", avatar: "🐻", school: "國立台灣大學", grade: "大四",
-    headline: "金融業實習中，歡迎問我銀行系校園大使的面試",
+    headline: "科技業實習中，歡迎問我研華、緯創的大使面試",
     skills: ["簡報", "數據分析", "公關"],
     igUrl: "https://instagram.com/", contactOpen: true,
-    experiences: [{ programName: "永豐銀行校園大使", cohort: "第 3 屆", year: "2025" }],
+    experiences: [{ programName: "研華科技校園大使", cohort: "第 3 屆", year: "2026" }],
     badges: ["verified"], status: "live"
   },
   {
     id: "p-mia", nickname: "Mia 陳", avatar: "🐰", school: "國立成功大學", grade: "大二",
-    headline: "美妝控，ETUDE 甜派員，喜歡辦南部的大使聚會",
+    headline: "美妝控，喜歡辦南部的大使聚會",
     skills: ["美妝內容", "攝影", "文案"],
     igUrl: "https://instagram.com/", contactOpen: true,
-    experiences: [{ programName: "ETUDE 校園甜派員", cohort: "第 2 屆", year: "2025" }],
+    experiences: [{ programName: "美膚娜娜校園大使", cohort: "第 4 屆", year: "2026" }],
     badges: ["verified", "founding"], status: "live"
   },
   {
     id: "p-leo", nickname: "Leo", avatar: "🐺", school: "國立清華大學", grade: "碩一",
-    headline: "工具控，Notion 校園領袖，可以教你把履歷做得很好看",
-    skills: ["Notion", "生產力工具", "工作坊帶領"],
+    headline: "半導體人，SEMI 校園大使，可以聊產業與展會",
+    skills: ["產業研究", "簡報", "工作坊帶領"],
     igUrl: "https://instagram.com/", contactOpen: false,
-    experiences: [{ programName: "Notion 校園領袖", cohort: "第 1 屆", year: "2025" }],
+    experiences: [{ programName: "SEMI 校園大使", cohort: "2026", year: "2026" }],
     badges: ["verified"], status: "live"
   },
   {
     id: "p-sana", nickname: "Sana", avatar: "🐱", school: "輔仁大學", grade: "大三",
-    headline: "時尚配件品牌大使，穿搭與拍攝合作找我聊",
+    headline: "時尚穿搭大使，穿搭與拍攝合作找我聊",
     skills: ["穿搭", "拍攝", "選品"],
     igUrl: "https://instagram.com/", contactOpen: true,
-    experiences: [{ programName: "ROBINMAY 校園大使", cohort: "第 2 屆", year: "2025" }],
+    experiences: [{ programName: "Roots 校園穿搭大使", cohort: "2026", year: "2026" }],
     badges: ["founding"], status: "live"
   },
   {
     id: "p-jay", nickname: "Jay 林", avatar: "🦁", school: "國立政治大學", grade: "大四",
-    headline: "104 遠距實習組，職涯內容製作，樂意分享求職心得",
+    headline: "職涯內容製作，樂意分享求職與雇主品牌心得",
     skills: ["Podcast", "職涯諮詢", "剪輯"],
     igUrl: "https://instagram.com/", contactOpen: true,
-    experiences: [{ programName: "104 校園大使", cohort: "社群播客組", year: "2025" }],
+    experiences: [{ programName: "藝珂 Adecco 校園大使", cohort: "第 3 屆", year: "2026" }],
     badges: ["verified"], status: "live"
   },
   {
     id: "p-wei", nickname: "Wei", avatar: "🐨", school: "國立台灣大學", grade: "大二",
-    headline: "旅遊魂，StarRoad 大使，想揪跨校的大使一起出遊",
-    skills: ["旅遊企劃", "社群", "外語"],
+    headline: "國際交流魂，GLO 大使，想揪跨校的大使一起活動",
+    skills: ["國際交流", "社群", "外語"],
     igUrl: "https://instagram.com/", contactOpen: true,
-    experiences: [{ programName: "StarRoad 校園大使", cohort: "第 4 屆", year: "2025" }],
+    experiences: [{ programName: "GLO 校園大使", cohort: "第 6 屆", year: "2026" }],
     badges: [], status: "live"
   },
   {
@@ -310,8 +318,7 @@ window.PROFILES = [
   }
 ];
 
-// ===== 活動假資料 =====
-// type 見 EVENT_TYPES；status: pending / live / rejected / done
+// ===== 活動假資料（示範用）=====
 window.EVENTS = [
   {
     id: "e-01", hostId: "p-anna", title: "校園大使面試攻略分享會（線上）",
@@ -328,16 +335,16 @@ window.EVENTS = [
     capacity: 8, signupIds: ["p-sana"], status: "live"
   },
   {
-    id: "e-03", hostId: "p-anna", title: "JLab 第 1 屆同梯聚：一年後我們都在幹嘛",
+    id: "e-03", hostId: "p-anna", title: "科技業大使同梯聚：一年後我們都在幹嘛",
     type: "同計畫同梯聚",
-    description: "JLab 第一屆的夥伴們，一年沒見了！來更新一下近況，順便交換各自的實習/工作情報。",
+    description: "科技業計畫的夥伴們，來更新一下近況，順便交換各自的實習/工作情報。",
     eventAt: "2026-08-18 18:30", locationType: "offline", location: "台北・信義區（餐廳待訂）",
     capacity: 15, signupIds: ["p-kevin"], status: "live"
   },
   {
     id: "e-04", hostId: "p-jay", title: "校際交流・履歷健檢工作坊",
     type: "校際交流",
-    description: "帶大家用 Notion 做出好看的履歷，現場互相健檢。跨校參加，認識不同學校的大使。",
+    description: "帶大家做出好看的履歷，現場互相健檢。跨校參加，認識不同學校的大使。",
     eventAt: "2026-08-25 14:00", locationType: "offline", location: "台北・政大公企中心",
     capacity: 20, signupIds: ["p-leo", "p-wei", "p-mia"], status: "live"
   },
@@ -352,5 +359,5 @@ window.EVENTS = [
 
 // 篩選/表單用清單
 window.SCHOOLS = ["全部", "國立政治大學", "國立台灣大學", "國立成功大學", "國立清華大學", "輔仁大學"];
-window.SKILL_TAGS = ["社群經營", "短影音", "活動企劃", "簡報", "數據分析", "公關", "美妝內容", "攝影", "文案", "Notion", "生產力工具", "穿搭", "拍攝", "選品", "Podcast", "職涯諮詢", "剪輯", "旅遊企劃", "外語"];
+window.SKILL_TAGS = ["社群經營", "短影音", "活動企劃", "簡報", "數據分析", "公關", "美妝內容", "攝影", "文案", "產業研究", "工作坊帶領", "穿搭", "拍攝", "選品", "Podcast", "職涯諮詢", "剪輯", "國際交流", "外語"];
 window.EVENT_TYPES = ["面試攻略分享會", "同計畫同梯聚", "校際交流", "廠商見面會", "純吃飯哈拉"];
