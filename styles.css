@@ -90,6 +90,19 @@ header.nav {
 .chip:hover { border-color: var(--ink); color: var(--ink); }
 .chip.active { background: var(--ink); color: #fff; border-color: var(--ink); }
 .filter-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.select-box { position: relative; }
+.select-box::after {
+  content: "▾"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+  pointer-events: none; color: var(--ink-soft); font-size: 13px;
+}
+.select-box select {
+  appearance: none; -webkit-appearance: none;
+  padding: 9px 40px 9px 16px; border: 1px solid var(--line-strong); border-radius: 999px;
+  font-size: 14.5px; font-family: inherit; background: #fff; color: var(--ink);
+  cursor: pointer; outline: none; transition: .15s;
+}
+.select-box select:hover { border-color: var(--ink); }
+.select-box select:focus { border-color: var(--ink); }
 .toggle {
   display: inline-flex; align-items: center; gap: 7px; font-size: 14px; color: var(--ink-soft);
   padding: 7px 14px; border: 1px solid var(--line-strong); border-radius: 999px; cursor: pointer; user-select: none;

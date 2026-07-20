@@ -2,7 +2,7 @@
 (function () {
   const grid = document.getElementById("grid");
   const empty = document.getElementById("empty");
-  const catChips = document.getElementById("catChips");
+  const catSelect = document.getElementById("catSelect");
   const paidOnly = document.getElementById("paidOnly");
   const searchInput = document.getElementById("searchInput");
   const resultCount = document.getElementById("resultCount");
@@ -11,19 +11,17 @@
   let favSet = new Set(); // 目前使用者的收藏（快取）
   let activeCat = "全部";
 
-  // ---------- 分類 chips ----------
+  // ---------- 分類下拉選單 ----------
   window.CATEGORIES.forEach((cat) => {
-    const c = document.createElement("div");
-    c.className = "chip" + (cat === "全部" ? " active" : "");
-    c.textContent = cat;
-    c.onclick = () => {
-      activeCat = cat;
-      document.querySelectorAll(".chip").forEach((x) => x.classList.remove("active"));
-      c.classList.add("active");
-      render();
-    };
-    catChips.appendChild(c);
+    const o = document.createElement("option");
+    o.value = cat;
+    o.textContent = cat === "全部" ? "全部產業" : cat;
+    catSelect.appendChild(o);
   });
+  catSelect.onchange = () => {
+    activeCat = catSelect.value;
+    render();
+  };
 
   // ---------- 截止日 ----------
   function daysLeft(dateStr) {
