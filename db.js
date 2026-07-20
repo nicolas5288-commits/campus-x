@@ -282,17 +282,21 @@ window.DB = (function () {
     else s.profileOverrides[id] = { status };
     saveStore(s);
   }
+  // 大使名片 DB row(snake) → 前端(camel)：igUrl/contactOpen
+  function normalizeProfile(r) {
+    return { ...r, igUrl: r.ig_url, contactOpen: r.contact_open };
+  }
   async function getProfiles() {
     if (!sb) return localAllProfiles().filter((p) => p.status === "live");
     const { data, error } = await sb.from("profiles").select("*").eq("status", "live").order("created_at", { ascending: false });
     if (error) throw error;
-    return data || [];
+    return (data || []).map(normalizeProfile);
   }
   async function getPendingProfiles() {
     if (!sb) return localAllProfiles().filter((p) => p.status === "pending");
     const { data, error } = await sb.from("profiles").select("*").eq("status", "pending");
     if (error) throw error;
-    return data || [];
+    return (data || []).map(normalizeProfile);
   }
   // 目前使用者自己的名片（本機模式用 localStorage 的第一張自建）
   async function getMyProfile() {
@@ -303,7 +307,7 @@ window.DB = (function () {
     if (!currentUser) return null;
     const { data, error } = await sb.from("profiles").select("*").eq("user_id", currentUser.id).maybeSingle();
     if (error) throw error;
-    return data || null;
+    return data ? normalizeProfile(data) : null;
   }
   async function saveProfile(form) {
     // 建立/更新名片（送出後為 pending 待審）
@@ -317,7 +321,15 @@ window.DB = (function () {
       return { ok: true };
     }
     if (!currentUser) throw new Error("請先登入");
-    const row = { ...form, user_id: currentUser.id, status: "pending" };
+    // 前端 camelCase → 資料表 snake_case（欄位名要對得上）
+    const row = {
+      user_id: currentUser.id,
+      nickname: form.nickname, avatar: form.avatar, avatar_url: form.avatar_url || null,
+      school: form.school, grade: form.grade, headline: form.headline,
+      skills: form.skills || [], experiences: form.experiences || [],
+      ig_url: form.igUrl || null, contact_open: !!form.contactOpen,
+      status: "pending",
+    };
     const { error } = await sb.from("profiles").upsert(row, { onConflict: "user_id" });
     if (error) throw error;
     return { ok: true };
@@ -457,7 +469,14 @@ window.DB = (function () {
       return { ok: true };
     }
     if (!currentUser) throw new Error("請先登入");
-    const row = { ...form, host_user_id: currentUser.id, status: "pending" };
+    // 前端 camelCase → 資料表 snake_case
+    const row = {
+      host_user_id: currentUser.id,
+      title: form.title, type: form.type, description: form.description,
+      event_at: form.eventAt || null, location_type: form.locationType || "offline",
+      location: form.location, capacity: form.capacity || null,
+      status: "pending",
+    };
     const { error } = await sb.from("events").insert(row);
     if (error) throw error;
     return { ok: true };
