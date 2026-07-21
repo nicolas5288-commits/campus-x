@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · Campus X</title>
-  <link rel="stylesheet" href="styles.css?v=23" />
+  <link rel="stylesheet" href="styles.css?v=24" />
 </head>
 <body>
   <header class="nav">
@@ -57,9 +57,9 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=23"></script>
-  <script src="data.js?v=23"></script>
-  <script src="db.js?v=23"></script>
+  <script src="config.js?v=24"></script>
+  <script src="data.js?v=24"></script>
+  <script src="db.js?v=24"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -234,25 +234,15 @@
       try { s = await DB.getAdminStats() || {}; } catch (e) { queue.innerHTML = `<div class="admin-empty">數據載入失敗：${esc(e.message)}</div>`; return; }
       try { wishes = await DB.getBrandWishes() || []; } catch {}
       const tile = (label, val, hint) => `<div class="stat-tile"><b>${val ?? "—"}</b><span>${label}</span>${hint ? `<small>${hint}</small>` : ""}</div>`;
-      const wishTotal = (s.brand_wishes ?? 0) + (s.feature_wishes ?? 0);
       const wishRows = wishes.length
         ? wishes.slice(0, 15).map((w, i) => `<tr><td>${i + 1}</td><td>${esc(w.brand_name)}</td><td><b>${w.votes}</b> 票</td></tr>`).join("")
         : `<tr><td colspan="3" style="color:var(--ink-soft);text-align:center;padding:20px;">還沒有人許願</td></tr>`;
       queue.innerHTML = `
-        <div class="stat-grid">
+        <div class="stat-grid four">
           ${tile("註冊人數", s.users)}
           ${tile("計畫上架中", s.programs_live)}
           ${tile("收藏總數", s.favorites)}
           ${tile("大使名片", s.profiles_live)}
-          ${tile("許願數", wishTotal, "品牌＋功能")}
-        </div>
-        <div class="stat-grid" style="margin-top:14px;">
-          ${tile("待審投稿", s.pending_programs)}
-          ${tile("待審心得", s.pending_reviews)}
-          ${tile("待審名片", s.pending_profiles)}
-          ${tile("待處理檢舉", s.pending_reports)}
-          ${tile("待審活動", s.pending_events)}
-          ${tile("計畫回報", s.pending_notes)}
         </div>
         <h3 style="margin:28px 0 12px;">🪄 廠商許願排行（開發名單）</h3>
         <div class="queue-card" style="padding:0;overflow:hidden;">
@@ -520,6 +510,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=23"></script>
+  <script src="nav.js?v=24"></script>
 </body>
 </html>

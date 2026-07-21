@@ -331,6 +331,7 @@ header.nav {
 .btn.reject:hover { background: #fdeaea; opacity: 1; }
 .admin-gate { text-align: center; padding: 70px 20px; }
 .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.stat-grid.four { grid-template-columns: repeat(2, 1fr); max-width: 560px; }
 .stat-tile { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; box-shadow: var(--shadow); }
 .stat-tile b { font-size: 30px; font-weight: 800; letter-spacing: -.02em; display: block; }
 .stat-tile span { font-size: 13.5px; color: var(--ink-soft); }
