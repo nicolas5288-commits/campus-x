@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    font-family: "PingFang TC", "Noto Sans TC", -apple-system, sans-serif;
+    background: #fffdf7;
+    position: relative;
+    color: #1a1a1a;
+  }
+  /* 蠟筆色點綴背景 */
+  .blob { position: absolute; border-radius: 50%; filter: blur(2px); opacity: .55; }
+  .b1 { width: 220px; height: 220px; background: #ffe28a; top: -70px; left: -60px; }
+  .b2 { width: 180px; height: 180px; background: #a9d9ea; bottom: -70px; left: 380px; opacity: .4; }
+  .b3 { width: 160px; height: 160px; background: #fac0d2; top: 40px; right: 60px; opacity: .38; }
+  .frame { position: absolute; inset: 26px; border: 4px solid #1a1a1a;
+    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; }
+  .inner { position: absolute; inset: 26px; display: flex; align-items: center; padding: 0 64px; }
+  .left { width: 640px; }
+  .logo { display: flex; align-items: center; gap: 12px; font-size: 30px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 30px; }
+  .logo .dot { width: 16px; height: 16px; border-radius: 50%; background: #1a1a1a; }
+  .eyebrow {
+    display: inline-block; font-size: 20px; font-weight: 700; color: #7a5a00;
+    background: #fff6d9; padding: 7px 18px; border: 2px solid #ffe28a;
+    border-radius: 999px; margin-bottom: 22px;
+  }
+  h1 { font-size: 62px; line-height: 1.14; font-weight: 800; letter-spacing: -.03em; }
+  h1 .hl { position: relative; white-space: nowrap; }
+  h1 .hl::after { content: ""; position: absolute; left: -4px; right: -4px; bottom: 4px; height: 18px;
+    background: #ffe28a; z-index: -1; border-radius: 255px 12px 225px 12px / 12px 225px 12px 255px; transform: rotate(-.6deg); }
+  .perks { display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap; }
+  .chip { font-size: 20px; font-weight: 700; padding: 9px 18px; border: 2.5px solid #1a1a1a; background: #fff;
+    box-shadow: 3px 4px 0 rgba(26,26,26,.9); }
+  .chip.c1 { background: #fff6d9; } .chip.c2 { background: #e2f3fa; } .chip.c3 { background: #ffe8dc; } .chip.c4 { background: #fce4ec; }
+  .art { position: absolute; right: 30px; bottom: 0; width: 470px; }
+  .art svg { width: 100%; height: auto; }
+</style>
+</head>
+<body>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <div class="frame"></div>
+  <div class="inner">
+    <div class="left">
+      <div class="logo"><span class="dot"></span>Campus X</div>
+      <span class="eyebrow">🎓 全台校園大使機會，一站看遍</span>
+      <h1>找到最適合你的<br /><span class="hl">校園大使</span>計畫</h1>
+      <div class="perks">
+        <span class="chip c1">任務獎金</span>
+        <span class="chip c2">產品體驗</span>
+        <span class="chip c3">實習門票</span>
+        <span class="chip c4">履歷加分</span>
+      </div>
+    </div>
+  </div>
+  <div class="art">
+    <svg viewBox="0 0 440 380" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="220" cy="342" rx="150" ry="16" fill="#eee"/>
+      <path d="M40 250 L40 165 L120 130 L200 165 L200 250 Z" fill="#e2f3fa" stroke="#1a1a1a" stroke-width="3"/>
+      <path d="M120 130 L120 100 M108 108 L132 98" stroke="#1a1a1a" stroke-width="3"/>
+      <path d="M120 100 L150 108 L120 116 Z" fill="#fac0d2" stroke="#1a1a1a" stroke-width="2.5"/>
+      <rect x="66" y="192" width="26" height="30" fill="#fff" stroke="#1a1a1a" stroke-width="2.5"/>
+      <rect x="148" y="192" width="26" height="30" fill="#fff" stroke="#1a1a1a" stroke-width="2.5"/>
+      <path d="M104 250 L104 208 L136 208 L136 250" fill="#ffe28a" stroke="#1a1a1a" stroke-width="2.5"/>
+      <path d="M300 96 L356 66 M312 120 L372 108 M306 150 L362 168" stroke="#e6a700" stroke-width="4"/>
+      <path d="M232 118 L286 92 L292 168 L238 148 Z" fill="#ffcaa8" stroke="#1a1a1a" stroke-width="3.5"/>
+      <rect x="214" y="122" width="24" height="26" rx="4" fill="#a9d9ea" stroke="#1a1a1a" stroke-width="3.5"/>
+      <circle cx="150" cy="212" r="34" fill="#ffe28a" stroke="#1a1a1a" stroke-width="3.5"/>
+      <path d="M120 205 q0 -34 30 -34 q30 0 30 34" fill="#5a4a2a" stroke="#1a1a1a" stroke-width="3"/>
+      <circle cx="140" cy="212" r="3.5" fill="#1a1a1a"/>
+      <circle cx="162" cy="212" r="3.5" fill="#1a1a1a"/>
+      <path d="M140 226 q10 9 20 0" stroke="#1a1a1a" stroke-width="3"/>
+      <path d="M150 246 L150 316 M150 268 L214 138 M150 272 L108 320 M150 316 L120 356 M150 316 L182 356" stroke="#1a1a1a" stroke-width="4"/>
+      <path d="M118 258 L182 258 L176 316 L124 316 Z" fill="#c2e3b3" stroke="#1a1a1a" stroke-width="3.5"/>
+      <path d="M330 210 l6 14 l15 2 l-11 10 l3 15 l-13 -8 l-13 8 l3 -15 l-11 -10 l15 -2 Z" fill="#fac0d2" stroke="#1a1a1a" stroke-width="2.5"/>
+    </svg>
+  </div>
+</body>
+</html>
