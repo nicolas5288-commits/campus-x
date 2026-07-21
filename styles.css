@@ -65,6 +65,17 @@ header.nav {
 .nav-dd.open .nav-dd-menu { display: flex; }
 .nav-dd-menu a { padding: 9px 12px; border-radius: 8px; font-size: 14px; color: var(--ink); white-space: nowrap; }
 .nav-dd-menu a:hover { background: var(--accent-soft); }
+/* 漢堡按鈕（桌機隱藏，手機顯示）*/
+.nav-toggle {
+  display: none; width: 40px; height: 40px; align-items: center; justify-content: center;
+  background: none; border: 1px solid var(--line-strong); border-radius: 10px; cursor: pointer;
+  color: var(--ink); padding: 0; transition: .15s;
+}
+.nav-toggle:hover { background: var(--accent-soft); }
+.nav-toggle svg { width: 20px; height: 20px; }
+.nav-toggle .ico-close { display: none; }
+.nav-toggle.open .ico-open { display: none; }
+.nav-toggle.open .ico-close { display: block; }
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 9px 18px; border-radius: 999px; font-size: 14.5px; font-weight: 600;
@@ -476,9 +487,28 @@ footer { border-top: 1px solid var(--line); padding: 38px 0; margin-top: 40px; }
 @media (max-width: 620px) {
   .grid { grid-template-columns: 1fr; }
   .hero { padding: 52px 0 32px; } .hero h1 { font-size: 33px; }
-  .hero-stats { gap: 26px; } .nav-links a:not(.btn) { display: none; }
+  .hero-stats { gap: 26px; }
   .sub-form { flex-direction: column; } .subscribe { padding: 40px 24px; }
   .meta-grid { grid-template-columns: 1fr; }
+
+  /* 手機導覽：漢堡選單面板 */
+  .nav-toggle { display: inline-flex; }
+  .nav-links {
+    position: absolute; top: 100%; left: 0; right: 0;
+    flex-direction: column; align-items: stretch; gap: 2px;
+    background: #fff; border-bottom: 1px solid var(--line);
+    box-shadow: 0 14px 26px rgba(0,0,0,.09);
+    padding: 10px 20px 18px; display: none;
+  }
+  .nav-links.open { display: flex; }
+  .nav-links a { padding: 13px 14px; border-radius: 10px; font-size: 15.5px; width: 100%; color: var(--ink); }
+  .nav-links a:hover { background: var(--accent-soft); }
+  .nav-links a.btn { justify-content: center; margin-top: 8px; }
+  /* 「我是廠商」下拉在面板內攤平 */
+  .nav-dd { width: 100%; }
+  .nav-dd-trigger { width: 100%; justify-content: space-between; padding: 13px 14px; font-size: 15.5px; border-radius: 10px; }
+  .nav-dd-menu { position: static; box-shadow: none; border: none; min-width: 0; padding: 2px 0 2px 12px; }
+  .nav-dd-menu a { font-size: 14.5px; }
 }
 
 /* ============================================================
