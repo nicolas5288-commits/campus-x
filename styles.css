@@ -191,11 +191,24 @@ header.nav {
 .google-btn:hover { background: var(--bg-soft); opacity: 1; }
 .auth-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0 4px; color: var(--ink-soft); font-size: 12.5px; }
 .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-#authForm { display: flex; flex-direction: column; gap: 14px; margin-top: 22px; }
-.field { display: flex; flex-direction: column; gap: 6px; }
-.field span { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
-.field input { padding: 11px 14px; border: 1px solid var(--line-strong); border-radius: 10px; font-size: 15px; font-family: inherit; outline: none; transition: .15s; }
-.field input:focus { border-color: var(--ink); }
+/* ===== 全站表單欄位（modal 與表單頁共用；單一來源）===== */
+/* 兩種結構都支援：<div class="field"><label>…</label></div> 與 <label class="field">…</label> */
+#authForm { margin-top: 22px; }
+.field { display: flex; flex-direction: column; margin-bottom: 16px; }
+.field > label { display: flex; flex-direction: column; }
+.field label > span, .field > span { display: block; font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+.field .hint { font-weight: 400; color: var(--ink-soft); font-size: 12.5px; }
+.field input[type="text"], .field input[type="email"], .field input[type="url"],
+.field input[type="password"], .field input[type="date"], .field input[type="datetime-local"],
+.field input[type="number"], .field select, .field textarea {
+  width: 100%; padding: 11px 14px; border: 1px solid var(--line-strong); border-radius: 10px;
+  font-size: 15px; font-family: inherit; outline: none; transition: .15s; background: #fff; color: var(--ink);
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--ink); }
+.field textarea { resize: vertical; min-height: 84px; line-height: 1.5; }
+.field select { appearance: none; -webkit-appearance: none; cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path fill='%23888' d='M6 8L2 4h8z'/></svg>");
+  background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
 .auth-err { color: #d64545; font-size: 13.5px; min-height: 0; }
 .auth-err:not(:empty) { min-height: 18px; }
 .auth-note { display: block; margin-top: 16px; color: var(--ink-soft); font-size: 12.5px; text-align: center; }
@@ -230,17 +243,9 @@ header.nav {
 .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-soft); font-size: 14px; margin-bottom: 22px; }
 .back-link:hover { color: var(--ink); }
 .form-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow); }
-.form-card .field { margin-bottom: 18px; }
-.form-card label > span, .form-card .field > span { display: block; font-size: 13.5px; font-weight: 600; margin-bottom: 6px; }
-.form-card .field .hint { font-weight: 400; color: var(--ink-soft); font-size: 12.5px; }
-.form-card input[type="text"], .form-card input[type="email"], .form-card input[type="url"],
-.form-card input[type="date"], .form-card select, .form-card textarea {
-  width: 100%; padding: 11px 14px; border: 1px solid var(--line-strong); border-radius: 10px;
-  font-size: 15px; font-family: inherit; outline: none; transition: .15s; background: #fff;
-}
-.form-card input:focus, .form-card select:focus, .form-card textarea:focus { border-color: var(--ink); }
-.form-card textarea { resize: vertical; min-height: 84px; line-height: 1.5; }
+.form-card .field:last-child { margin-bottom: 0; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 560px) { .form-row { grid-template-columns: 1fr; } }
 .check-line { display: flex; align-items: center; gap: 9px; font-size: 15px; cursor: pointer; }
 .check-line input { width: 18px; height: 18px; accent-color: var(--ink); }
 .emoji-picker { display: flex; gap: 6px; flex-wrap: wrap; }

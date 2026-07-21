@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>大使活動 · Campus X</title>
-  <link rel="stylesheet" href="styles.css?v=21a" />
+  <link rel="stylesheet" href="styles.css?v=21b" />
 </head>
 <body>
   <header class="nav">
@@ -57,7 +57,7 @@
         </div>
         <div class="field"><label><span>活動說明 <span class="hint">必填</span></span><textarea name="description" required placeholder="想找誰來？做什麼？"></textarea></label></div>
         <div class="form-row">
-          <div class="field"><label><span>時間</span><input type="text" name="eventAt" placeholder="例：2026-08-20 19:00" /></label></div>
+          <div class="field"><label><span>時間</span><input type="datetime-local" name="eventAt" /></label></div>
           <div class="field"><label><span>形式</span>
             <select name="locationType"><option value="offline">線下實體</option><option value="online">線上</option></select></label></div>
         </div>
@@ -72,10 +72,10 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=21a"></script>
-  <script src="data.js?v=21a"></script>
-  <script src="db.js?v=21a"></script>
-  <script src="authui.js?v=21a"></script>
-  <script src="events.js?v=21a"></script>
+  <script src="config.js?v=21b"></script>
+  <script src="data.js?v=21b"></script>
+  <script src="db.js?v=21b"></script>
+  <script src="authui.js?v=21b"></script>
+  <script src="events.js?v=21b"></script>
 </body>
 </html>
