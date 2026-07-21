@@ -717,3 +717,39 @@ footer { border-top: 1px solid var(--line); padding: 38px 0; margin-top: 40px; }
   .about-sec-head h2, .home-about-inner h2 { font-size: 24px; }
   .about-cta { padding: 40px 20px; } .about-cta h2 { font-size: 24px; }
 }
+
+/* ===== 許願池 2.0 ===== */
+.wish-cta { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; }
+.wish-cta span { color: var(--ink-soft); font-size: 14.5px; }
+.wish-card { display: flex; align-items: stretch; gap: 14px; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 16px 18px; margin-bottom: 12px; transition: box-shadow .18s, border-color .18s; }
+.wish-card:hover { box-shadow: var(--shadow); }
+.wc-main { flex: 1; min-width: 0; }
+.wc-brand { font-size: 17px; font-weight: 700; color: var(--ink); }
+.wc-reason { font-size: 14px; color: var(--ink-soft); margin-top: 5px; line-height: 1.55; word-break: break-word; }
+.wc-by { font-size: 12.5px; color: #9a9a9a; margin-top: 8px; }
+.wc-vote { flex: 0 0 auto; align-self: center; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-width: 58px; padding: 8px 6px; border: 1px solid var(--line-strong); border-radius: 12px; background: #fff;
+  cursor: pointer; font-family: inherit; color: var(--ink-soft); transition: .15s; }
+.wc-vote:hover { border-color: var(--ink); color: var(--ink); }
+.wc-vote.voted { background: var(--ink); border-color: var(--ink); color: #fff; }
+.wc-arrow { font-size: 13px; line-height: 1; }
+.wc-count { font-size: 16px; font-weight: 700; margin-top: 2px; }
+.wc-flash { animation: wcFlash 1.6s ease; }
+@keyframes wcFlash { 0%,100% { box-shadow: 0 0 0 0 rgba(26,26,26,0); } 25% { box-shadow: 0 0 0 3px rgba(26,26,26,.18); border-color: var(--ink); } }
+
+/* 檢舉名片文字鈕（低調） */
+.report-link { background: none; border: none; cursor: pointer; font-family: inherit; font-size: 13px;
+  color: #a0a0a0; padding: 4px 8px; border-radius: 8px; transition: .15s; }
+.report-link:hover { color: #d64545; background: #fdf0f0; }
+
+/* 後台：名片 tab 子切換 */
+.sub-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.sub-tab { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); background: #fff; cursor: pointer;
+  font-size: 13.5px; font-weight: 600; color: var(--ink-soft); font-family: inherit; }
+.sub-tab.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.sub-tab .badge { display: inline-block; margin-left: 6px; background: #d64545; color: #fff; font-size: 11px; padding: 1px 7px; border-radius: 999px; }
+.mini-del { background: none; border: none; cursor: pointer; font-family: inherit; font-size: 14px; padding: 4px 8px;
+  border-radius: 8px; color: var(--ink-soft); transition: .15s; }
+.mini-del:hover { color: #d64545; background: #fdf0f0; }

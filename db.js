@@ -28,6 +28,7 @@ window.DB = (function () {
       submitted: d.submitted || [], overrides: d.overrides || {}, reviews: d.reviews || [],
       profiles: d.profiles || [], profileOverrides: d.profileOverrides || {},
       events: d.events || [], eventOverrides: d.eventOverrides || {}, eventSignups: d.eventSignups || {},
+      reports: d.reports || [], brandWishes: d.brandWishes || [], wishVotes: d.wishVotes || [], featureWishes: d.featureWishes || [],
     };
   }
   function saveStore(s) {
@@ -653,6 +654,8 @@ window.DB = (function () {
       return {
         users: 0, favorites: localFavs.get().length,
         subscriptions: 0, wishes: (s.wishes || []).length,
+        brand_wishes: (s.brandWishes || []).length,
+        feature_wishes: (s.featureWishes || []).length,
         profiles_live: localAllProfiles().filter((p) => p.status === "live").length,
         programs_live: localAllPrograms().filter((p) => p.status === "live").length,
         pending_programs: localAllPrograms().filter((p) => p.status === "pending").length,
@@ -660,11 +663,178 @@ window.DB = (function () {
         pending_profiles: localAllProfiles().filter((p) => p.status === "pending").length,
         pending_events: localAllEvents().filter((e) => e.status === "pending").length,
         pending_notes: (s.notes || []).filter((n) => n.status === "pending").length,
+        pending_reports: (s.reports || []).filter((r) => r.status === "pending").length,
       };
     }
     const { data, error } = await sb.rpc("admin_stats");
     if (error) throw error;
     return data || {};
+  }
+
+  // ========== 名片治理：檢舉 profile_reports ==========
+  async function reportProfile(profileId, reason, content) {
+    if (!sb) {
+      const s = loadStore();
+      s.reports = s.reports || [];
+      s.reports.push({ id: "rp-" + Date.now(), profile_id: profileId, reporter_id: "local", reason, content: content || null, status: "pending", created_at: new Date(0).toISOString() });
+      saveStore(s);
+      return { ok: true };
+    }
+    if (!currentUser) throw new Error("請先登入再檢舉");
+    const { error } = await sb.from("profile_reports").insert({ profile_id: profileId, reporter_id: currentUser.id, reason, content: content || null, status: "pending" });
+    if (error) throw error;
+    return { ok: true };
+  }
+  // 後台：待處理檢舉（join 被檢舉名片摘要）
+  async function getPendingReports() {
+    if (!sb) {
+      const s = loadStore();
+      const profs = localAllProfiles();
+      return (s.reports || []).filter((r) => r.status === "pending").map((r) => {
+        const p = profs.find((x) => x.id === r.profile_id);
+        return { ...r, profiles: p ? { id: p.id, nickname: p.nickname, school: p.school, headline: p.headline, status: p.status } : null };
+      });
+    }
+    const { data, error } = await sb.from("profile_reports")
+      .select("*, profiles(id, nickname, school, headline, status)")
+      .eq("status", "pending").order("created_at", { ascending: true });
+    if (error) throw error;
+    return data || [];
+  }
+  async function resolveReport(id, status) {
+    if (!sb) {
+      const s = loadStore();
+      const r = (s.reports || []).find((x) => x.id === id);
+      if (r) r.status = status;
+      saveStore(s);
+      return;
+    }
+    const { error } = await sb.from("profile_reports").update({ status }).eq("id", id);
+    if (error) throw error;
+  }
+  // 名片下架（=status rejected，資料保留、可救回）
+  async function removeProfile(id) {
+    if (!sb) return localSetProfileStatus(id, "rejected");
+    const { error } = await sb.from("profiles").update({ status: "rejected", reject_reason: "管理員下架" }).eq("id", id);
+    if (error) throw error;
+  }
+  // 後台：所有已上架名片（給「已上架」檢視下架用）
+  async function getLiveProfilesAdmin() {
+    if (!sb) return localAllProfiles().filter((p) => p.status === "live");
+    const { data, error } = await sb.from("profiles").select("*").eq("status", "live").order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data || []).map(normalizeProfile);
+  }
+
+  // ========== 許願池 2.0：廠商許願公開牆 brand_wishes ==========
+  // 回：[{id, brand_name, reason, anonymous, byName, votes, mine}]（票數降冪；未登入也可讀）
+  async function getBrandWishes() {
+    if (!sb) {
+      const s = loadStore();
+      const votes = s.wishVotes || [];
+      const list = (s.brandWishes || []).map((w) => ({
+        ...w,
+        votes: votes.filter((v) => v.wish_id === w.id).length,
+        mine: votes.some((v) => v.wish_id === w.id && v.user_id === "me"),
+        byName: w.anonymous ? null : "我",
+      }));
+      return list.sort((a, b) => b.votes - a.votes || (b.created_at > a.created_at ? 1 : -1));
+    }
+    const [{ data: wishes, error: e1 }, { data: votes, error: e2 }] = await Promise.all([
+      sb.from("brand_wishes").select("*"),
+      sb.from("wish_votes").select("wish_id, user_id"),
+    ]);
+    if (e1) throw e1;
+    if (e2) throw e2;
+    const uid = currentUser?.id;
+    // 具名發起人暱稱：查 accounts
+    const nameIds = (wishes || []).filter((w) => !w.anonymous).map((w) => w.created_by);
+    const nameMap = await getAccountsMap(nameIds);
+    const list = (wishes || []).map((w) => ({
+      id: w.id, brand_name: w.brand_name, reason: w.reason, anonymous: w.anonymous,
+      byName: w.anonymous ? null : (nameMap[w.created_by]?.nickname || "會員"),
+      votes: (votes || []).filter((v) => v.wish_id === w.id).length,
+      mine: !!uid && (votes || []).some((v) => v.wish_id === w.id && v.user_id === uid),
+    }));
+    return list.sort((a, b) => b.votes - a.votes || (b.id > a.id ? -1 : 1));
+  }
+  async function submitBrandWish(brand, reason, anonymous) {
+    if (!sb) {
+      const s = loadStore();
+      s.brandWishes = s.brandWishes || [];
+      s.brandWishes.push({ id: "bw-" + Date.now(), brand_name: brand, reason: reason || null, created_by: "me", anonymous: !!anonymous, created_at: new Date().toISOString() });
+      saveStore(s);
+      return { ok: true };
+    }
+    if (!currentUser) throw new Error("請先登入再許願");
+    const { error } = await sb.from("brand_wishes").insert({ brand_name: brand, reason: reason || null, created_by: currentUser.id, anonymous: !!anonymous });
+    if (error) throw error;
+    return { ok: true };
+  }
+  // 投票 / 收回（樂觀更新在前端；這裡回傳投票後狀態 true=已投）
+  async function toggleWishVote(wishId) {
+    if (!sb) {
+      const s = loadStore();
+      s.wishVotes = s.wishVotes || [];
+      const i = s.wishVotes.findIndex((v) => v.wish_id === wishId && v.user_id === "me");
+      if (i >= 0) { s.wishVotes.splice(i, 1); saveStore(s); return false; }
+      s.wishVotes.push({ wish_id: wishId, user_id: "me" }); saveStore(s); return true;
+    }
+    if (!currentUser) throw new Error("請先登入再投票");
+    const { data: existing } = await sb.from("wish_votes").select("wish_id").eq("wish_id", wishId).eq("user_id", currentUser.id).maybeSingle();
+    if (existing) {
+      const { error } = await sb.from("wish_votes").delete().eq("wish_id", wishId).eq("user_id", currentUser.id);
+      if (error) throw error;
+      return false;
+    }
+    const { error } = await sb.from("wish_votes").insert({ wish_id: wishId, user_id: currentUser.id });
+    if (error) throw error;
+    return true;
+  }
+  async function deleteBrandWish(id) {
+    if (!sb) {
+      const s = loadStore();
+      s.brandWishes = (s.brandWishes || []).filter((w) => w.id !== id);
+      s.wishVotes = (s.wishVotes || []).filter((v) => v.wish_id !== id);
+      saveStore(s);
+      return;
+    }
+    const { error } = await sb.from("brand_wishes").delete().eq("id", id);
+    if (error) throw error;
+  }
+
+  // ========== 許願池 2.0：功能許願 feature_wishes（私密）==========
+  async function submitFeatureWish(content) {
+    if (!sb) {
+      const s = loadStore();
+      s.featureWishes = s.featureWishes || [];
+      s.featureWishes.push({ id: "fw-" + Date.now(), user_id: "local", content, created_at: new Date().toISOString() });
+      saveStore(s);
+      return { ok: true };
+    }
+    if (!currentUser) throw new Error("請先登入再許願");
+    const { error } = await sb.from("feature_wishes").insert({ user_id: currentUser.id, content });
+    if (error) throw error;
+    return { ok: true };
+  }
+  async function getFeatureWishesAdmin() {
+    if (!sb) {
+      const s = loadStore();
+      return [...(s.featureWishes || [])].sort((a, b) => (b.created_at > a.created_at ? 1 : -1));
+    }
+    const { data, error } = await sb.from("feature_wishes").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  }
+  async function deleteFeatureWish(id) {
+    if (!sb) {
+      const s = loadStore();
+      s.featureWishes = (s.featureWishes || []).filter((w) => w.id !== id);
+      saveStore(s);
+      return;
+    }
+    const { error } = await sb.from("feature_wishes").delete().eq("id", id);
+    if (error) throw error;
   }
 
 
@@ -679,6 +849,9 @@ window.DB = (function () {
     getMyAccount, saveAccount, getAccountsMap,
     getEvents, getPendingEvents, createEvent, approveEvent, rejectEvent, toggleSignup, localMySignups,
     submitWish, getAdminWishes, getAdminStats,
+    reportProfile, getPendingReports, resolveReport, removeProfile, getLiveProfilesAdmin,
+    getBrandWishes, submitBrandWish, toggleWishVote, deleteBrandWish,
+    submitFeatureWish, getFeatureWishesAdmin, deleteFeatureWish,
     cfg,
     CATEGORIES: (window.CATEGORIES || []).filter((c) => c !== "全部"),
   };

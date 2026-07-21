@@ -21,7 +21,7 @@
   <meta name="twitter:title" content="Campus X · 台灣校園大使機會平台" />
   <meta name="twitter:description" content="一站看遍全台校園大使計畫。任務獎金、產品體驗、實習門票、履歷加分。" />
   <meta name="twitter:image" content="https://nicolas5288-commits.github.io/campus-x/og-image.png?v=1" />
-  <link rel="stylesheet" href="styles.css?v=21w" />
+  <link rel="stylesheet" href="styles.css?v=22" />
 </head>
 <body>
   <!-- Nav -->
@@ -132,17 +132,6 @@
         <span class="btn is-soon">🔒 IG 即將開通</span>
       </div>
       <small>敬請期待 ✨</small>
-    </div>
-  </section>
-
-  <!-- 許願池 -->
-  <section class="wrap" id="wish">
-    <div class="wish-band">
-      <div>
-        <h2>🪄 想要哪個品牌來開校園大使？</h2>
-        <p>許願告訴我們，越多人想要的品牌，我們越有機會幫你敲來。</p>
-      </div>
-      <button class="btn ghost" id="wishBtn">我要許願</button>
     </div>
   </section>
 
@@ -311,32 +300,16 @@
     </div>
   </div>
 
-  <!-- 許願 Modal -->
-  <div class="modal-mask" id="wishMask">
-    <div class="modal" id="wishBody" style="max-width:440px;">
-      <button class="modal-close" id="wishClose">✕</button>
-      <h2>🪄 許願</h2>
-      <p class="auth-sub">告訴我們你想要哪個品牌開校園大使。</p>
-      <form id="wishForm" style="margin-top:16px;">
-        <div class="field"><label><span>品牌 / 單位名稱 <span class="hint">必填</span></span>
-          <input type="text" name="brand" required placeholder="例：UNIQLO、誠品、星巴克…" /></label></div>
-        <div class="field"><label><span>想說的話 <span class="hint">選填</span></span>
-          <textarea name="reason" placeholder="為什麼想要這個品牌的大使？"></textarea></label></div>
-        <div class="auth-err" id="wishErr"></div>
-        <button type="submit" class="btn" id="wishSubmit" style="width:100%;justify-content:center;">送出許願</button>
-      </form>
-    </div>
-  </div>
 
   <div class="toast" id="toast"></div>
 
   <!-- Supabase JS（雲端模式用；本機模式不影響）-->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=21w"></script>
-  <script src="data.js?v=21w"></script>
-  <script src="db.js?v=21w"></script>
-  <script src="authui.js?v=21w"></script>
-  <script src="app.js?v=21w"></script>
-  <script src="nav.js?v=21w"></script>
+  <script src="config.js?v=22"></script>
+  <script src="data.js?v=22"></script>
+  <script src="db.js?v=22"></script>
+  <script src="authui.js?v=22"></script>
+  <script src="app.js?v=22"></script>
+  <script src="nav.js?v=22"></script>
 </body>
 </html>

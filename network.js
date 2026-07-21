@@ -107,9 +107,44 @@
       <div class="pc-skills">${(p.skills || []).map(s => `<span class="tag">${esc(s)}</span>`).join("") || "—"}</div>
       <h4>大使經歷</h4>
       ${(p.experiences || []).map(e => `<div class="pm-exp-item">🎓 <b>${esc(e.programName)}</b> · ${esc(e.cohort || "")} · ${esc(e.year || "")}</div>`).join("") || "—"}
-      <div style="margin-top:22px;">${contact}</div>`;
+      <div style="margin-top:22px;">${contact}</div>
+      <div style="margin-top:16px;text-align:center;">
+        <button type="button" class="report-link" data-report="${p.id}">🚩 檢舉這張名片</button>
+      </div>`;
     document.getElementById("pmMask").classList.add("open");
     document.getElementById("pmClose").onclick = () => document.getElementById("pmMask").classList.remove("open");
+    const rb = document.querySelector("[data-report]");
+    if (rb) rb.onclick = () => openReport(rb.dataset.report);
+  }
+
+  // ---------- 檢舉名片 ----------
+  let reportTargetId = null;
+  function openReport(id) {
+    if (DB.configured && !DB.getUser()) { toast("請先登入再檢舉 🔑"); return; }
+    reportTargetId = id;
+    document.getElementById("reportErr").textContent = "";
+    document.getElementById("reportForm").reset();
+    document.getElementById("pmMask").classList.remove("open");
+    document.getElementById("reportMask").classList.add("open");
+  }
+  const reportMask = document.getElementById("reportMask");
+  if (reportMask) {
+    document.getElementById("reportClose").onclick = () => reportMask.classList.remove("open");
+    reportMask.onclick = (e) => { if (e.target.id === "reportMask") reportMask.classList.remove("open"); };
+    document.getElementById("reportForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const errEl = document.getElementById("reportErr");
+      const btn = document.getElementById("reportSubmit");
+      errEl.textContent = "";
+      btn.disabled = true; btn.textContent = "送出中…";
+      try {
+        await DB.reportProfile(reportTargetId, f.reason.value, f.content.value.trim());
+        reportMask.classList.remove("open");
+        toast("已收到你的檢舉，我們會盡快處理 🙏");
+      } catch (err) { errEl.textContent = err.message || "送出失敗"; }
+      finally { btn.disabled = false; btn.textContent = "送出檢舉"; }
+    };
   }
   document.getElementById("pmMask").onclick = (e) => { if (e.target.id === "pmMask") e.currentTarget.classList.remove("open"); };
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · Campus X</title>
-  <link rel="stylesheet" href="styles.css?v=21w" />
+  <link rel="stylesheet" href="styles.css?v=22" />
 </head>
 <body>
   <header class="nav">
@@ -48,6 +48,7 @@
         <button class="admin-tab" data-tab="profiles">大使名片 <span class="badge" id="badgeN" style="display:none;">0</span></button>
         <button class="admin-tab" data-tab="events">活動 <span class="badge" id="badgeE" style="display:none;">0</span></button>
         <button class="admin-tab" data-tab="notes">計畫回報 <span class="badge" id="badgeNote" style="display:none;">0</span></button>
+        <button class="admin-tab" data-tab="wishes">許願池</button>
         <button class="btn ghost sm" id="adLogout" style="margin-left:auto;">登出</button>
       </div>
       <div id="queue"></div>
@@ -56,13 +57,14 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=21w"></script>
-  <script src="data.js?v=21w"></script>
-  <script src="db.js?v=21w"></script>
+  <script src="config.js?v=22"></script>
+  <script src="data.js?v=22"></script>
+  <script src="db.js?v=22"></script>
   <script>
   (function () {
     const DB = window.DB;
     let tab = "stats";
+    let profileView = "pending";   // 大使名片 tab 內：pending / live / report
 
     function toast(msg) {
       const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show");
@@ -156,12 +158,9 @@
             : '<div class="admin-empty">目前沒有待審的心得 🎉</div>';
           bindReviewActions();
         } else if (tab === "profiles") {
-          const list = await DB.getPendingProfiles();
-          updateBadge("badgeN", list.length);
-          queue.innerHTML = list.length
-            ? list.map(profileCard).join("")
-            : '<div class="admin-empty">目前沒有待審的名片 🎉</div>';
-          bindProfileActions();
+          await renderProfilesTab();
+        } else if (tab === "wishes") {
+          await renderWishes();
         } else if (tab === "events") {
           const list = await DB.getPendingEvents();
           updateBadge("badgeE", list.length);
@@ -190,7 +189,10 @@
     async function refreshBadges() {
       try { updateBadge("badgeP", (await DB.getPendingPrograms()).length); } catch {}
       try { updateBadge("badgeR", (await DB.getPendingReviews()).length); } catch {}
-      try { updateBadge("badgeN", (await DB.getPendingProfiles()).length); } catch {}
+      try {
+        const [pp, rr] = await Promise.all([DB.getPendingProfiles(), DB.getPendingReports().catch(() => [])]);
+        updateBadge("badgeN", pp.length + rr.length);
+      } catch {}
       try { updateBadge("badgeE", (await DB.getPendingEvents()).length); } catch {}
       try { updateBadge("badgeNote", (await DB.getPendingNotes()).length); } catch {}
     }
@@ -230,10 +232,11 @@
       queue.innerHTML = '<div class="admin-empty">載入中…</div>';
       let s = {}, wishes = [];
       try { s = await DB.getAdminStats() || {}; } catch (e) { queue.innerHTML = `<div class="admin-empty">數據載入失敗：${esc(e.message)}</div>`; return; }
-      try { wishes = await DB.getAdminWishes() || []; } catch {}
+      try { wishes = await DB.getBrandWishes() || []; } catch {}
       const tile = (label, val, hint) => `<div class="stat-tile"><b>${val ?? "—"}</b><span>${label}</span>${hint ? `<small>${hint}</small>` : ""}</div>`;
+      const wishTotal = (s.brand_wishes ?? 0) + (s.feature_wishes ?? 0);
       const wishRows = wishes.length
-        ? wishes.map((w, i) => `<tr><td>${i + 1}</td><td>${esc(w.brand_name)}</td><td><b>${w.votes}</b> 票</td></tr>`).join("")
+        ? wishes.slice(0, 15).map((w, i) => `<tr><td>${i + 1}</td><td>${esc(w.brand_name)}</td><td><b>${w.votes}</b> 票</td></tr>`).join("")
         : `<tr><td colspan="3" style="color:var(--ink-soft);text-align:center;padding:20px;">還沒有人許願</td></tr>`;
       queue.innerHTML = `
         <div class="stat-grid">
@@ -241,16 +244,17 @@
           ${tile("計畫上架中", s.programs_live)}
           ${tile("收藏總數", s.favorites)}
           ${tile("大使名片", s.profiles_live)}
-          ${tile("許願數", s.wishes)}
+          ${tile("許願數", wishTotal, "品牌＋功能")}
         </div>
         <div class="stat-grid" style="margin-top:14px;">
           ${tile("待審投稿", s.pending_programs)}
           ${tile("待審心得", s.pending_reviews)}
           ${tile("待審名片", s.pending_profiles)}
+          ${tile("待處理檢舉", s.pending_reports)}
           ${tile("待審活動", s.pending_events)}
           ${tile("計畫回報", s.pending_notes)}
         </div>
-        <h3 style="margin:28px 0 12px;">🪄 許願清單（廠商開發名單）</h3>
+        <h3 style="margin:28px 0 12px;">🪄 廠商許願排行（開發名單）</h3>
         <div class="queue-card" style="padding:0;overflow:hidden;">
           <table class="cmp-table" style="min-width:auto;">
             <tr><th style="width:48px;">#</th><th>品牌</th><th style="width:90px;">票數</th></tr>
@@ -287,6 +291,134 @@
       document.querySelectorAll("[data-nreject]").forEach(b => b.onclick = async () => {
         if (!confirm("確定退回這張名片？")) return;
         b.disabled = true; await DB.rejectProfile(b.dataset.nreject); toast("已退回"); loadQueue();
+      });
+    }
+
+    // ---- 大使名片 tab：三檢視（待審核 / 已上架 / 檢舉）----
+    async function renderProfilesTab() {
+      const queue = document.getElementById("queue");
+      let pendingN = 0, reportN = 0;
+      try { pendingN = (await DB.getPendingProfiles()).length; } catch {}
+      try { reportN = (await DB.getPendingReports()).length; } catch {}
+      updateBadge("badgeN", pendingN + reportN);
+      const subBadge = (n) => n > 0 ? `<span class="badge">${n}</span>` : "";
+      queue.innerHTML = `
+        <div class="sub-tabs">
+          <button class="sub-tab ${profileView === "pending" ? "active" : ""}" data-pv="pending">待審核 ${subBadge(pendingN)}</button>
+          <button class="sub-tab ${profileView === "live" ? "active" : ""}" data-pv="live">已上架</button>
+          <button class="sub-tab ${profileView === "report" ? "active" : ""}" data-pv="report">檢舉 ${subBadge(reportN)}</button>
+        </div>
+        <div id="profSub"><div class="admin-empty">載入中…</div></div>`;
+      queue.querySelectorAll("[data-pv]").forEach(b => b.onclick = () => { profileView = b.dataset.pv; renderProfilesTab(); });
+      const sub = document.getElementById("profSub");
+      try {
+        if (profileView === "pending") {
+          const list = await DB.getPendingProfiles();
+          sub.innerHTML = list.length ? list.map(profileCard).join("") : '<div class="admin-empty">目前沒有待審的名片 🎉</div>';
+          bindProfileActions();
+        } else if (profileView === "live") {
+          const list = await DB.getLiveProfilesAdmin();
+          sub.innerHTML = list.length ? list.map(liveProfileCard).join("") : '<div class="admin-empty">目前沒有已上架的名片</div>';
+          bindLiveProfileActions();
+        } else {
+          const list = await DB.getPendingReports();
+          sub.innerHTML = list.length ? list.map(reportCard).join("") : '<div class="admin-empty">目前沒有待處理的檢舉 🎉</div>';
+          bindReportActions();
+        }
+      } catch (err) { sub.innerHTML = `<div class="admin-empty">載入失敗：${esc(err.message)}</div>`; }
+    }
+    function liveProfileCard(p) {
+      const avatarHtml = p.avatar_url
+        ? `<img src="${esc(p.avatar_url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
+        : (p.avatar || "👤");
+      return `<div class="queue-card" data-id="${p.id}">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="pc-avatar" style="overflow:hidden;">${avatarHtml}</div>
+          <div style="flex:1;"><h3>${esc(p.nickname)}</h3><div class="q-brand">${esc(p.school || "")} ${esc(p.grade || "")}</div></div>
+        </div>
+        <div class="q-section"><b>介紹</b><div>${esc(p.headline || "")}</div></div>
+        ${(p.skills && p.skills.length) ? `<div class="q-section"><b>專長</b><div>${p.skills.map(esc).join("、")}</div></div>` : ""}
+        <div class="q-actions">
+          <button class="btn reject" data-remove="${p.id}">⬇️ 下架這張名片</button>
+        </div>
+      </div>`;
+    }
+    function bindLiveProfileActions() {
+      document.querySelectorAll("[data-remove]").forEach(b => b.onclick = async () => {
+        if (!confirm("確定下架這張名片？資料會保留、之後可救回，名片牆會立即看不到。")) return;
+        b.disabled = true; await DB.removeProfile(b.dataset.remove); toast("已下架"); renderProfilesTab();
+      });
+    }
+    function reportCard(r) {
+      const p = r.profiles;
+      const target = p
+        ? `<div class="q-brand">被檢舉名片：<b>${esc(p.nickname)}</b>｜${esc(p.school || "")}　<span class="tag">${p.status === "live" ? "上架中" : esc(p.status)}</span></div>
+           <div class="q-section"><b>名片介紹</b><div>${esc(p.headline || "")}</div></div>`
+        : `<div class="q-brand">被檢舉名片：（已不存在）</div>`;
+      return `<div class="queue-card" data-id="${r.id}">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span class="rev-type-badge">🚩 ${esc(r.reason)}</span>
+        </div>
+        ${target}
+        ${r.content ? `<div class="q-section"><b>檢舉補充</b><div>${esc(r.content)}</div></div>` : ""}
+        <div class="q-actions">
+          ${p && p.status === "live" ? `<button class="btn reject" data-rmreport="${r.id}" data-pid="${esc(p.id)}">⬇️ 下架該名片＋結案</button>` : ""}
+          <button class="btn approve" data-rresolve="${r.id}">✓ 結案（不下架）</button>
+          <button class="btn ghost sm" data-rdismiss="${r.id}">駁回檢舉</button>
+        </div>
+      </div>`;
+    }
+    function bindReportActions() {
+      document.querySelectorAll("[data-rmreport]").forEach(b => b.onclick = async () => {
+        if (!confirm("下架這張名片並將檢舉結案？")) return;
+        b.disabled = true;
+        await DB.removeProfile(b.dataset.pid);
+        await DB.resolveReport(b.dataset.rmreport, "resolved");
+        toast("已下架並結案 ✓"); renderProfilesTab();
+      });
+      document.querySelectorAll("[data-rresolve]").forEach(b => b.onclick = async () => {
+        b.disabled = true; await DB.resolveReport(b.dataset.rresolve, "resolved"); toast("已結案 ✓"); renderProfilesTab();
+      });
+      document.querySelectorAll("[data-rdismiss]").forEach(b => b.onclick = async () => {
+        b.disabled = true; await DB.resolveReport(b.dataset.rdismiss, "dismissed"); toast("已駁回檢舉"); renderProfilesTab();
+      });
+    }
+
+    // ---- 許願池 tab ----
+    async function renderWishes() {
+      const queue = document.getElementById("queue");
+      queue.innerHTML = '<div class="admin-empty">載入中…</div>';
+      let brand = [], feature = [];
+      try { brand = await DB.getBrandWishes() || []; } catch (e) {}
+      try { feature = await DB.getFeatureWishesAdmin() || []; } catch (e) {}
+      const brandRows = brand.length
+        ? brand.map((w, i) => `<tr><td>${i + 1}</td><td>${esc(w.brand_name)}${w.reason ? `<div style="color:var(--ink-soft);font-size:12.5px;margin-top:2px;">${esc(w.reason)}</div>` : ""}</td><td><b>${w.votes}</b> 票</td><td>${esc(w.anonymous ? "匿名" : (w.byName || "會員"))}</td><td><button class="mini-del" data-delbrand="${esc(w.id)}" title="刪除">🗑️</button></td></tr>`).join("")
+        : `<tr><td colspan="5" style="color:var(--ink-soft);text-align:center;padding:20px;">還沒有人許願品牌</td></tr>`;
+      const featureRows = feature.length
+        ? feature.map((w) => `<div class="queue-card" data-id="${esc(w.id)}" style="margin-bottom:10px;">
+            <div class="q-section" style="border:none;padding:0;"><div>${esc(w.content)}</div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+              <span style="color:var(--ink-soft);font-size:12.5px;">${esc((w.created_at || "").slice(0, 10))}</span>
+              <button class="mini-del" data-delfeat="${esc(w.id)}" title="刪除">🗑️ 刪除</button>
+            </div></div>`).join("")
+        : `<div class="admin-empty">目前沒有功能許願</div>`;
+      queue.innerHTML = `
+        <h3 style="margin:8px 0 12px;">🏢 廠商許願排行（公開牆）</h3>
+        <div class="queue-card" style="padding:0;overflow:hidden;">
+          <table class="cmp-table" style="min-width:auto;">
+            <tr><th style="width:40px;">#</th><th>品牌</th><th style="width:70px;">票數</th><th style="width:90px;">發起人</th><th style="width:44px;"></th></tr>
+            ${brandRows}
+          </table>
+        </div>
+        <h3 style="margin:28px 0 12px;">💡 功能許願（私密）</h3>
+        ${featureRows}`;
+      queue.querySelectorAll("[data-delbrand]").forEach(b => b.onclick = async () => {
+        if (!confirm("刪除這則品牌許願？連同它的票數一起移除。")) return;
+        b.disabled = true; await DB.deleteBrandWish(b.dataset.delbrand); toast("已刪除"); renderWishes();
+      });
+      queue.querySelectorAll("[data-delfeat]").forEach(b => b.onclick = async () => {
+        if (!confirm("刪除這則功能許願？")) return;
+        b.disabled = true; await DB.deleteFeatureWish(b.dataset.delfeat); toast("已刪除"); renderWishes();
       });
     }
 
@@ -388,6 +520,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=21w"></script>
+  <script src="nav.js?v=22"></script>
 </body>
 </html>

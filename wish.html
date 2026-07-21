@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>許願池 · Campus X</title>
+  <meta name="description" content="想要哪個品牌來開校園大使？許願、投票，越多人想要的品牌，我們越有機會幫你敲來。" />
+  <link rel="canonical" href="https://nicolas5288-commits.github.io/campus-x/wish.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Campus X" />
+  <meta property="og:title" content="許願池 · Campus X" />
+  <meta property="og:description" content="想要哪個品牌來開校園大使？許願、投票，一起把品牌敲來。" />
+  <meta property="og:url" content="https://nicolas5288-commits.github.io/campus-x/wish.html" />
+  <meta property="og:image" content="https://nicolas5288-commits.github.io/campus-x/og-image.png?v=1" />
+  <meta property="og:locale" content="zh_TW" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="stylesheet" href="styles.css?v=22" />
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="index.html" class="logo"><span class="dot"></span>Campus X</a>
+      <nav class="nav-links">
+        <a href="index.html">找計畫</a>
+        <a href="about.html">什麼是校園大使</a>
+        <a href="network.html">人脈網</a>
+        <a href="events.html">活動</a>
+        <a href="#" class="btn ghost sm" id="loginBtn">登入 / 註冊</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page" style="max-width:760px;">
+    <div class="page-head">
+      <h1>🪄 許願池</h1>
+      <p>想要哪個品牌來開校園大使？許願、投票——越多人想要，我們越有機會幫你敲來。</p>
+    </div>
+
+    <div class="admin-tabs" id="wishTabs">
+      <button class="admin-tab active" data-tab="brand">🏢 廠商許願牆</button>
+      <button class="admin-tab" data-tab="feature">💡 功能許願</button>
+    </div>
+
+    <!-- 廠商許願牆 -->
+    <div id="brandView">
+      <div class="wish-cta">
+        <span>想要的品牌還沒人許願？</span>
+        <button class="btn" id="newWishBtn">＋ 我要許願</button>
+      </div>
+      <div class="sub" id="brandCount" style="color:var(--ink-soft);font-size:14px;margin:14px 0 10px;"></div>
+      <div id="brandList"></div>
+      <div class="admin-empty" id="brandEmpty" style="display:none;"></div>
+    </div>
+
+    <!-- 功能許願（私密）-->
+    <div id="featureView" style="display:none;">
+      <div class="form-card" style="max-width:100%;">
+        <h3 style="margin:0 0 4px;">💡 想要 Campus X 多做什麼？</h3>
+        <p class="auth-sub" style="margin-bottom:16px;">功能建議、想看到的內容、覺得哪裡不好用都可以說。<b>不公開</b>，每一則我們都會看。</p>
+        <form id="featureForm">
+          <div class="field"><label><span>你的想法 <span class="hint">必填</span></span>
+            <textarea name="content" required placeholder="例：希望可以按截止日排序、想要 LINE 通知新機會…"></textarea></label></div>
+          <div class="auth-err" id="featureErr"></div>
+          <button type="submit" class="btn" id="featureSubmit" style="width:100%;justify-content:center;">送出</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="wrap foot-inner">
+      <div class="foot-contact">
+        <span class="foot-contact-label">聯繫我們</span>
+        <a id="footIg" class="foot-ico" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.6" cy="6.4" r="1.3" fill="currentColor" stroke="none"/></svg></a>
+        <a id="footMail" class="foot-ico" aria-label="聯絡信箱" title="聯絡信箱"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M3.5 7 L12 13.5 L20.5 7"/></svg></a>
+      </div>
+      <div class="foot-bottom">
+        <a href="index.html" class="logo"><span class="dot"></span>Campus X</a>
+        <div class="foot-copy">© 2026 Nicolas Liu · Campus X 台灣校園大使機會平台．保留所有權利</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 我要許願 modal -->
+  <div class="modal-mask" id="wishMask">
+    <div class="modal" id="wishBody" style="max-width:440px;">
+      <button class="modal-close" id="wishClose">✕</button>
+      <h2>🪄 許願一個品牌</h2>
+      <p class="auth-sub">告訴我們你想要哪個品牌來開校園大使。</p>
+      <form id="wishForm" style="margin-top:16px;">
+        <div class="field"><label><span>品牌 / 單位名稱 <span class="hint">必填</span></span>
+          <input type="text" name="brand" required placeholder="例：UNIQLO、誠品、星巴克…" autocomplete="off" /></label></div>
+        <div class="field"><label><span>為什麼想要 <span class="hint">選填</span></span>
+          <textarea name="reason" placeholder="為什麼想要這個品牌的大使？（會顯示在牆上）"></textarea></label></div>
+        <label class="check-line" style="margin:4px 0 16px;"><input type="checkbox" name="anonymous" /> 匿名發起（牆上顯示「匿名許願」）</label>
+        <div class="auth-err" id="wishErr"></div>
+        <button type="submit" class="btn" id="wishSubmit" style="width:100%;justify-content:center;">送出許願</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="config.js?v=22"></script>
+  <script src="data.js?v=22"></script>
+  <script src="db.js?v=22"></script>
+  <script src="authui.js?v=22"></script>
+  <script src="wish.js?v=22"></script>
+  <script src="nav.js?v=22"></script>
+</body>
+</html>

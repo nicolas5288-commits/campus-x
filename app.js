@@ -461,7 +461,6 @@
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeModal(); closeAuth(); closeReview(); closeCompare();
-      document.getElementById("wishMask").classList.remove("open");
       document.getElementById("noteMask").classList.remove("open");
       document.getElementById("editMask").classList.remove("open");
     }
@@ -573,37 +572,6 @@
   document.getElementById("loginBtn").onclick = (e) => {
     e.preventDefault();
     openAuth("login");
-  };
-
-  // ---------- 許願池 ----------
-  const wishMask = document.getElementById("wishMask");
-  document.getElementById("wishBtn").onclick = () => {
-    if (window.DB.configured && !window.DB.getUser()) {
-      openAuth("login", "登入後就能許願囉！");
-      return;
-    }
-    document.getElementById("wishErr").textContent = "";
-    wishMask.classList.add("open");
-  };
-  document.getElementById("wishClose").onclick = () => wishMask.classList.remove("open");
-  wishMask.onclick = (e) => { if (e.target.id === "wishMask") wishMask.classList.remove("open"); };
-  document.getElementById("wishForm").onsubmit = async (e) => {
-    e.preventDefault();
-    const f = e.target;
-    const btn = document.getElementById("wishSubmit");
-    const errEl = document.getElementById("wishErr");
-    errEl.textContent = "";
-    btn.disabled = true; btn.textContent = "送出中…";
-    try {
-      await window.DB.submitWish(f.brand.value.trim(), f.reason.value.trim());
-      wishMask.classList.remove("open");
-      f.reset();
-      toast("許願成功！謝謝你的建議 🪄");
-    } catch (err) {
-      errEl.textContent = err.message || "送出失敗";
-    } finally {
-      btn.disabled = false; btn.textContent = "送出許願";
-    }
   };
 
   // ---------- 補充 / 回報 Modal ----------

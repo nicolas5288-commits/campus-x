@@ -17,7 +17,7 @@
   <meta property="og:locale" content="zh_TW" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:image" content="https://nicolas5288-commits.github.io/campus-x/og-image.png?v=1" />
-  <link rel="stylesheet" href="styles.css?v=21w" />
+  <link rel="stylesheet" href="styles.css?v=22" />
 </head>
 <body>
   <header class="nav">
@@ -57,6 +57,30 @@
 
   <!-- 名片詳情 modal -->
   <div class="modal-mask" id="pmMask"><div class="modal" id="pmBody"></div></div>
+
+  <!-- 檢舉名片 modal -->
+  <div class="modal-mask" id="reportMask">
+    <div class="modal" id="reportBody" style="max-width:440px;">
+      <button class="modal-close" id="reportClose">✕</button>
+      <h2>🚩 檢舉名片</h2>
+      <p class="auth-sub">看到冒充、不實或不當的名片？告訴我們，會由 Campus X 審核處理。</p>
+      <form id="reportForm" style="margin-top:16px;">
+        <div class="field"><label><span>檢舉原因 <span class="hint">必填</span></span>
+          <select name="reason" required>
+            <option value="">請選擇</option>
+            <option>冒充身分</option>
+            <option>資訊不實</option>
+            <option>廣告或詐騙</option>
+            <option>不當內容</option>
+            <option>其他</option>
+          </select></label></div>
+        <div class="field"><label><span>補充說明 <span class="hint">選填</span></span>
+          <textarea name="content" placeholder="多告訴我們一點，幫助我們判斷"></textarea></label></div>
+        <div class="auth-err" id="reportErr"></div>
+        <button type="submit" class="btn" id="reportSubmit" style="width:100%;justify-content:center;">送出檢舉</button>
+      </form>
+    </div>
+  </div>
 
   <!-- 建立/編輯名片 modal -->
   <div class="modal-mask" id="editMask">
@@ -109,11 +133,11 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=21w"></script>
-  <script src="data.js?v=21w"></script>
-  <script src="db.js?v=21w"></script>
-  <script src="authui.js?v=21w"></script>
-  <script src="network.js?v=21w"></script>
-  <script src="nav.js?v=21w"></script>
+  <script src="config.js?v=22"></script>
+  <script src="data.js?v=22"></script>
+  <script src="db.js?v=22"></script>
+  <script src="authui.js?v=22"></script>
+  <script src="network.js?v=22"></script>
+  <script src="nav.js?v=22"></script>
 </body>
 </html>
