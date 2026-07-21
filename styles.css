@@ -287,6 +287,7 @@ header.nav {
 
 /* ===== 表單頁（投稿 / 後台共用）===== */
 .page { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+.admin-page { max-width: 960px; }
 .page-head { margin-bottom: 8px; }
 .page-head h1 { font-size: 32px; letter-spacing: -.02em; }
 .page-head p { color: var(--ink-soft); margin-top: 8px; font-size: 15.5px; }
@@ -311,8 +312,10 @@ header.nav {
 .success-box p { color: var(--ink-soft); margin-bottom: 24px; }
 
 /* ===== 後台 ===== */
-.admin-tabs { display: flex; gap: 8px; margin: 24px 0; }
-.admin-tab { padding: 9px 18px; border-radius: 999px; border: 1px solid var(--line-strong); background: #fff; cursor: pointer; font-size: 14.5px; font-weight: 600; color: var(--ink-soft); font-family: inherit; }
+.admin-tabs { display: flex; gap: 8px; margin: 24px 0; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.admin-tabs::-webkit-scrollbar { height: 0; }
+.admin-tab { flex: 0 0 auto; white-space: nowrap; padding: 8px 13px; border-radius: 999px; border: 1px solid var(--line-strong); background: #fff; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--ink-soft); font-family: inherit; }
+.admin-tabs .btn { flex: 0 0 auto; }
 .admin-tab.active { background: var(--ink); color: #fff; border-color: var(--ink); }
 .admin-tab .badge { display: inline-block; margin-left: 6px; background: #d64545; color: #fff; font-size: 11px; padding: 1px 7px; border-radius: 999px; }
 .admin-tab.active .badge { background: #fff; color: var(--ink); }
