@@ -5,7 +5,7 @@
   const mail = document.getElementById("footMail");
   if (ig) { if (cfg.CONTACT_IG) ig.href = cfg.CONTACT_IG; else ig.style.display = "none"; }
   if (mail) {
-    if (cfg.CONTACT_EMAIL) mail.href = "mailto:" + cfg.CONTACT_EMAIL + "?subject=Campus%20X%20聯絡";
+    if (cfg.CONTACT_EMAIL) mail.href = "mailto:" + cfg.CONTACT_EMAIL + "?subject=UniEmbassy%20聯絡";
     else mail.style.display = "none";
   }
 })();

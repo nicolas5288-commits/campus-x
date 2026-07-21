@@ -1,4 +1,4 @@
-// Campus X 資料層（db.js）
+// UniEmbassy 資料層（db.js）
 // 「雙模式」大腦：config.js 填了 Supabase → 用雲端；沒填 → 用本機 data.js + localStorage。
 // app.js / submit / admin 只呼叫這裡的函式，不用管背後是雲端還是本機。
 window.DB = (function () {

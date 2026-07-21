@@ -39,7 +39,7 @@
     const contactHtml =
       (cfg.CONTACT_IG || cfg.CONTACT_EMAIL ? '<div class="um-sep"></div>' : "") +
       (cfg.CONTACT_IG ? `<a href="${escapeHtml(cfg.CONTACT_IG)}" target="_blank" rel="noopener">${igSvg} Instagram</a>` : "") +
-      (cfg.CONTACT_EMAIL ? `<a href="mailto:${escapeHtml(cfg.CONTACT_EMAIL)}?subject=Campus%20X%20聯絡">${mailSvg} 聯絡信箱</a>` : "");
+      (cfg.CONTACT_EMAIL ? `<a href="mailto:${escapeHtml(cfg.CONTACT_EMAIL)}?subject=UniEmbassy%20聯絡">${mailSvg} 聯絡信箱</a>` : "");
 
     menu.innerHTML = `
       <button class="um-trigger" type="button">${avatarHtml}<span class="um-name">${escapeHtml(nickname)}</span><span class="um-caret">▾</span></button>

@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>查詢投稿進度 · Campus X</title>
-  <link rel="stylesheet" href="styles.css?v=24" />
+  <title>查詢投稿進度 · UniEmbassy</title>
+  <link rel="stylesheet" href="styles.css?v=25" />
 </head>
 <body>
   <header class="nav">
     <div class="wrap nav-inner">
-      <a href="index.html" class="logo"><span class="dot"></span>Campus X</a>
+      <a href="index.html" class="logo"><span class="dot"></span>UniEmbassy</a>
       <nav class="nav-links">
         <a href="index.html">找計畫</a>
         <a href="submit.html">我要投稿</a>
@@ -38,9 +38,9 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=24"></script>
-  <script src="data.js?v=24"></script>
-  <script src="db.js?v=24"></script>
+  <script src="config.js?v=25"></script>
+  <script src="data.js?v=25"></script>
+  <script src="db.js?v=25"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -50,7 +50,7 @@
     function esc(s) { return (s == null ? "" : String(s)).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
 
     const STATUS_VIEW = {
-      pending:  { icon: "🕐", label: "審核中",   note: "已收到投稿，Campus X 審核中，通過後會自動上架。", cls: "" },
+      pending:  { icon: "🕐", label: "審核中",   note: "已收到投稿，UniEmbassy 審核中，通過後會自動上架。", cls: "" },
       live:     { icon: "✅", label: "已上架",   note: "恭喜！你的計畫已上架，學生可以在計畫列表看到並報名。", cls: "ok" },
       rejected: { icon: "❌", label: "已退回",   note: "很抱歉，這次投稿未通過審核。可依原因調整後重新投稿。", cls: "err" },
       closed:   { icon: "📁", label: "已截止",   note: "此計畫已過截止日或已下架。歡迎再次投稿新一期計畫。", cls: "" },
@@ -94,6 +94,6 @@
     if (urlCode) { document.getElementById("trackCode").value = urlCode; doTrack(); }
   })();
   </script>
-  <script src="nav.js?v=24"></script>
+  <script src="nav.js?v=25"></script>
 </body>
 </html>

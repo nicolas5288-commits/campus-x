@@ -6,7 +6,7 @@
   const cfg = (DB && DB.cfg) || {};
   const fIg = document.getElementById("footIg"), fMail = document.getElementById("footMail");
   if (fIg) { if (cfg.CONTACT_IG) fIg.href = cfg.CONTACT_IG; else fIg.style.display = "none"; }
-  if (fMail) { if (cfg.CONTACT_EMAIL) fMail.href = "mailto:" + cfg.CONTACT_EMAIL + "?subject=Campus%20X%20聯絡"; else fMail.style.display = "none"; }
+  if (fMail) { if (cfg.CONTACT_EMAIL) fMail.href = "mailto:" + cfg.CONTACT_EMAIL + "?subject=UniEmbassy%20聯絡"; else fMail.style.display = "none"; }
 
   function toast(m) { const t = document.getElementById("toast"); t.textContent = m; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 2400); }
   function esc(s) { return (s == null ? "" : String(s)).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }

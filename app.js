@@ -1,4 +1,4 @@
-// Campus X — 前台邏輯（Phase 2：改用 DB 資料層，支援雲端 / 本機雙模式）
+// UniEmbassy — 前台邏輯（Phase 2：改用 DB 資料層，支援雲端 / 本機雙模式）
 (function () {
   const grid = document.getElementById("grid");
   const empty = document.getElementById("empty");
@@ -564,7 +564,7 @@
     if (!box) return;
     const ig = (window.DB.cfg || {}).CONTACT_IG;
     if (IG_READY && ig) {
-      box.innerHTML = `<a href="${ig}" target="_blank" rel="noopener" class="btn">追蹤 Campus X IG →</a>`;
+      box.innerHTML = `<a href="${ig}" target="_blank" rel="noopener" class="btn">追蹤 UniEmbassy IG →</a>`;
     }
   })();
 
@@ -718,7 +718,7 @@
     const mail = document.getElementById("footMail");
     if (ig) { if (cfg.CONTACT_IG) ig.href = cfg.CONTACT_IG; else ig.style.display = "none"; }
     if (mail) {
-      if (cfg.CONTACT_EMAIL) mail.href = "mailto:" + cfg.CONTACT_EMAIL + "?subject=Campus%20X%20聯絡";
+      if (cfg.CONTACT_EMAIL) mail.href = "mailto:" + cfg.CONTACT_EMAIL + "?subject=UniEmbassy%20聯絡";
       else mail.style.display = "none";
     }
   })();

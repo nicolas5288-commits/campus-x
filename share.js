@@ -22,7 +22,7 @@
     const c = state.cohort.trim();
     switch (state.type) {
       case "grad": return { kicker: "🎓 圓滿結業", pre: "我完成了", big: b, post: (c ? c + " " : "") + "校園大使任期" };
-      case "review": return { kicker: "✍️ 我在 Campus X", pre: "分享了", big: b, post: "大使心得，幫助學弟妹" };
+      case "review": return { kicker: "✍️ 我在 UniEmbassy", pre: "分享了", big: b, post: "大使心得，幫助學弟妹" };
       case "event": return { kicker: "🎪 我發起了活動", pre: "", big: b, post: "快來報名一起參加！" };
       default: return { kicker: "🎉 好消息", pre: "我正式成為", big: b, post: (c ? c + " " : "") + "校園大使" };
     }
@@ -48,7 +48,7 @@
     // 頂部 logo
     ctx.fillStyle = "#fff";
     setFont(46, "800");
-    ctx.fillText("● Campus X", W / 2, 150);
+    ctx.fillText("● UniEmbassy", W / 2, 150);
 
     const c = copy();
     // 用文字中心對齊，間距依字體大小動態算，四種卡都有穩定呼吸感
@@ -112,7 +112,7 @@
     // 頁尾
     ctx.fillStyle = hexA("#ffffff", 0.5);
     setFont(38, "500");
-    ctx.fillText("在 Campus X 找校園大使機會 · campus-x", W / 2, H - 90);
+    ctx.fillText("在 UniEmbassy 找校園大使機會 · uniembassy.tw", W / 2, H - 90);
   }
 
   function wrapText(text, x, y, maxW, lh) {

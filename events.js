@@ -113,7 +113,7 @@
       <p style="font-size:15px;color:var(--ink-soft);">${esc(e.description || "")}</p>
       <h4>誰會去（${signups.length}）</h4>
       <div class="attendee-grid">${attendees}</div>
-      <div class="safety-tip">🛡️ 第一次見面建議約公共場所、結伴同行。覺得不對勁可截圖回報 Campus X。</div>
+      <div class="safety-tip">🛡️ 第一次見面建議約公共場所、結伴同行。覺得不對勁可截圖回報 UniEmbassy。</div>
       <div style="margin-top:16px;">${btn}</div>`;
     document.getElementById("emMask").classList.add("open");
     document.getElementById("emClose").onclick = () => document.getElementById("emMask").classList.remove("open");
