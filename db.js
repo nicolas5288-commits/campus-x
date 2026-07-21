@@ -245,6 +245,23 @@ window.DB = (function () {
     const { error } = await sb.from("reviews").update({ status: "rejected", reject_reason: reason }).eq("id", id);
     if (error) throw error;
   }
+  // 精選心得（跨計畫，給「關於校園大使」頁做社會證明；只回 live，附品牌名）
+  async function getFeaturedReviews(limit = 3) {
+    if (!sb) {
+      const progs = localAllPrograms();
+      return loadStore().reviews
+        .filter((r) => r.status === "live")
+        .slice(0, limit)
+        .map((r) => {
+          const p = progs.find((x) => x.id === r.program_id);
+          return { ...r, brand: p?.brand || "", title: p?.title || "" };
+        });
+    }
+    const { data, error } = await sb.from("reviews").select("*, programs(title, brand)")
+      .eq("status", "live").order("created_at", { ascending: false }).limit(limit);
+    if (error) throw error;
+    return (data || []).map((r) => ({ ...r, brand: r.programs?.brand || "", title: r.programs?.title || "" }));
+  }
 
   // ========== 廠商查稿（用編號查投稿狀態）==========
   async function getProgramStatus(id) {
@@ -582,7 +599,7 @@ window.DB = (function () {
     initAuth, onAuth, signUp, signIn, signInWithGoogle, signOut, getUser, isAdmin,
     getPrograms, getPendingPrograms, submitProgram, approveProgram, rejectProgram, getProgramStatus,
     getFavorites, toggleFavorite,
-    getReviews, getPendingReviews, submitReview, approveReview, rejectReview,
+    getReviews, getPendingReviews, submitReview, approveReview, rejectReview, getFeaturedReviews,
     getProfiles, getPendingProfiles, getMyProfile, saveProfile, approveProfile, rejectProfile, uploadAvatar,
     getMyAccount, saveAccount, getAccountsMap,
     getEvents, getPendingEvents, createEvent, approveEvent, rejectEvent, toggleSignup, localMySignups,
