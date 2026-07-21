@@ -550,6 +550,15 @@
     }
   };
 
+  // ---------- 「我是廠商」下拉選單 ----------
+  (function initVendorDd() {
+    const dd = document.getElementById("vendorDd");
+    const trigger = document.getElementById("vendorTrigger");
+    if (!dd || !trigger) return;
+    trigger.onclick = (e) => { e.stopPropagation(); dd.classList.toggle("open"); };
+    document.addEventListener("click", () => dd.classList.remove("open"));
+  })();
+
   // ---------- 聯絡我們（footer 連結）----------
   (function initContact() {
     const cfg = window.DB.cfg || {};

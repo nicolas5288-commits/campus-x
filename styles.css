@@ -47,6 +47,24 @@ header.nav {
 .nav-links { display: flex; align-items: center; gap: 6px; }
 .nav-links a { padding: 8px 14px; border-radius: 999px; font-size: 14.5px; color: var(--ink-soft); transition: .15s; }
 .nav-links a:hover { background: var(--accent-soft); color: var(--ink); }
+/* nav 下拉選單（我是廠商）*/
+.nav-dd { position: relative; }
+.nav-dd-trigger {
+  padding: 8px 14px; border-radius: 999px; font-size: 14.5px; color: var(--ink-soft);
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  display: inline-flex; align-items: center; gap: 5px; transition: .15s;
+}
+.nav-dd-trigger:hover, .nav-dd.open .nav-dd-trigger { background: var(--accent-soft); color: var(--ink); }
+.nav-dd-caret { font-size: 11px; transition: transform .18s; }
+.nav-dd.open .nav-dd-caret { transform: rotate(180deg); }
+.nav-dd-menu {
+  position: absolute; top: calc(100% + 6px); right: 0; min-width: 168px;
+  background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
+  padding: 6px; display: none; flex-direction: column; gap: 2px; z-index: 60;
+}
+.nav-dd.open .nav-dd-menu { display: flex; }
+.nav-dd-menu a { padding: 9px 12px; border-radius: 8px; font-size: 14px; color: var(--ink); white-space: nowrap; }
+.nav-dd-menu a:hover { background: var(--accent-soft); }
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 9px 18px; border-radius: 999px; font-size: 14.5px; font-weight: 600;
@@ -442,6 +460,8 @@ footer { border-top: 1px solid var(--line); padding: 38px 0; margin-top: 40px; }
 .foot-bottom { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .foot-inner .logo { color: var(--ink); }
 .foot-copy { color: var(--ink-soft); font-size: 13.5px; }
+.foot-contact { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.foot-contact-label { font-size: 14px; font-weight: 700; color: var(--ink); }
 
 /* ===== Toast ===== */
 .toast {
