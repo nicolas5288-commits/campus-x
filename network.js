@@ -65,7 +65,24 @@
   function render() {
     const list = getFiltered();
     netCount.textContent = `共 ${list.length} 位大使`;
-    if (!list.length) { grid.innerHTML = ""; empty.style.display = "block"; return; }
+    if (!list.length) {
+      grid.innerHTML = "";
+      if (profiles.length === 0) {
+        // 整個牆是空的 → 創始大使招募（不塞假資料，把空城變稀缺感）
+        empty.innerHTML = `<div class="founding-state">
+          <div class="fs-badge">🏆</div>
+          <h3>成為第 1 位創始大使</h3>
+          <p>人脈網剛啟動——前 20 位建立名片的大使，會獲得專屬「創始大使」徽章。<br>你可以是第一個。</p>
+          <button class="btn" id="foundingCta">＋ 建立我的名片</button>
+        </div>`;
+        const cta = document.getElementById("foundingCta");
+        if (cta) cta.onclick = openEdit;
+      } else {
+        empty.innerHTML = "找不到符合的大使，換個條件試試 🔍";
+      }
+      empty.style.display = "block";
+      return;
+    }
     empty.style.display = "none";
     grid.innerHTML = list.map(cardHTML).join("");
     grid.querySelectorAll(".profile-card").forEach((el) => el.onclick = () => openProfile(el.dataset.id));

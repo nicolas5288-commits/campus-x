@@ -59,7 +59,23 @@
   function render() {
     const list = getFiltered();
     evCount.textContent = `共 ${list.length} 場活動`;
-    if (!list.length) { grid.innerHTML = ""; empty.style.display = "block"; return; }
+    if (!list.length) {
+      grid.innerHTML = "";
+      if (events.length === 0) {
+        empty.innerHTML = `<div class="founding-state">
+          <div class="fs-badge">🎪</div>
+          <h3>發起第一場活動</h3>
+          <p>還沒有人揪活動——認證大使可以發起面試分享會、同梯小聚、校際交流。<br>當第一個帶大家見面的人吧。</p>
+          <button class="btn" id="foundingEvCta">＋ 發起活動</button>
+        </div>`;
+        const cta = document.getElementById("foundingEvCta");
+        if (cta) cta.onclick = () => document.getElementById("createEventBtn").click();
+      } else {
+        empty.innerHTML = "目前沒有這類活動，發起一場吧 🎉";
+      }
+      empty.style.display = "block";
+      return;
+    }
     empty.style.display = "none";
     grid.innerHTML = list.map(cardHTML).join("");
     grid.querySelectorAll(".event-card").forEach((el) => el.onclick = () => openEvent(el.dataset.id));

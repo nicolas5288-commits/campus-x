@@ -331,6 +331,12 @@ header.nav {
 .cmp-table td ul { margin: 0; padding-left: 16px; }
 .cmp-table td ul li { font-size: 13.5px; margin-bottom: 3px; }
 
+/* ===== 創始大使 / 發起第一場 空狀態 ===== */
+.founding-state { text-align: center; padding: 56px 24px; background: linear-gradient(160deg, #fbf7ee, #fff); border: 1px dashed #e6d9bd; border-radius: 20px; max-width: 520px; margin: 20px auto; }
+.founding-state .fs-badge { font-size: 56px; margin-bottom: 8px; }
+.founding-state h3 { font-size: 24px; letter-spacing: -.02em; margin-bottom: 12px; }
+.founding-state p { color: var(--ink-soft); font-size: 15.5px; line-height: 1.7; margin-bottom: 24px; }
+
 /* ===== 名片牆 ===== */
 .net-intro { background: linear-gradient(135deg, #111, #333); color: #fff; border-radius: 18px; padding: 30px 32px; margin-bottom: 26px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
 .net-intro h2 { font-size: 22px; letter-spacing: -.02em; }
