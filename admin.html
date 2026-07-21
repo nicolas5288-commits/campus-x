@@ -227,9 +227,12 @@
 
     // ---- 名片卡 ----
     function profileCard(p) {
+      const avatarHtml = p.avatar_url
+        ? `<img src="${esc(p.avatar_url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
+        : (p.avatar || "👤");
       return `<div class="queue-card" data-id="${p.id}">
         <div style="display:flex;gap:12px;align-items:center;">
-          <div class="pc-avatar">${p.avatar || "👤"}</div>
+          <div class="pc-avatar" style="overflow:hidden;">${avatarHtml}</div>
           <div style="flex:1;"><h3>${esc(p.nickname)}</h3><div class="q-brand">${esc(p.school || "")} ${esc(p.grade || "")}</div></div>
         </div>
         <div class="q-section"><b>介紹</b><div>${esc(p.headline || "")}</div></div>
