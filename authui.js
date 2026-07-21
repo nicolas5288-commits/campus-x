@@ -38,6 +38,7 @@
         <a href="member.html">👤 個人檔案</a>
         <a href="member.html">⭐ 我的收藏</a>
         <a href="network.html">🪪 大使名片</a>
+        <a href="share.html">🎉 產生分享卡</a>
         ${DB.isAdmin && DB.isAdmin() ? '<a href="admin.html">🛠️ 審核後台</a>' : ""}
         <button class="um-logout" type="button">登出</button>
       </div>`;

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>產生分享卡 · Campus X</title>
+  <link rel="stylesheet" href="styles.css?v=21d" />
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="index.html" class="logo"><span class="dot"></span>Campus X</a>
+      <nav class="nav-links">
+        <a href="index.html">找計畫</a>
+        <a href="network.html">人脈網</a>
+        <a href="events.html">活動</a>
+        <a href="#" class="btn ghost sm" id="loginBtn">登入 / 註冊</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page" style="max-width:960px;">
+    <div class="page-head">
+      <h1>🎉 產生你的大使分享卡</h1>
+      <p>一鍵生成專屬圖卡，下載發 IG 限動——曬經歷剛剛好，還幫你標記 Campus X。</p>
+    </div>
+
+    <div class="share-layout">
+      <!-- 左：設定 -->
+      <div class="form-card">
+        <div class="field">
+          <label><span>卡片類型</span>
+            <select id="cardType">
+              <option value="join">🎉 我成為大使（錄取）</option>
+              <option value="grad">🎓 我完成大使任期（結業）</option>
+              <option value="review">✍️ 我分享了心得</option>
+              <option value="event">🎪 我發起了活動</option>
+            </select></label>
+        </div>
+        <div class="field"><label><span id="brandLabel">品牌 / 計畫名稱</span>
+          <input type="text" id="brandInput" placeholder="例：工研院、JLab、foodpanda…" /></label></div>
+        <div class="field" id="cohortField"><label><span>屆數 <span class="hint">選填</span></span>
+          <input type="text" id="cohortInput" placeholder="例：第 4 屆" /></label></div>
+        <div class="field"><label><span>你的名字 / 暱稱</span>
+          <input type="text" id="nameInput" placeholder="想顯示的名字" /></label></div>
+        <div class="field"><span>配色</span>
+          <div class="color-picker" id="colorPicker"></div>
+        </div>
+        <button class="btn" id="downloadBtn" style="width:100%;justify-content:center;">⬇️ 下載分享卡</button>
+        <p class="auth-note">下載後到 IG 發限動，記得 tag @campusx 讓更多人看到 🙌</p>
+      </div>
+
+      <!-- 右：預覽 -->
+      <div class="share-preview-wrap">
+        <canvas id="cardCanvas" width="1080" height="1920"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="mode-badge" id="modeBadge"></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="config.js?v=21d"></script>
+  <script src="data.js?v=21d"></script>
+  <script src="db.js?v=21d"></script>
+  <script src="authui.js?v=21d"></script>
+  <script src="share.js?v=21d"></script>
+</body>
+</html>

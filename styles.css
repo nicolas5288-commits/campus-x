@@ -389,6 +389,16 @@ header.nav {
 @media (max-width: 900px) { .profile-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 620px) { .profile-grid, .event-grid { grid-template-columns: 1fr; } }
 
+/* ===== 分享卡生成器 ===== */
+.share-layout { display: grid; grid-template-columns: 1fr 340px; gap: 26px; align-items: start; }
+.share-preview-wrap { position: sticky; top: 88px; background: var(--bg-soft); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; justify-content: center; }
+#cardCanvas { width: 100%; max-width: 300px; height: auto; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.2); }
+.color-picker { display: flex; gap: 10px; }
+.color-opt { width: 44px; height: 44px; border-radius: 12px; border: 2px solid var(--line); cursor: pointer; position: relative; padding: 0; transition: .15s; }
+.color-opt.sel { border-color: var(--ink); transform: scale(1.05); }
+.color-opt span { position: absolute; right: 5px; bottom: 5px; width: 14px; height: 14px; border-radius: 50%; display: block; }
+@media (max-width: 720px) { .share-layout { grid-template-columns: 1fr; } .share-preview-wrap { position: static; order: -1; } #cardCanvas { max-width: 240px; } }
+
 /* ===== Subscribe band ===== */
 .subscribe {
   background: #111; color: #fff; border-radius: 22px; padding: 52px 40px; text-align: center; margin: 64px 0;
