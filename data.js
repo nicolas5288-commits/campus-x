@@ -301,6 +301,107 @@ window.PROGRAMS = [
     sourceUrl: "https://www.dcard.tw/f/job/p/257407012",
     status: "live"
   },
+  // ===== 第二批（Dcard + 官方頁研究，2026-07-21，與 supabase/schema_v6 一致）=====
+  {
+    id: "inventec-2025",
+    brand: "英業達 Inventec",
+    emoji: "💻",
+    category: "3C 科技",
+    title: "英業達 第四屆校園大使",
+    summary: "科技業校園大使，深入了解 AI、5G 等產業趨勢，累積行銷實戰經驗，完成任期可獲萬元獎金。",
+    tasks: ["推廣英業達雇主品牌與科技產業趨勢", "社群經營與行銷實戰", "參與校園活動與指定任務"],
+    benefits: ["完成任期任務可獲獎金 1 萬元", "免費專業形象照拍攝", "履歷健診、職涯諮詢", "推薦函", "交通補助", "參與公司大型活動（如運動家庭日）"],
+    eligibility: "大專院校在學學生；對科技業、AI/5G 有興趣，想累積行銷實戰經驗",
+    term: "依屆別公告",
+    paid: true,
+    location: "全台",
+    deadline: "2026-08-07",
+    recruiting: true,
+    recruitNote: "第四屆招募中，履歷先到先審，2026/8/7 截止",
+    applyUrl: "https://cpc.mcu.edu.tw/2026/06/10/%E3%80%90%E8%BD%89%E7%9F%A5%E3%80%91%E8%8B%B1%E6%A5%AD%E9%81%94%E7%AC%AC%E5%9B%9B%E5%B1%86%E6%A0%A1%E5%9C%92%E5%A4%A7%E4%BD%BF%E6%8B%9B%E5%8B%9F%E4%B8%AD/",
+    sourceUrl: "https://cpc.mcu.edu.tw/2026/06/10/%E3%80%90%E8%BD%89%E7%9F%A5%E3%80%91%E8%8B%B1%E6%A5%AD%E9%81%94%E7%AC%AC%E5%9B%9B%E5%B1%86%E6%A0%A1%E5%9C%92%E5%A4%A7%E4%BD%BF%E6%8B%9B%E5%8B%9F%E4%B8%AD/",
+    status: "live"
+  },
+  {
+    id: "twbank-hokii-115",
+    brand: "臺灣企銀 Hokii",
+    emoji: "🏦",
+    category: "金融",
+    title: "臺灣企銀 Hokii 校園大使（115 年）",
+    summary: "金融品牌實戰型校園大使，數位金融與社群行銷培訓、Hokii Reels 創意徵選，有機會獨得 2–4 萬獎金。",
+    tasks: ["打造黃金履歷代表作", "業界導師實戰培訓：數位金融與社群行銷", "解鎖大使專屬任務", "Hokii Reels 創意影片徵選", "兩天實體課程培訓 + 任務執行期"],
+    benefits: ["校園大使獎學金", "表現優異可獨得 2–4 萬獎金（金獎 4 萬/銀獎 3 萬/銅獎 2 萬）", "業界導師親授培訓", "與全台菁英建立跨校人脈"],
+    eligibility: "台灣公私立大專 18 歲在校生（大一至碩二），不限國籍；IG 追蹤 500+ 或 FB 好友 300+",
+    term: "培訓 2026/11，任務期 2026/11–2027/1",
+    paid: true,
+    location: "全台",
+    deadline: "2026-09-30",
+    recruiting: true,
+    recruitNote: "115 年招募中，報名至 2026/9/30，擇優錄取 12 名",
+    applyUrl: "https://bhuntr.com/tw/competitions/mg4lcrp3d1lug9ycph",
+    sourceUrl: "https://bhuntr.com/tw/competitions/mg4lcrp3d1lug9ycph",
+    status: "live"
+  },
+  {
+    id: "kkbox-11",
+    brand: "KKBOX",
+    emoji: "🎵",
+    category: "媒體／職涯",
+    title: "KKBOX 校園大使（第 11 屆）",
+    summary: "音樂串流品牌校園大使，推廣音樂與品牌活動、經營社群，享免費聽與獎勵金。",
+    tasks: ["發揮個人影響力推廣 KKBOX 與音樂活動", "社群內容創作與校園推廣", "參與品牌指定任務"],
+    benefits: ["免費聽 KKBOX", "滿滿獎勵金", "免費參加音樂活動", "與歌手合作機會", "豐富培訓課程"],
+    eligibility: "台灣公私立大專院校在學學生；熱愛音樂、樂於分享",
+    term: "依屆別公告",
+    paid: true,
+    location: "全台",
+    deadline: null,
+    recruiting: false,
+    recruitNote: "第 11 屆招募資訊以 KKBOX 官方頁為準",
+    applyUrl: "https://campus.kkbox.com/tw/talentselect",
+    sourceUrl: "https://campus.kkbox.com/tw/talentselect",
+    status: "live"
+  },
+  {
+    id: "caves-2026",
+    brand: "敦煌書局 Caves",
+    emoji: "📚",
+    category: "教育",
+    title: "敦煌校園大使（2026）",
+    summary: "成為敦煌書局與大專院校的橋樑，強化品牌印象、發揮個人社群影響力，並接觸不同產業品牌合作。",
+    tasks: ["成為敦煌書局與校園的橋樑，強化品牌印象", "發揮個人社群影響力推廣", "接觸不同產業品牌合作、累積校園實作經驗"],
+    benefits: ["多元品牌合作實戰經驗", "履歷加分", "校園行銷與社群推廣歷練"],
+    eligibility: "全台大專院校學生（2026 年 9 月起就讀大一至大四之本國籍在學學生）；任期學年制",
+    term: "學年制",
+    paid: false,
+    location: "全台",
+    deadline: "2026-06-30",
+    recruiting: false,
+    recruitNote: "2026 梯次報名已於 6/30 截止，關注官方等下屆",
+    applyUrl: "https://www.cavescampus.com/campusambassador2026",
+    sourceUrl: "https://www.cavescampus.com/campusambassador2026",
+    status: "live"
+  },
+  {
+    id: "garena-aov-2025",
+    brand: "傳說對決 Garena",
+    emoji: "🎮",
+    category: "軟體工具",
+    title: "傳說對決 校園大使",
+    summary: "遊戲品牌校園大使，參與官方活動企劃、接收最新遊戲資訊，獲得長期合作機會。",
+    tasks: ["參與傳說對決官方活動企劃", "校園推廣與社群經營", "接收並分享最新遊戲資訊"],
+    benefits: ["參與官方活動企劃", "最新遊戲資訊", "長期合作機會", "大使專屬福利"],
+    eligibility: "對遊戲有熱情的大專院校學生",
+    term: "依屆別公告",
+    paid: false,
+    location: "全台",
+    deadline: null,
+    recruiting: false,
+    recruitNote: "招募資訊見官方（LINE 社群「傳說對決校園大使」），Dcard 有心得可參考",
+    applyUrl: "https://vs.cga.gg/feed/161013",
+    sourceUrl: "https://vs.cga.gg/feed/161013",
+    status: "live"
+  },
   // 一筆待審範例（給後台 Phase 3 用）
   {
     id: "demo-pending-01",
@@ -333,6 +434,9 @@ window.CATEGORIES = [
 window.DCARD_LINKS = {
   "casetify-2025": [
     { title: "那些擔任校園大使的經驗分享＆好康", url: "https://www.dcard.tw/f/job/p/257407012" }
+  ],
+  "kkbox-11": [
+    { title: "KKBOX 校園大使招募中！面試過程一次看（附面試題目）", url: "https://www.dcard.tw/f/job/p/243606029" }
   ],
   "104-2025": [
     { title: "104 校園大使心得分享", url: "https://www.dcard.tw/f/ncu/p/258436954" }
