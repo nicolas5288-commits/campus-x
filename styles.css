@@ -638,6 +638,13 @@ footer { border-top: 1px solid var(--line); padding: 38px 0; margin-top: 40px; }
 .voice .quote::before { content: "“"; font-size: 34px; line-height: 0; vertical-align: -12px; color: var(--crayon-peach); margin-right: 2px; }
 .voice .who { font-size: 13px; color: var(--ink-soft); font-weight: 700; margin-top: auto; }
 .voice .who .stars { color: #e6a700; letter-spacing: 1px; }
+/* Dcard 外連卡片 */
+.dcard-voice { cursor: pointer; }
+.dcard-voice:hover { transform: translateY(-4px); box-shadow: 7px 9px 0 rgba(26,26,26,.9); }
+.dcard-badge { display: inline-block; align-self: flex-start; font-size: 12px; font-weight: 700; color: #fff; background: #006aa6; padding: 4px 11px; border-radius: 999px; }
+.dcard-voice .quote::before { content: none; }
+.dcard-voice .dcard-more { color: #006aa6; }
+.dcard-note { text-align: center; font-size: 12.5px; color: var(--ink-soft); margin-top: 22px; }
 
 /* ---- CTA band ---- */
 .about-cta {
