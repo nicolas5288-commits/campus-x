@@ -1,4 +1,14 @@
-// 關於校園大使頁 — 只做一件事：撈精選心得當社會證明（有才顯示，沒有整區隱藏）
+// 關於校園大使頁 — 頁尾聯絡圖示 + 撈精選心得當社會證明（有才顯示，沒有整區隱藏）
+(function () {
+  const cfg = (window.DB && window.DB.cfg) || {};
+  const ig = document.getElementById("footIg");
+  const mail = document.getElementById("footMail");
+  if (ig) { if (cfg.CONTACT_IG) ig.href = cfg.CONTACT_IG; else ig.style.display = "none"; }
+  if (mail) {
+    if (cfg.CONTACT_EMAIL) mail.href = "mailto:" + cfg.CONTACT_EMAIL + "?subject=Campus%20X%20聯絡";
+    else mail.style.display = "none";
+  }
+})();
 (async function () {
   function escapeHtml(s) {
     return String(s == null ? "" : s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));

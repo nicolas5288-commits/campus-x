@@ -1,7 +1,6 @@
 // 會員頁 — 我的收藏
 (function () {
   const DB = window.DB;
-  document.getElementById("modeBadge").textContent = DB.MODE === "supabase" ? "☁️ 雲端資料庫" : "🖥️ 本機展示模式";
   function toast(m) { const t = document.getElementById("toast"); t.textContent = m; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 2200); }
   function esc(s) { return (s == null ? "" : String(s)).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
 

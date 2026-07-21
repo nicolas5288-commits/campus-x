@@ -10,8 +10,6 @@
   let profileMap = {}; // id -> profile（拿發起人/報名者名片）
   let mySignups = []; // 本機模式我報名的活動
   let activeType = "全部";
-
-  document.getElementById("modeBadge").textContent = DB.MODE === "supabase" ? "☁️ 雲端資料庫" : "🖥️ 本機展示模式";
   function toast(m) { const t = document.getElementById("toast"); t.textContent = m; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 2200); }
   function esc(s) { return (s == null ? "" : String(s)).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
 

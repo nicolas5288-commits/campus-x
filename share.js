@@ -4,8 +4,6 @@
   const canvas = document.getElementById("cardCanvas");
   const ctx = canvas.getContext("2d");
   const W = 1080, H = 1920;
-
-  document.getElementById("modeBadge").textContent = DB.MODE === "supabase" ? "☁️ 雲端資料庫" : "🖥️ 本機展示模式";
   function toast(m) { const t = document.getElementById("toast"); t.textContent = m; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 2200); }
 
   // 配色主題（accent 用在光暈＋品牌字＋頁尾）

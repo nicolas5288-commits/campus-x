@@ -568,12 +568,6 @@
 
   // ---------- 啟動 ----------
   async function boot() {
-    // 模式提示
-    const badge = document.createElement("div");
-    badge.className = "mode-badge";
-    badge.textContent = window.DB.MODE === "supabase" ? "☁️ 雲端資料庫" : "🖥️ 本機展示模式";
-    document.body.appendChild(badge);
-
     // 載入計畫
     try {
       livePrograms = await window.DB.getPrograms();

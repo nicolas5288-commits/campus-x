@@ -218,7 +218,11 @@ header.nav {
 .user-chip .avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
 .user-chip .logout { background: none; border: none; cursor: pointer; color: var(--ink-soft); font-size: 13px; padding: 4px 8px; border-radius: 999px; }
 .user-chip .logout:hover { background: var(--accent-soft); color: var(--ink); }
-.mode-badge { position: fixed; bottom: 14px; left: 14px; z-index: 90; font-size: 11.5px; color: var(--ink-soft); background: #fff; border: 1px solid var(--line); padding: 4px 10px; border-radius: 999px; opacity: .75; }
+.foot-ico { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid var(--line-strong); border-radius: 50%; color: var(--ink-soft); transition: .15s; }
+.foot-ico:hover { border-color: var(--ink); color: var(--ink); background: var(--accent-soft); }
+.foot-ico svg { width: 16px; height: 16px; }
+.um-dropdown .um-sep { height: 1px; background: var(--line); margin: 6px 0; }
+.um-dropdown a svg.um-ico { width: 15px; height: 15px; vertical-align: -2px; margin-right: 2px; }
 
 /* 右上角使用者選單 */
 .user-menu { position: relative; }
