@@ -474,6 +474,7 @@ header.nav {
 .sub-form .btn { background: #fff; color: #111; border-color: #fff; }
 .subscribe small { display: block; margin-top: 14px; color: #888; font-size: 12.5px; }
 /* 追蹤 IG band */
+#follow .subscribe p { max-width: 640px; }
 .follow-cta { margin-top: 28px; }
 .follow-cta .btn { background: #fff; color: #111; border-color: #fff; }
 .btn.is-soon { background: rgba(255,255,255,.14); color: #eaeaea; border-color: rgba(255,255,255,.28); cursor: default; }
