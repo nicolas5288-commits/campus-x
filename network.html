@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>大使人脈網 · Campus X</title>
-  <link rel="stylesheet" href="styles.css?v=21f" />
+  <link rel="stylesheet" href="styles.css?v=21g" />
 </head>
 <body>
   <header class="nav">
@@ -68,8 +68,15 @@
           </div>
         </div>
         <div class="form-row">
-          <div class="field"><label><span>學校</span><input type="text" name="school" placeholder="例：國立政治大學" /></label></div>
-          <div class="field"><label><span>年級</span><input type="text" name="grade" placeholder="例：大三" /></label></div>
+          <div class="field"><label><span>學校</span>
+            <input type="text" name="school" list="schoolList" placeholder="打字搜尋，或直接輸入" autocomplete="off" />
+            <datalist id="schoolList"></datalist></label></div>
+          <div class="field"><label><span>年級</span>
+            <select name="grade">
+              <option value="">請選擇</option>
+              <option>大一</option><option>大二</option><option>大三</option><option>大四</option>
+              <option>碩士</option><option>博士</option><option>應屆畢業</option><option>其他</option>
+            </select></label></div>
         </div>
         <div class="field"><label><span>一句話介紹自己 <span class="hint">必填</span></span><input type="text" name="headline" required placeholder="例：做過 3 個計畫，最愛聊社群經營" /></label></div>
         <div class="field">
@@ -90,10 +97,10 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=21f"></script>
-  <script src="data.js?v=21f"></script>
-  <script src="db.js?v=21f"></script>
-  <script src="authui.js?v=21f"></script>
-  <script src="network.js?v=21f"></script>
+  <script src="config.js?v=21g"></script>
+  <script src="data.js?v=21g"></script>
+  <script src="db.js?v=21g"></script>
+  <script src="authui.js?v=21g"></script>
+  <script src="network.js?v=21g"></script>
 </body>
 </html>

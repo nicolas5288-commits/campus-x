@@ -154,6 +154,13 @@
     });
   }
 
+  // 學校建議清單（datalist；仍可自由輸入）
+  (function fillSchoolList() {
+    const dl = document.getElementById("schoolList");
+    if (!dl) return;
+    (window.SCHOOLS_FULL || []).forEach((s) => { const o = document.createElement("option"); o.value = s; dl.appendChild(o); });
+  })();
+
   // ---------- 專長多選標籤（＋其他自填）----------
   const selectedSkills = new Set();
   const skillBox = document.getElementById("skillChips");

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>刊登校園大使計畫 · Campus X</title>
-  <link rel="stylesheet" href="styles.css?v=21f" />
+  <link rel="stylesheet" href="styles.css?v=21g" />
 </head>
 <body>
   <header class="nav">
@@ -44,7 +44,10 @@
           </div>
           <div class="field">
             <label><span>地區</span>
-              <input type="text" name="location" placeholder="例：全台 / 北部 / 遠距" value="全台" /></label>
+              <select name="location">
+                <option>全台</option><option>北部</option><option>中部</option><option>南部</option>
+                <option>東部</option><option>離島</option><option>遠距</option><option>其他</option>
+              </select></label>
           </div>
         </div>
 
@@ -75,7 +78,10 @@
           </div>
           <div class="field">
             <label><span>任期</span>
-              <input type="text" name="term" placeholder="例：一學期 / 一學年" value="一學期" /></label>
+              <select name="term">
+                <option>一學期</option><option>一學年</option><option>寒暑假</option>
+                <option>專案制</option><option>長期</option><option>其他</option>
+              </select></label>
           </div>
         </div>
 
@@ -124,9 +130,9 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=21f"></script>
-  <script src="data.js?v=21f"></script>
-  <script src="db.js?v=21f"></script>
+  <script src="config.js?v=21g"></script>
+  <script src="data.js?v=21g"></script>
+  <script src="db.js?v=21g"></script>
   <script>
   (function () {
     const EMOJIS = ["📌","🎧","🐼","🧴","🏦","📝","💄","👜","💼","✈️","📚","🍔","🎮","👟","☕","🎬","📱","💡","🌱","🎨"];
