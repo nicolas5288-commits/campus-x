@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · Campus X</title>
-  <link rel="stylesheet" href="styles.css?v=21t" />
+  <link rel="stylesheet" href="styles.css?v=21u" />
 </head>
 <body>
   <header class="nav">
@@ -47,6 +47,7 @@
         <button class="admin-tab" data-tab="reviews">學生心得 <span class="badge" id="badgeR" style="display:none;">0</span></button>
         <button class="admin-tab" data-tab="profiles">大使名片 <span class="badge" id="badgeN" style="display:none;">0</span></button>
         <button class="admin-tab" data-tab="events">活動 <span class="badge" id="badgeE" style="display:none;">0</span></button>
+        <button class="admin-tab" data-tab="notes">計畫回報 <span class="badge" id="badgeNote" style="display:none;">0</span></button>
         <button class="btn ghost sm" id="adLogout" style="margin-left:auto;">登出</button>
       </div>
       <div id="queue"></div>
@@ -55,9 +56,9 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=21t"></script>
-  <script src="data.js?v=21t"></script>
-  <script src="db.js?v=21t"></script>
+  <script src="config.js?v=21u"></script>
+  <script src="data.js?v=21u"></script>
+  <script src="db.js?v=21u"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -168,6 +169,13 @@
             ? list.map(eventCard).join("")
             : '<div class="admin-empty">目前沒有待審的活動 🎉</div>';
           bindEventActions();
+        } else if (tab === "notes") {
+          const list = await DB.getPendingNotes();
+          updateBadge("badgeNote", list.length);
+          queue.innerHTML = list.length
+            ? list.map(noteCard).join("")
+            : '<div class="admin-empty">目前沒有待處理的計畫回報 🎉</div>';
+          bindNoteActions();
         }
       } catch (err) {
         queue.innerHTML = `<div class="admin-empty">載入失敗：${esc(err.message)}</div>`;
@@ -184,6 +192,36 @@
       try { updateBadge("badgeR", (await DB.getPendingReviews()).length); } catch {}
       try { updateBadge("badgeN", (await DB.getPendingProfiles()).length); } catch {}
       try { updateBadge("badgeE", (await DB.getPendingEvents()).length); } catch {}
+      try { updateBadge("badgeNote", (await DB.getPendingNotes()).length); } catch {}
+    }
+
+    // ---- 計畫回報卡 ----
+    function noteCard(n) {
+      const prog = n.programs ? `${esc(n.programs.brand)}｜${esc(n.programs.title)}` : n.program_id;
+      return `<div class="queue-card" data-id="${n.id}">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span class="rev-type-badge">${esc(n.type)}</span>
+        </div>
+        <div class="q-brand" style="margin-top:8px;">計畫：${prog}</div>
+        <div class="q-section"><b>回報內容</b><div>${esc(n.content)}</div></div>
+        <div class="q-actions">
+          <button class="btn approve" data-editnote="${esc(n.program_id)}">✏️ 編輯此計畫</button>
+          <button class="btn" data-noteok="${n.id}" style="background:#0f8a5f;color:#fff;">✓ 已處理</button>
+          <button class="btn reject" data-notereject="${n.id}">✕ 退回</button>
+        </div>
+      </div>`;
+    }
+    function bindNoteActions() {
+      document.querySelectorAll("[data-editnote]").forEach(b => b.onclick = () => {
+        // 帶去前台該計畫的編輯（管理員登入態同一 session）
+        location.href = "index.html?p=" + encodeURIComponent(b.dataset.editnote) + "&edit=1";
+      });
+      document.querySelectorAll("[data-noteok]").forEach(b => b.onclick = async () => {
+        b.disabled = true; await DB.resolveNote(b.dataset.noteok, "accepted"); toast("已標記為處理完成 ✓"); loadQueue();
+      });
+      document.querySelectorAll("[data-notereject]").forEach(b => b.onclick = async () => {
+        b.disabled = true; await DB.resolveNote(b.dataset.notereject, "rejected"); toast("已退回"); loadQueue();
+      });
     }
 
     // ---- 數據總覽 ----
@@ -211,6 +249,7 @@
           ${tile("待審心得", s.pending_reviews)}
           ${tile("待審名片", s.pending_profiles)}
           ${tile("待審活動", s.pending_events)}
+          ${tile("計畫回報", s.pending_notes)}
         </div>
         <h3 style="margin:28px 0 12px;">🪄 許願清單（廠商開發名單）</h3>
         <div class="queue-card" style="padding:0;overflow:hidden;">
@@ -350,6 +389,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=21t"></script>
+  <script src="nav.js?v=21u"></script>
 </body>
 </html>

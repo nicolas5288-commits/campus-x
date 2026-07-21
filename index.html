@@ -21,7 +21,7 @@
   <meta name="twitter:title" content="Campus X · 台灣校園大使機會平台" />
   <meta name="twitter:description" content="一站看遍全台校園大使計畫，訂閱通知不錯過新機會。" />
   <meta name="twitter:image" content="https://nicolas5288-commits.github.io/campus-x/og-image.png?v=1" />
-  <link rel="stylesheet" href="styles.css?v=21t" />
+  <link rel="stylesheet" href="styles.css?v=21u" />
 </head>
 <body>
   <!-- Nav -->
@@ -111,6 +111,7 @@
         <div class="select-box">
           <select id="catSelect"></select>
         </div>
+        <label class="toggle"><input type="checkbox" id="recruitingOnly" /> 🟢 招募中</label>
         <label class="toggle"><input type="checkbox" id="paidOnly" /> 只看有薪</label>
         <div class="search-box">
           🔍 <input type="text" id="searchInput" placeholder="搜尋品牌或關鍵字…" />
@@ -252,6 +253,65 @@
     <div class="modal cmp-modal" id="cmpBody"></div>
   </div>
 
+  <!-- 補充/回報 Modal -->
+  <div class="modal-mask" id="noteMask">
+    <div class="modal" id="noteBody" style="max-width:460px;">
+      <button class="modal-close" id="noteClose">✕</button>
+      <h2>📝 補充 / 回報資訊</h2>
+      <p class="auth-sub" id="noteFor"></p>
+      <form id="noteForm" style="margin-top:16px;">
+        <div class="field"><label><span>類型</span>
+          <select name="type">
+            <option value="資訊有誤">資訊有誤</option>
+            <option value="已截止或重新開放">已截止 / 重新開放</option>
+            <option value="連結失效">連結失效</option>
+            <option value="其他補充">其他補充</option>
+          </select></label></div>
+        <div class="field"><label><span>內容 <span class="hint">必填</span></span>
+          <textarea name="content" required placeholder="請描述正確資訊或要補充的內容…"></textarea></label></div>
+        <div class="auth-err" id="noteErr"></div>
+        <button type="submit" class="btn" id="noteSubmit" style="width:100%;justify-content:center;">送出回報</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 管理員編輯計畫 Modal -->
+  <div class="modal-mask" id="editMask">
+    <div class="modal" id="editBody">
+      <button class="modal-close" id="editClose">✕</button>
+      <h2>✏️ 編輯計畫</h2>
+      <p class="auth-sub">只有管理員看得到，儲存後直接更新這個計畫。</p>
+      <form id="editForm" style="margin-top:16px;">
+        <div class="form-row">
+          <div class="field"><label><span>品牌</span><input name="brand" required /></label></div>
+          <div class="field"><label><span>Emoji</span><input name="emoji" maxlength="4" /></label></div>
+        </div>
+        <div class="field"><label><span>標題</span><input name="title" required /></label></div>
+        <div class="form-row">
+          <div class="field"><label><span>分類</span><select name="category" id="editCat"></select></label></div>
+          <div class="field"><label><span>地區</span><input name="location" /></label></div>
+        </div>
+        <div class="field"><label><span>簡介</span><textarea name="summary"></textarea></label></div>
+        <div class="field"><label><span>任務內容 <span class="hint">一行一項</span></span><textarea name="tasks" rows="4"></textarea></label></div>
+        <div class="field"><label><span>大使福利 <span class="hint">一行一項</span></span><textarea name="benefits" rows="4"></textarea></label></div>
+        <div class="field"><label><span>招募對象</span><textarea name="eligibility"></textarea></label></div>
+        <div class="form-row">
+          <div class="field"><label><span>任期</span><input name="term" /></label></div>
+          <div class="field"><label><span>截止日</span><input type="date" name="deadline" /></label></div>
+        </div>
+        <div class="form-row">
+          <label class="check-line"><input type="checkbox" name="paid" /> 有薪</label>
+          <label class="check-line"><input type="checkbox" name="recruiting" /> 🟢 招募中</label>
+        </div>
+        <div class="field"><label><span>招募狀態說明 <span class="hint">如「本梯已截止」「隨到隨審」</span></span><input name="recruitNote" /></label></div>
+        <div class="field"><label><span>報名連結</span><input name="applyUrl" /></label></div>
+        <div class="field"><label><span>資料來源連結</span><input name="sourceUrl" /></label></div>
+        <div class="auth-err" id="editErr"></div>
+        <button type="submit" class="btn" id="editSubmit" style="width:100%;justify-content:center;">儲存變更</button>
+      </form>
+    </div>
+  </div>
+
   <!-- 許願 Modal -->
   <div class="modal-mask" id="wishMask">
     <div class="modal" id="wishBody" style="max-width:440px;">
@@ -273,11 +333,11 @@
 
   <!-- Supabase JS（雲端模式用；本機模式不影響）-->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=21t"></script>
-  <script src="data.js?v=21t"></script>
-  <script src="db.js?v=21t"></script>
-  <script src="authui.js?v=21t"></script>
-  <script src="app.js?v=21t"></script>
-  <script src="nav.js?v=21t"></script>
+  <script src="config.js?v=21u"></script>
+  <script src="data.js?v=21u"></script>
+  <script src="db.js?v=21u"></script>
+  <script src="authui.js?v=21u"></script>
+  <script src="app.js?v=21u"></script>
+  <script src="nav.js?v=21u"></script>
 </body>
 </html>

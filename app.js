@@ -4,6 +4,7 @@
   const empty = document.getElementById("empty");
   const catSelect = document.getElementById("catSelect");
   const paidOnly = document.getElementById("paidOnly");
+  const recruitingOnly = document.getElementById("recruitingOnly");
   const searchInput = document.getElementById("searchInput");
   const resultCount = document.getElementById("resultCount");
 
@@ -41,16 +42,52 @@
   // ---------- 篩選 ----------
   function getFiltered() {
     const q = searchInput.value.trim().toLowerCase();
-    return livePrograms.filter((p) => {
+    const list = livePrograms.filter((p) => {
       if (activeCat !== "全部" && p.category !== activeCat) return false;
       if (paidOnly.checked && !p.paid) return false;
+      if (recruitingOnly.checked && p.recruiting === false) return false;
       if (q) {
         const hay = (p.brand + p.title + p.summary + p.category).toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
+    // 預設排序：招募中排前面，已截止的沉底（stable sort 維持組內原序）
+    return list.sort((a, b) => (a.recruiting === false ? 1 : 0) - (b.recruiting === false ? 1 : 0));
   }
+
+  // ---------- ⋯ 選單（依身分變臉）----------
+  function moreMenuHTML(p) {
+    const admin = window.DB.isAdmin && window.DB.isAdmin();
+    const adminItems = admin
+      ? `<button type="button" data-editp="${p.id}">✏️ 編輯計畫</button>
+         <button type="button" data-togglerec="${p.id}">${p.recruiting === false ? "🟢 標為招募中" : "🔴 標為已截止"}</button>`
+      : "";
+    return `<div class="more-wrap">
+        <button class="more-btn" type="button" data-more="${p.id}" title="更多">⋯</button>
+        <div class="more-menu">
+          ${adminItems}
+          <button type="button" data-notep="${p.id}">📝 補充 / 回報資訊</button>
+        </div>
+      </div>`;
+  }
+  // 綁定：⋯ 開合 + 三個動作（可在 grid 卡片或 modal 內共用）
+  function bindMoreMenus(root) {
+    root.querySelectorAll(".more-btn").forEach((btn) => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const wrap = btn.closest(".more-wrap");
+        const wasOpen = wrap.classList.contains("open");
+        document.querySelectorAll(".more-wrap.open").forEach((w) => w.classList.remove("open"));
+        if (!wasOpen) wrap.classList.add("open");
+      };
+    });
+    root.querySelectorAll("[data-notep]").forEach((b) => b.onclick = (e) => { e.stopPropagation(); closeMenus(); openNote(b.dataset.notep); });
+    root.querySelectorAll("[data-editp]").forEach((b) => b.onclick = (e) => { e.stopPropagation(); closeMenus(); openEdit(b.dataset.editp); });
+    root.querySelectorAll("[data-togglerec]").forEach((b) => b.onclick = (e) => { e.stopPropagation(); closeMenus(); toggleRecruiting(b.dataset.togglerec); });
+  }
+  function closeMenus() { document.querySelectorAll(".more-wrap.open").forEach((w) => w.classList.remove("open")); }
+  document.addEventListener("click", closeMenus);
 
   // ---------- 卡片 ----------
   function cardHTML(p) {
@@ -67,7 +104,10 @@
       <div class="card" data-id="${p.id}">
         <div class="card-top">
           <div class="card-emoji">${p.emoji}</div>
-          <button class="fav-btn ${isFav ? "on" : ""}" data-fav="${p.id}" title="收藏">${isFav ? "♥" : "♡"}</button>
+          <div class="card-top-actions">
+            ${moreMenuHTML(p)}
+            <button class="fav-btn ${isFav ? "on" : ""}" data-fav="${p.id}" title="收藏">${isFav ? "♥" : "♡"}</button>
+          </div>
         </div>
         <div>
           <h3>${p.title}</h3>
@@ -102,10 +142,11 @@
 
     grid.querySelectorAll(".card").forEach((el) => {
       el.onclick = (e) => {
-        if (e.target.closest("[data-fav]") || e.target.closest("[data-cmp]")) return;
+        if (e.target.closest("[data-fav]") || e.target.closest("[data-cmp]") || e.target.closest(".more-wrap")) return;
         openModal(el.dataset.id);
       };
     });
+    bindMoreMenus(grid);
     grid.querySelectorAll("[data-fav]").forEach((btn) => {
       btn.onclick = async (e) => {
         e.stopPropagation();
@@ -215,6 +256,7 @@
       : '<span class="tag unpaid">無薪</span>';
     body.innerHTML = `
       <button class="modal-close" id="modalClose">✕</button>
+      <div class="modal-more">${moreMenuHTML(p)}</div>
       <div class="modal-emoji">${p.emoji}</div>
       <h2>${p.title}</h2>
       <div class="m-brand">${p.brand}</div>
@@ -260,6 +302,7 @@
     document.getElementById("modalClose").onclick = closeModal;
     document.getElementById("modalFav").onclick = () => handleFav(p.id);
     document.getElementById("shareExpBtn").onclick = () => openReview(p);
+    bindMoreMenus(body);
 
     // 載入該計畫的心得
     loadProgramReviews(p);
@@ -419,6 +462,8 @@
     if (e.key === "Escape") {
       closeModal(); closeAuth(); closeReview(); closeCompare();
       document.getElementById("wishMask").classList.remove("open");
+      document.getElementById("noteMask").classList.remove("open");
+      document.getElementById("editMask").classList.remove("open");
     }
   });
 
@@ -564,6 +609,134 @@
     }
   };
 
+  // ---------- 補充 / 回報 Modal ----------
+  const noteMask = document.getElementById("noteMask");
+  let noteTargetId = null;
+  function openNote(id) {
+    // 需登入（雲端模式）
+    if (window.DB.configured && !window.DB.getUser()) {
+      openAuth("login", "登入後就能回報 / 補充計畫資訊！");
+      return;
+    }
+    const p = livePrograms.find((x) => x.id === id);
+    noteTargetId = id;
+    document.getElementById("noteFor").textContent = p ? `${p.title}（${p.brand}）` : "";
+    document.getElementById("noteErr").textContent = "";
+    document.getElementById("noteForm").reset();
+    noteMask.classList.add("open");
+  }
+  function closeNote() { noteMask.classList.remove("open"); }
+  document.getElementById("noteClose").onclick = closeNote;
+  noteMask.onclick = (e) => { if (e.target.id === "noteMask") closeNote(); };
+  document.getElementById("noteForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const btn = document.getElementById("noteSubmit");
+    const errEl = document.getElementById("noteErr");
+    errEl.textContent = "";
+    btn.disabled = true; btn.textContent = "送出中…";
+    try {
+      await window.DB.submitProgramNote(noteTargetId, f.type.value, f.content.value.trim());
+      closeNote();
+      toast("已送出，感謝回報！我們會盡快確認 🙌");
+    } catch (err) {
+      errEl.textContent = err.message || "送出失敗，請稍後再試";
+    } finally {
+      btn.disabled = false; btn.textContent = "送出回報";
+    }
+  };
+
+  // ---------- 管理員：編輯計畫 Modal ----------
+  const editMask = document.getElementById("editMask");
+  let editTargetId = null;
+  // 分類下拉
+  (function fillEditCat() {
+    const sel = document.getElementById("editCat");
+    if (!sel) return;
+    (window.CATEGORIES || []).filter((c) => c !== "全部").forEach((c) => {
+      const o = document.createElement("option"); o.value = c; o.textContent = c; sel.appendChild(o);
+    });
+  })();
+  function openEdit(id) {
+    const p = livePrograms.find((x) => x.id === id);
+    if (!p) return;
+    editTargetId = id;
+    const f = document.getElementById("editForm");
+    f.brand.value = p.brand || "";
+    f.emoji.value = p.emoji || "";
+    f.title.value = p.title || "";
+    f.category.value = p.category || "";
+    f.location.value = p.location || "";
+    f.summary.value = p.summary || "";
+    f.tasks.value = (p.tasks || []).join("\n");
+    f.benefits.value = (p.benefits || []).join("\n");
+    f.eligibility.value = p.eligibility || "";
+    f.term.value = p.term || "";
+    f.deadline.value = p.deadline || "";
+    f.paid.checked = !!p.paid;
+    f.recruiting.checked = p.recruiting !== false;
+    f.recruitNote.value = p.recruitNote || "";
+    f.applyUrl.value = p.applyUrl || "";
+    f.sourceUrl.value = p.sourceUrl || "";
+    document.getElementById("editErr").textContent = "";
+    editMask.classList.add("open");
+  }
+  function closeEdit() { editMask.classList.remove("open"); }
+  document.getElementById("editClose").onclick = closeEdit;
+  editMask.onclick = (e) => { if (e.target.id === "editMask") closeEdit(); };
+  document.getElementById("editForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const btn = document.getElementById("editSubmit");
+    const errEl = document.getElementById("editErr");
+    errEl.textContent = "";
+    btn.disabled = true; btn.textContent = "儲存中…";
+    const lines = (v) => v.split("\n").map((x) => x.trim()).filter(Boolean);
+    try {
+      await window.DB.updateProgram(editTargetId, {
+        brand: f.brand.value.trim(), emoji: f.emoji.value.trim() || "📌", category: f.category.value,
+        title: f.title.value.trim(), summary: f.summary.value.trim(),
+        tasks: lines(f.tasks.value), benefits: lines(f.benefits.value),
+        eligibility: f.eligibility.value.trim(), term: f.term.value.trim(),
+        paid: f.paid.checked, location: f.location.value.trim(),
+        deadline: f.deadline.value || null, recruiting: f.recruiting.checked,
+        recruitNote: f.recruitNote.value.trim(), applyUrl: f.applyUrl.value.trim(), sourceUrl: f.sourceUrl.value.trim(),
+      });
+      closeEdit();
+      toast("計畫已更新 ✓");
+      await reloadPrograms(editTargetId);
+    } catch (err) {
+      errEl.textContent = err.message || "儲存失敗";
+    } finally {
+      btn.disabled = false; btn.textContent = "儲存變更";
+    }
+  };
+
+  // 管理員快捷：切換招募狀態
+  async function toggleRecruiting(id) {
+    const p = livePrograms.find((x) => x.id === id);
+    if (!p) return;
+    const next = p.recruiting === false; // 目前已截止→改招募中；反之亦然
+    try {
+      await window.DB.setRecruiting(id, next);
+      toast(next ? "已標為 🟢 招募中" : "已標為 🔴 已截止");
+      await reloadPrograms(id);
+    } catch (err) { toast(err.message || "操作失敗"); }
+  }
+
+  // 重新載入計畫並重繪；若該計畫詳情正開著就刷新
+  async function reloadPrograms(refreshId) {
+    try { livePrograms = await window.DB.getPrograms(); } catch {}
+    document.getElementById("statCount").textContent = livePrograms.length;
+    document.getElementById("statPaid").textContent = livePrograms.filter((p) => p.paid).length;
+    render();
+    if (refreshId && document.getElementById("modalMask").classList.contains("open")) {
+      openModal(refreshId);
+    }
+  }
+  // 供 admin 深連結：index.html?p=id&edit=1（管理員看完回報一鍵編輯）
+  window.__openEditFromDeepLink = (id) => openEdit(id);
+
   // ---------- 「我是廠商」下拉選單 ----------
   (function initVendorDd() {
     const dd = document.getElementById("vendorDd");
@@ -587,6 +760,7 @@
 
   // ---------- 事件 ----------
   paidOnly.onchange = render;
+  recruitingOnly.onchange = render;
   searchInput.oninput = render;
 
   // ---------- 啟動 ----------
@@ -603,9 +777,15 @@
     document.getElementById("statPaid").textContent = livePrograms.filter((p) => p.paid).length;
 
     // 從會員頁「看詳情」帶 ?p=id 進來 → 自動開該計畫詳情
-    const wantP = new URLSearchParams(location.search).get("p");
+    // admin 深連結 ?p=id&edit=1（後台看完回報一鍵編輯）
+    const params = new URLSearchParams(location.search);
+    const wantP = params.get("p");
     if (wantP && livePrograms.some((x) => x.id === wantP)) {
-      setTimeout(() => openModal(wantP), 300);
+      const wantEdit = params.get("edit") === "1";
+      setTimeout(() => {
+        if (wantEdit && window.DB.isAdmin && window.DB.isAdmin()) openEdit(wantP);
+        else openModal(wantP);
+      }, 400);
     }
 
     // Auth：狀態變化時重載收藏（nav 由 authui.js 處理）

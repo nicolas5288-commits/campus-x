@@ -159,6 +159,23 @@ header.nav {
 .fav-btn { background: none; border: none; cursor: pointer; font-size: 20px; line-height: 1; color: var(--line-strong); transition: .15s; padding: 4px; }
 .fav-btn:hover { transform: scale(1.15); }
 .fav-btn.on { color: #e0245e; }
+
+/* ⋯ 更多選單 */
+.card-top-actions { display: flex; align-items: center; gap: 2px; }
+.more-wrap { position: relative; }
+.more-btn { background: none; border: none; cursor: pointer; font-size: 20px; line-height: 1; color: var(--ink-soft); padding: 4px 6px; border-radius: 8px; transition: .15s; }
+.more-btn:hover { background: var(--accent-soft); color: var(--ink); }
+.more-menu {
+  position: absolute; top: calc(100% + 4px); right: 0; min-width: 168px; z-index: 40;
+  background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
+  padding: 6px; display: none; flex-direction: column; gap: 2px; text-align: left;
+}
+.more-wrap.open .more-menu { display: flex; }
+.more-menu button { background: none; border: none; text-align: left; cursor: pointer; font-family: inherit;
+  font-size: 14px; color: var(--ink); padding: 9px 12px; border-radius: 8px; white-space: nowrap; width: 100%; }
+.more-menu button:hover { background: var(--accent-soft); }
+.modal-more { position: absolute; top: 18px; left: 22px; }
+.modal-more .more-menu { left: 0; right: auto; }
 .card h3 { font-size: 17px; font-weight: 700; letter-spacing: -.01em; line-height: 1.35; }
 .card .brand { font-size: 13.5px; color: var(--ink-soft); margin-top: 1px; }
 .card .desc { font-size: 14px; color: var(--ink-soft); flex: 1; }

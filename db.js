@@ -22,7 +22,9 @@ window.DB = (function () {
   };
   function loadStore() {
     const d = JSON.parse(localStorage.getItem(LS.store) || "{}");
+    // 先 spread 保留所有 key（wishes/notes/programEdits…），再補預設，避免新加的 key 讀出來消失
     return {
+      ...d,
       submitted: d.submitted || [], overrides: d.overrides || {}, reviews: d.reviews || [],
       profiles: d.profiles || [], profileOverrides: d.profileOverrides || {},
       events: d.events || [], eventOverrides: d.eventOverrides || {}, eventSignups: d.eventSignups || {},
@@ -48,9 +50,12 @@ window.DB = (function () {
     const base = (window.PROGRAMS || []).map((p) => ({ ...p }));
     const all = base.concat(s.submitted.map((p) => ({ ...p })));
     return all.map((p) => {
+      let out = { ...p };
       const ov = s.overrides[p.id];
-      if (ov) return { ...p, status: ov.status, reject_reason: ov.reject_reason };
-      return p;
+      if (ov) out = { ...out, status: ov.status, reject_reason: ov.reject_reason };
+      const ed = (s.programEdits || {})[p.id];   // 管理員本機編輯覆蓋
+      if (ed) out = { ...out, ...ed };
+      return out;
     });
   }
   function localSetStatus(id, status, reason) {
@@ -165,6 +170,82 @@ window.DB = (function () {
   async function rejectProgram(id, reason) {
     if (!sb) return localSetStatus(id, "rejected", reason);
     const { error } = await sb.from("programs").update({ status: "rejected", reject_reason: reason }).eq("id", id);
+    if (error) throw error;
+  }
+
+  // ========== Programs：管理員編輯（RLS prog_admin_update 已存在）==========
+  // ⚠️ camelCase 前台欄位 → snake_case 明確對應（別用自動轉換，profiles 踩過雷）
+  async function updateProgram(id, f) {
+    const fields = {
+      brand: f.brand, emoji: f.emoji || "📌", category: f.category, title: f.title, summary: f.summary,
+      tasks: f.tasks || [], benefits: f.benefits || [], eligibility: f.eligibility, term: f.term,
+      paid: !!f.paid, location: f.location, deadline: f.deadline || null,
+      recruiting: f.recruiting !== false, recruit_note: f.recruitNote || null,
+      apply_url: f.applyUrl || null, source_url: f.sourceUrl || null,
+    };
+    if (!sb) {
+      const s = loadStore();
+      s.programEdits = s.programEdits || {};
+      s.programEdits[id] = { ...(s.programEdits[id] || {}), ...f };
+      saveStore(s);
+      return { ok: true };
+    }
+    if (!isAdmin()) throw new Error("只有管理員能編輯計畫");
+    const { error } = await sb.from("programs").update(fields).eq("id", id);
+    if (error) throw error;
+    return { ok: true };
+  }
+  // 快捷：切換招募狀態
+  async function setRecruiting(id, recruiting) {
+    if (!sb) {
+      const s = loadStore();
+      s.programEdits = s.programEdits || {};
+      s.programEdits[id] = { ...(s.programEdits[id] || {}), recruiting };
+      saveStore(s);
+      return { ok: true };
+    }
+    if (!isAdmin()) throw new Error("只有管理員能操作");
+    const { error } = await sb.from("programs").update({ recruiting }).eq("id", id);
+    if (error) throw error;
+    return { ok: true };
+  }
+
+  // ========== 計畫補充/回報 program_notes ==========
+  async function submitProgramNote(programId, type, content) {
+    if (!sb) {
+      const s = loadStore();
+      s.notes = s.notes || [];
+      s.notes.push({ id: "n-" + Date.now(), program_id: programId, user_id: "local", type, content, status: "pending", created_at: new Date(0).toISOString() });
+      saveStore(s);
+      return { ok: true };
+    }
+    if (!currentUser) throw new Error("請先登入再回報");
+    const { error } = await sb.from("program_notes").insert({ program_id: programId, user_id: currentUser.id, type, content, status: "pending" });
+    if (error) throw error;
+    return { ok: true };
+  }
+  async function getPendingNotes() {
+    if (!sb) {
+      const s = loadStore();
+      return (s.notes || []).filter((n) => n.status === "pending").map((n) => {
+        const p = localAllPrograms().find((x) => x.id === n.program_id);
+        return { ...n, programs: p ? { title: p.title, brand: p.brand } : null };
+      });
+    }
+    const { data, error } = await sb.from("program_notes").select("*, programs(title, brand)")
+      .eq("status", "pending").order("created_at", { ascending: true });
+    if (error) throw error;
+    return data || [];
+  }
+  async function resolveNote(id, status) {
+    if (!sb) {
+      const s = loadStore();
+      const n = (s.notes || []).find((x) => x.id === id);
+      if (n) n.status = status;
+      saveStore(s);
+      return;
+    }
+    const { error } = await sb.from("program_notes").update({ status }).eq("id", id);
     if (error) throw error;
   }
 
@@ -578,6 +659,7 @@ window.DB = (function () {
         pending_reviews: (s.reviews || []).filter((r) => r.status === "pending").length,
         pending_profiles: localAllProfiles().filter((p) => p.status === "pending").length,
         pending_events: localAllEvents().filter((e) => e.status === "pending").length,
+        pending_notes: (s.notes || []).filter((n) => n.status === "pending").length,
       };
     }
     const { data, error } = await sb.rpc("admin_stats");
@@ -598,6 +680,7 @@ window.DB = (function () {
     MODE, configured: !!sb,
     initAuth, onAuth, signUp, signIn, signInWithGoogle, signOut, getUser, isAdmin,
     getPrograms, getPendingPrograms, submitProgram, approveProgram, rejectProgram, getProgramStatus,
+    updateProgram, setRecruiting, submitProgramNote, getPendingNotes, resolveNote,
     getFavorites, toggleFavorite,
     getReviews, getPendingReviews, submitReview, approveReview, rejectReview, getFeaturedReviews,
     getProfiles, getPendingProfiles, getMyProfile, saveProfile, approveProfile, rejectProfile, uploadAvatar,
