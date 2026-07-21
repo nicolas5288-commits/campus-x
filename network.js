@@ -154,6 +154,29 @@
     });
   }
 
+  // ---------- 專長多選標籤（＋其他自填）----------
+  const selectedSkills = new Set();
+  const skillBox = document.getElementById("skillChips");
+  function renderSkillChips() {
+    const preset = window.SKILL_TAGS || [];
+    // 選中但不在預設清單的（自訂）也要顯示
+    const custom = [...selectedSkills].filter((s) => !preset.includes(s));
+    const all = [...preset, ...custom];
+    skillBox.innerHTML = all.map((s) =>
+      `<button type="button" class="chip ${selectedSkills.has(s) ? "active" : ""}" data-skill="${s.replace(/"/g, "")}">${s}</button>`
+    ).join("") + `<button type="button" class="chip chip-add" id="skillOther">＋ 其他</button>`;
+    skillBox.querySelectorAll("[data-skill]").forEach((b) => b.onclick = () => {
+      const s = b.dataset.skill;
+      if (selectedSkills.has(s)) selectedSkills.delete(s); else selectedSkills.add(s);
+      renderSkillChips();
+    });
+    document.getElementById("skillOther").onclick = () => {
+      const v = prompt("輸入你的專長（例：談判、企劃）：");
+      if (v && v.trim()) { selectedSkills.add(v.trim()); renderSkillChips(); }
+    };
+  }
+  renderSkillChips();
+
   function openEdit() {
     if (DB.configured && !DB.getUser()) { toast("請先登入再建立名片 🔑"); return; }
     document.getElementById("editErr").textContent = "";
@@ -177,7 +200,7 @@
       nickname: f.nickname.value.trim(), avatar: pickedAvatar,
       school: f.school.value.trim(), grade: f.grade.value.trim(),
       headline: f.headline.value.trim(),
-      skills: f.skills.value.split(/[,，]/).map(s => s.trim()).filter(Boolean),
+      skills: [...selectedSkills],
       experiences, igUrl: f.igUrl.value.trim(), contactOpen: f.contactOpen.checked,
     };
     btn.disabled = true; btn.textContent = "送出中…";
@@ -191,6 +214,8 @@
       document.getElementById("editMask").classList.remove("open");
       toast("名片已送出審核！通過後會出現在人脈網 🙌");
       f.reset();
+      selectedSkills.clear();
+      renderSkillChips();
     } catch (err) { errEl.textContent = err.message || "送出失敗"; }
     finally { btn.disabled = false; btn.textContent = "送出審核"; }
   };

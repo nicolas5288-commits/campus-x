@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>大使人脈網 · Campus X</title>
-  <link rel="stylesheet" href="styles.css?v=21e" />
+  <link rel="stylesheet" href="styles.css?v=21f" />
 </head>
 <body>
   <header class="nav">
@@ -72,7 +72,10 @@
           <div class="field"><label><span>年級</span><input type="text" name="grade" placeholder="例：大三" /></label></div>
         </div>
         <div class="field"><label><span>一句話介紹自己 <span class="hint">必填</span></span><input type="text" name="headline" required placeholder="例：做過 3 個計畫，最愛聊社群經營" /></label></div>
-        <div class="field"><label><span>專長 <span class="hint">用逗號分隔，例：社群經營, 短影音</span></span><input type="text" name="skills" placeholder="社群經營, 攝影, 文案" /></label></div>
+        <div class="field">
+          <span>專長 <span class="hint">點選你的專長，可多選</span></span>
+          <div class="chip-select" id="skillChips"></div>
+        </div>
         <div class="field"><label><span>做過的計畫 <span class="hint">一行一個，格式：計畫名 / 第X屆 / 年份</span></span>
           <textarea name="experiences" placeholder="JLab 校園大使 / 第 1 屆 / 2025&#10;foodpanda 校園大使 / 第 3 屆 / 2024"></textarea></label></div>
         <div class="field"><label><span>IG 連結 <span class="hint">選填，開放聯繫才會顯示</span></span><input type="url" name="igUrl" placeholder="https://instagram.com/你的帳號" /></label></div>
@@ -87,10 +90,10 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=21e"></script>
-  <script src="data.js?v=21e"></script>
-  <script src="db.js?v=21e"></script>
-  <script src="authui.js?v=21e"></script>
-  <script src="network.js?v=21e"></script>
+  <script src="config.js?v=21f"></script>
+  <script src="data.js?v=21f"></script>
+  <script src="db.js?v=21f"></script>
+  <script src="authui.js?v=21f"></script>
+  <script src="network.js?v=21f"></script>
 </body>
 </html>

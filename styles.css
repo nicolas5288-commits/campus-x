@@ -350,6 +350,12 @@ header.nav {
 .badge-f { background: #fff4e0; color: #c97a12; }
 .pc-exp { font-size: 12.5px; color: var(--ink-soft); border-top: 1px solid var(--line); padding-top: 10px; }
 
+/* 專長多選標籤 */
+.chip-select { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-select .chip { font-size: 13.5px; padding: 6px 13px; }
+.chip-select .chip-add { border-style: dashed; color: var(--ink-soft); }
+.chip-select .chip-add:hover { border-color: var(--ink); color: var(--ink); }
+
 /* 頭貼上傳 */
 .avatar-upload { display: flex; align-items: center; gap: 14px; }
 .avatar-preview { width: 60px; height: 60px; border-radius: 50%; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; overflow: hidden; border: 1px solid var(--line); }
