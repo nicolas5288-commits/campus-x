@@ -53,30 +53,36 @@
     ctx.fillText("● Campus X", W / 2, 150);
 
     const c = copy();
-    let y = 640;
+    // 用文字中心對齊，間距依字體大小動態算，四種卡都有穩定呼吸感
+    ctx.textBaseline = "middle";
+    let y = 600;
     // kicker
     ctx.fillStyle = t.accent;
-    setFont(52, "700");
+    setFont(50, "700");
     ctx.fillText(c.kicker, W / 2, y);
-    y += 130;
-    // pre line
+    y += 25 + 70; // kicker 半高 + gap
+    // pre line（可能為空）
     if (c.pre) {
-      ctx.fillStyle = "#e8e8e8";
       setFont(72, "600");
+      y += 36;
+      ctx.fillStyle = "#e8e8e8";
       ctx.fillText(c.pre, W / 2, y);
-      y += 150;
+      y += 36 + 40;
     }
     // big brand（過長自動縮字）
-    ctx.fillStyle = "#fff";
     let bigSize = 150;
     setFont(bigSize, "800");
     while (ctx.measureText(c.big).width > W - 140 && bigSize > 60) { bigSize -= 8; setFont(bigSize, "800"); }
+    y += bigSize / 2;
+    ctx.fillStyle = "#fff";
     ctx.fillText(c.big, W / 2, y);
-    y += bigSize + 40;
+    y += bigSize / 2 + 60;
     // post line（過長換行）
-    ctx.fillStyle = "#e8e8e8";
     setFont(60, "600");
-    wrapText(c.post, W / 2, y, W - 160, 78);
+    y += 30;
+    ctx.fillStyle = "#e8e8e8";
+    wrapText(c.post, W / 2, y, W - 160, 82);
+    ctx.textBaseline = "alphabetic";
 
     // 頭像 + 名字（下方）
     const ay = 1500, ar = 90;
