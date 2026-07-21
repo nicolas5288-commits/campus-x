@@ -558,19 +558,16 @@
     render();
   }
 
-  // ---------- 訂閱 ----------
-  document.getElementById("subForm").onsubmit = async (e) => {
-    e.preventDefault();
-    const email = document.getElementById("subEmail").value.trim();
-    document.getElementById("subEmail").value = "";
-    try {
-      const r = await window.DB.subscribe(email, []);
-      if (r.local) toast(`已收到 ${email} 的訂閱！（Supabase 設定後即真實記錄）`);
-      else toast(`訂閱成功！新計畫上架會通知 ${email} ✉️`);
-    } catch (err) {
-      toast("訂閱失敗：" + (err.message || "請稍後再試"));
+  // ---------- 追蹤 IG band（新計畫通知）----------
+  const IG_READY = false; // ⭐ IG 開通後把這行改成 true：按鈕自動變成可追蹤連結（讀 config.CONTACT_IG）
+  (function initIgBand() {
+    const box = document.getElementById("followCta");
+    if (!box) return;
+    const ig = (window.DB.cfg || {}).CONTACT_IG;
+    if (IG_READY && ig) {
+      box.innerHTML = `<a href="${ig}" target="_blank" rel="noopener" class="btn">追蹤 Campus X IG →</a>`;
     }
-  };
+  })();
 
   // ---------- 登入按鈕 ----------
   document.getElementById("loginBtn").onclick = (e) => {

@@ -473,6 +473,11 @@ header.nav {
 }
 .sub-form .btn { background: #fff; color: #111; border-color: #fff; }
 .subscribe small { display: block; margin-top: 14px; color: #888; font-size: 12.5px; }
+/* 追蹤 IG band */
+.follow-cta { margin-top: 28px; }
+.follow-cta .btn { background: #fff; color: #111; border-color: #fff; }
+.btn.is-soon { background: rgba(255,255,255,.14); color: #eaeaea; border-color: rgba(255,255,255,.28); cursor: default; }
+.btn.is-soon:hover { transform: none; opacity: 1; }
 
 /* ===== 許願池 band ===== */
 .wish-band { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; background: #fbf7ee; border: 1px solid #efe4cd; border-radius: 22px; padding: 34px 40px; margin: 30px 0; }

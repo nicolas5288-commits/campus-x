@@ -667,14 +667,6 @@ window.DB = (function () {
     return data || {};
   }
 
-  // ========== Subscriptions ==========
-  async function subscribe(email, categories = []) {
-    if (!sb) return { local: true };
-    const { error } = await sb.from("subscriptions")
-      .upsert({ email, categories, user_id: currentUser?.id || null }, { onConflict: "email" });
-    if (error) throw error;
-    return { ok: true };
-  }
 
   return {
     MODE, configured: !!sb,
@@ -687,7 +679,6 @@ window.DB = (function () {
     getMyAccount, saveAccount, getAccountsMap,
     getEvents, getPendingEvents, createEvent, approveEvent, rejectEvent, toggleSignup, localMySignups,
     submitWish, getAdminWishes, getAdminStats,
-    subscribe,
     cfg,
     CATEGORIES: (window.CATEGORIES || []).filter((c) => c !== "全部"),
   };

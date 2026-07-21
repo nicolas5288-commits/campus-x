@@ -236,7 +236,7 @@ window.PROGRAMS = [
     location: "遠距",
     deadline: "2025-04-13",
     recruiting: false,
-    recruitNote: "2025 梯次已截止，104 每年約 3–4 月招募，可訂閱通知等下屆",
+    recruitNote: "2025 梯次已截止，104 每年約 3–4 月招募",
     applyUrl: "https://www.104.com.tw/jobs/search/?keyword=%E6%A0%A1%E5%9C%92%E5%A4%A7%E4%BD%BF",
     sourceUrl: "https://www.104.com.tw/jobs/search/?keyword=%E6%A0%A1%E5%9C%92%E5%A4%A7%E4%BD%BF",
     status: "live"
