@@ -251,6 +251,7 @@
         <div class="rev-tabs" id="revViewTabs">
           <button class="rev-tab active" data-rv="interview">面試經驗</button>
           <button class="rev-tab" data-rv="experience">參與心得</button>
+          ${(window.DCARD_LINKS && window.DCARD_LINKS[p.id] && window.DCARD_LINKS[p.id].length) ? '<button class="rev-tab" data-rv="dcard">💬 Dcard 討論</button>' : ""}
         </div>
         <div id="revList"><div class="rev-empty">載入中…</div></div>
       </div>`;
@@ -286,6 +287,19 @@
   function renderReviewList(reviews, p) {
     const box = document.getElementById("revList");
     if (!box) return;
+    // Dcard 討論分頁：外連整理，非站內心得
+    if (reviewViewType === "dcard") {
+      const links = (window.DCARD_LINKS && window.DCARD_LINKS[p.id]) || [];
+      box.innerHTML =
+        links.map((l) =>
+          `<a class="dcard-rev" href="${escapeHtml(l.url)}" target="_blank" rel="noopener">
+             <span class="dcard-rev-badge">Dcard</span>
+             <span class="dcard-rev-title">${escapeHtml(l.title)}</span>
+             <span class="dcard-rev-go">看全文 →</span>
+           </a>`).join("") +
+        `<div class="dcard-rev-note">以上為 Dcard 公開文章連結，內容版權屬原作者。</div>`;
+      return;
+    }
     const list = reviews.filter((r) => r.type === reviewViewType);
     if (!list.length) {
       box.innerHTML = `<div class="rev-empty">還沒有${reviewViewType === "interview" ? "面試經驗" : "參與心得"}，當第一個分享的人吧 👋</div>`;

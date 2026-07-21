@@ -645,6 +645,13 @@ footer { border-top: 1px solid var(--line); padding: 38px 0; margin-top: 40px; }
 .dcard-voice .quote::before { content: none; }
 .dcard-voice .dcard-more { color: #006aa6; }
 .dcard-note { text-align: center; font-size: 12.5px; color: var(--ink-soft); margin-top: 22px; }
+/* Dcard 討論分頁（計畫詳情 學長姐怎麼說）*/
+.dcard-rev { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; transition: .15s; }
+.dcard-rev:hover { border-color: #006aa6; background: #f5fafd; }
+.dcard-rev-badge { flex-shrink: 0; font-size: 11.5px; font-weight: 700; color: #fff; background: #006aa6; padding: 3px 9px; border-radius: 999px; }
+.dcard-rev-title { flex: 1; font-size: 14px; font-weight: 600; color: var(--ink); }
+.dcard-rev-go { flex-shrink: 0; font-size: 12.5px; font-weight: 700; color: #006aa6; }
+.dcard-rev-note { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
 
 /* ---- CTA band ---- */
 .about-cta {
