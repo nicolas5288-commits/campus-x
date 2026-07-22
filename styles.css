@@ -331,6 +331,8 @@ header.nav {
 .btn.approve { background: var(--paid); border-color: var(--paid); }
 .btn.reject { background: #fff; color: #c0392b; border-color: #f0c9c4; }
 .btn.reject:hover { background: #fdeaea; opacity: 1; }
+.btn.danger { background: #c0392b; color: #fff; border-color: #c0392b; margin-left: auto; }
+.btn.danger:hover { background: #a5271b; border-color: #a5271b; opacity: 1; }
 .admin-gate { text-align: center; padding: 70px 20px; }
 .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .stat-grid.four { grid-template-columns: repeat(2, 1fr); max-width: 560px; }

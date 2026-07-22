@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · UniEmbassy</title>
-  <link rel="stylesheet" href="styles.css?v=37" />
+  <link rel="stylesheet" href="styles.css?v=38" />
 </head>
 <body>
   <header class="nav">
@@ -96,9 +96,9 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=37"></script>
-  <script src="data.js?v=37"></script>
-  <script src="db.js?v=37"></script>
+  <script src="config.js?v=38"></script>
+  <script src="data.js?v=38"></script>
+  <script src="db.js?v=38"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -151,6 +151,7 @@
           <button class="btn" data-editp="${p.id}" style="background:#fff;color:var(--ink);border-color:var(--line-strong);">✏️ 補完 / 編輯</button>
           <button class="btn approve" data-approve="${p.id}">✓ 通過上架</button>
           <button class="btn reject" data-reject="${p.id}">✕ 退回</button>
+          <button class="btn danger" data-delp="${p.id}">🗑️ 永久刪除</button>
         </div>
       </div>`;
     }
@@ -176,6 +177,7 @@
         <div class="q-actions">
           <button class="btn approve" data-rapprove="${r.id}">✓ 通過上架</button>
           <button class="btn reject" data-rreject="${r.id}">✕ 退回</button>
+          <button class="btn danger" data-delr="${r.id}">🗑️ 永久刪除</button>
         </div>
       </div>`;
     }
@@ -315,6 +317,7 @@
         <div class="q-actions">
           <button class="btn approve" data-napprove="${p.id}">✓ 通過上架</button>
           <button class="btn reject" data-nreject="${p.id}">✕ 退回</button>
+          <button class="btn danger" data-delprof="${p.id}">🗑️ 永久刪除</button>
         </div>
       </div>`;
     }
@@ -325,6 +328,13 @@
       document.querySelectorAll("[data-nreject]").forEach(b => b.onclick = async () => {
         if (!confirm("確定退回這張名片？")) return;
         b.disabled = true; await DB.rejectProfile(b.dataset.nreject); toast("已退回"); loadQueue();
+      });
+      document.querySelectorAll("[data-delprof]").forEach(b => b.onclick = async () => {
+        if (!confirm("永久刪除這張名片？\n\n此動作無法復原，資料會從資料庫徹底移除。\n若只是不想上架，請改用「退回」。")) return;
+        b.disabled = true;
+        try { await DB.deleteProfile(b.dataset.delprof); toast("已永久刪除 🗑️"); }
+        catch (e) { toast("刪除失敗：" + e.message); b.disabled = false; return; }
+        renderProfilesTab();
       });
     }
 
@@ -475,6 +485,7 @@
         <div class="q-actions">
           <button class="btn approve" data-eapprove="${e.id}">✓ 通過上架</button>
           <button class="btn reject" data-ereject="${e.id}">✕ 退回</button>
+          <button class="btn danger" data-dele="${e.id}">🗑️ 永久刪除</button>
         </div>
       </div>`;
     }
@@ -485,6 +496,13 @@
       document.querySelectorAll("[data-ereject]").forEach(b => b.onclick = async () => {
         if (!confirm("確定退回這場活動？")) return;
         b.disabled = true; await DB.rejectEvent(b.dataset.ereject); toast("已退回"); loadQueue();
+      });
+      document.querySelectorAll("[data-dele]").forEach(b => b.onclick = async () => {
+        if (!confirm("永久刪除這場活動？\n\n此動作無法復原，資料會從資料庫徹底移除（連同它的報名紀錄）。\n若只是不想上架，請改用「退回」。")) return;
+        b.disabled = true;
+        try { await DB.deleteEvent(b.dataset.dele); toast("已永久刪除 🗑️"); }
+        catch (e) { toast("刪除失敗：" + e.message); b.disabled = false; return; }
+        loadQueue();
       });
     }
 
@@ -501,6 +519,13 @@
         b.disabled = true;
         await DB.rejectProgram(b.dataset.reject, reason);
         toast("已退回"); loadQueue();
+      });
+      document.querySelectorAll("[data-delp]").forEach(b => b.onclick = async () => {
+        if (!confirm("永久刪除這筆計畫投稿？\n\n此動作無法復原，資料會從資料庫徹底移除（連同它的收藏、心得、回報一併清除）。\n若只是不想上架，請改用「退回」。")) return;
+        b.disabled = true;
+        try { await DB.deleteProgram(b.dataset.delp); toast("已永久刪除 🗑️"); }
+        catch (e) { toast("刪除失敗：" + e.message); b.disabled = false; return; }
+        loadQueue();
       });
     }
 
@@ -567,6 +592,13 @@
         await DB.rejectReview(b.dataset.rreject, reason);
         toast("已退回"); loadQueue();
       });
+      document.querySelectorAll("[data-delr]").forEach(b => b.onclick = async () => {
+        if (!confirm("永久刪除這則心得？\n\n此動作無法復原，資料會從資料庫徹底移除。\n若只是不想上架，請改用「退回」。")) return;
+        b.disabled = true;
+        try { await DB.deleteReview(b.dataset.delr); toast("已永久刪除 🗑️"); }
+        catch (e) { toast("刪除失敗：" + e.message); b.disabled = false; return; }
+        loadQueue();
+      });
     }
 
     // ---- Tabs ----
@@ -608,6 +640,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=37"></script>
+  <script src="nav.js?v=38"></script>
 </body>
 </html>

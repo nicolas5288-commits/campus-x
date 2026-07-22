@@ -29,6 +29,8 @@ window.DB = (function () {
       profiles: d.profiles || [], profileOverrides: d.profileOverrides || {},
       events: d.events || [], eventOverrides: d.eventOverrides || {}, eventSignups: d.eventSignups || {},
       reports: d.reports || [], brandWishes: d.brandWishes || [], wishVotes: d.wishVotes || [], featureWishes: d.featureWishes || [],
+      // 本機模式永久刪除的墓碑（seed 假資料無法真的刪，靠這個過濾掉）
+      deleted: { programs: (d.deleted && d.deleted.programs) || [], events: (d.deleted && d.deleted.events) || [], profiles: (d.deleted && d.deleted.profiles) || [] },
     };
   }
   function saveStore(s) {
@@ -50,7 +52,8 @@ window.DB = (function () {
     const s = loadStore();
     const base = (window.PROGRAMS || []).map((p) => ({ ...p }));
     const all = base.concat(s.submitted.map((p) => ({ ...p })));
-    return all.map((p) => {
+    const tomb = s.deleted.programs;
+    return all.filter((p) => !tomb.includes(p.id)).map((p) => {
       let out = { ...p };
       const ov = s.overrides[p.id];
       if (ov) out = { ...out, status: ov.status, reject_reason: ov.reject_reason };
@@ -178,6 +181,21 @@ window.DB = (function () {
     if (!sb) return localSetStatus(id, "rejected", reason);
     const { error } = await sb.from("programs").update({ status: "rejected", reject_reason: reason }).eq("id", id);
     if (error) throw error;
+  }
+  // 永久刪除（不可逆）：RLS prog_admin_delete(v12)；子表(reviews/favorites/notes)on delete cascade 自動清
+  async function deleteProgram(id) {
+    if (!sb) {
+      const s = loadStore();
+      s.submitted = s.submitted.filter((p) => p.id !== id);
+      delete s.overrides[id];
+      if (s.programEdits) delete s.programEdits[id];
+      if (!s.deleted.programs.includes(id)) s.deleted.programs.push(id);
+      saveStore(s);
+      return;
+    }
+    const { data, error } = await sb.from("programs").delete().eq("id", id).select("id");
+    if (error) throw error;
+    if (!data || !data.length) throw new Error("沒有刪除任何資料（請確認已跑 schema_v12_admin_delete.sql）");
   }
 
   // ========== Programs：管理員編輯（RLS prog_admin_update 已存在）==========
@@ -333,6 +351,18 @@ window.DB = (function () {
     const { error } = await sb.from("reviews").update({ status: "rejected", reject_reason: reason }).eq("id", id);
     if (error) throw error;
   }
+  // 永久刪除（不可逆）：RLS rev_admin_delete(v12)
+  async function deleteReview(id) {
+    if (!sb) {
+      const s = loadStore();
+      s.reviews = s.reviews.filter((r) => r.id !== id);
+      saveStore(s);
+      return;
+    }
+    const { data, error } = await sb.from("reviews").delete().eq("id", id).select("id");
+    if (error) throw error;
+    if (!data || !data.length) throw new Error("沒有刪除任何資料（請確認已跑 schema_v12_admin_delete.sql）");
+  }
   // 精選心得（跨計畫，給「關於校園大使」頁做社會證明；只回 live，附品牌名）
   async function getFeaturedReviews(limit = 3) {
     if (!sb) {
@@ -374,7 +404,8 @@ window.DB = (function () {
     const s = loadStore();
     const base = (window.PROFILES || []).map((p) => ({ ...p }));
     const all = base.concat((s.profiles || []).map((p) => ({ ...p })));
-    return all.map((p) => {
+    const tomb = s.deleted.profiles;
+    return all.filter((p) => !tomb.includes(p.id)).map((p) => {
       const ov = (s.profileOverrides || {})[p.id];
       return ov ? { ...p, status: ov.status } : p;
     });
@@ -519,13 +550,28 @@ window.DB = (function () {
     const { error } = await sb.from("profiles").update({ status: "rejected" }).eq("id", id);
     if (error) throw error;
   }
+  // 永久刪除（不可逆）：RLS prof_admin_delete(v12)；子表(reports)on delete cascade
+  async function deleteProfile(id) {
+    if (!sb) {
+      const s = loadStore();
+      s.profiles = (s.profiles || []).filter((p) => p.id !== id);
+      if (s.profileOverrides) delete s.profileOverrides[id];
+      if (!s.deleted.profiles.includes(id)) s.deleted.profiles.push(id);
+      saveStore(s);
+      return;
+    }
+    const { data, error } = await sb.from("profiles").delete().eq("id", id).select("id");
+    if (error) throw error;
+    if (!data || !data.length) throw new Error("沒有刪除任何資料（請確認已跑 schema_v12_admin_delete.sql）");
+  }
 
   // ========== 活動 events ==========
   function localAllEvents() {
     const s = loadStore();
     const base = (window.EVENTS || []).map((e) => ({ ...e }));
     const all = base.concat((s.events || []).map((e) => ({ ...e })));
-    return all.map((e) => {
+    const tomb = s.deleted.events;
+    return all.filter((e) => !tomb.includes(e.id)).map((e) => {
       const ov = (s.eventOverrides || {})[e.id];
       const signups = (s.eventSignups || {})[e.id];
       let out = e;
@@ -597,6 +643,21 @@ window.DB = (function () {
     if (!sb) return localSetEventStatus(id, "rejected");
     const { error } = await sb.from("events").update({ status: "rejected" }).eq("id", id);
     if (error) throw error;
+  }
+  // 永久刪除（不可逆）：RLS ev_admin_delete(v12)；子表(event_signups)on delete cascade
+  async function deleteEvent(id) {
+    if (!sb) {
+      const s = loadStore();
+      s.events = (s.events || []).filter((e) => e.id !== id);
+      if (s.eventOverrides) delete s.eventOverrides[id];
+      if (s.eventSignups) delete s.eventSignups[id];
+      if (!s.deleted.events.includes(id)) s.deleted.events.push(id);
+      saveStore(s);
+      return;
+    }
+    const { data, error } = await sb.from("events").delete().eq("id", id).select("id");
+    if (error) throw error;
+    if (!data || !data.length) throw new Error("沒有刪除任何資料（請確認已跑 schema_v12_admin_delete.sql）");
   }
   // 報名（本機模式用固定 demo 身分 'me'）
   async function toggleSignup(eventId) {
@@ -890,13 +951,13 @@ window.DB = (function () {
   return {
     MODE, configured: !!sb,
     initAuth, onAuth, signUp, signIn, signInWithGoogle, signOut, getUser, isAdmin,
-    getPrograms, getPendingPrograms, submitProgram, approveProgram, rejectProgram, getProgramStatus,
+    getPrograms, getPendingPrograms, submitProgram, approveProgram, rejectProgram, deleteProgram, getProgramStatus,
     updateProgram, setRecruiting, submitProgramNote, getPendingNotes, resolveNote,
     getFavorites, toggleFavorite,
-    getReviews, getPendingReviews, submitReview, approveReview, rejectReview, getFeaturedReviews,
-    getProfiles, getPendingProfiles, getMyProfile, saveProfile, approveProfile, rejectProfile, uploadAvatar,
+    getReviews, getPendingReviews, submitReview, approveReview, rejectReview, deleteReview, getFeaturedReviews,
+    getProfiles, getPendingProfiles, getMyProfile, saveProfile, approveProfile, rejectProfile, deleteProfile, uploadAvatar,
     getMyAccount, saveAccount, getAccountsMap,
-    getEvents, getPendingEvents, createEvent, approveEvent, rejectEvent, toggleSignup, localMySignups,
+    getEvents, getPendingEvents, createEvent, approveEvent, rejectEvent, deleteEvent, toggleSignup, localMySignups,
     submitWish, getAdminWishes, getAdminStats,
     reportProfile, getPendingReports, resolveReport, removeProfile, getLiveProfilesAdmin,
     getBrandWishes, submitBrandWish, toggleWishVote, deleteBrandWish,
