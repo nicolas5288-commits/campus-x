@@ -716,8 +716,9 @@ window.DB = (function () {
   }
   // 名片下架（=status rejected，資料保留、可救回）
   async function removeProfile(id) {
+    // profiles 表沒有 reject_reason 欄位，下架＝只改 status（同 rejectProfile）；下架後不在名片牆（getProfiles 只抓 live）
     if (!sb) return localSetProfileStatus(id, "rejected");
-    const { error } = await sb.from("profiles").update({ status: "rejected", reject_reason: "管理員下架" }).eq("id", id);
+    const { error } = await sb.from("profiles").update({ status: "rejected" }).eq("id", id);
     if (error) throw error;
   }
   // 後台：所有已上架名片（給「已上架」檢視下架用）
