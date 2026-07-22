@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /member.html
+
+Sitemap: https://uniembassy.tw/sitemap.xml
