@@ -17,7 +17,7 @@
   <meta property="og:locale" content="zh_TW" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:image" content="https://uniembassy.tw/og-image.png?v=2" />
-  <link rel="stylesheet" href="styles.css?v=31" />
+  <link rel="stylesheet" href="styles.css?v=32" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <meta name="theme-color" content="#1a1a1a" />
@@ -79,6 +79,10 @@
             <select name="locationType"><option value="offline">線下實體</option><option value="online">線上</option></select></label></div>
         </div>
         <div class="field"><label><span>地點 <span class="hint">線下寫地區、線上寫平台</span></span><input type="text" name="location" placeholder="例：台北・信義區 / Google Meet" /></label></div>
+        <div class="form-row">
+          <div class="field"><label><span>費用 <span class="hint">選填，免費可留空</span></span><input type="text" name="fee" placeholder="例：免費 / NT$100 / 酌收場地費 50" /></label></div>
+          <div class="field"><label><span>報名連結 <span class="hint">選填，Google 表單等</span></span><input type="url" name="signupUrl" placeholder="https://..." /></label></div>
+        </div>
         <div class="auth-err" id="ceErr"></div>
         <button type="submit" class="btn" id="ceSubmit" style="width:100%;justify-content:center;">送出審核</button>
       </form>
@@ -87,12 +91,12 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=31"></script>
-  <script src="data.js?v=31"></script>
-  <script src="db.js?v=31"></script>
-  <script src="authui.js?v=31"></script>
-  <script src="events.js?v=31"></script>
-  <script src="nav.js?v=31"></script>
-  <script src="install.js?v=31"></script>
+  <script src="config.js?v=32"></script>
+  <script src="data.js?v=32"></script>
+  <script src="db.js?v=32"></script>
+  <script src="authui.js?v=32"></script>
+  <script src="events.js?v=32"></script>
+  <script src="nav.js?v=32"></script>
+  <script src="install.js?v=32"></script>
 </body>
 </html>

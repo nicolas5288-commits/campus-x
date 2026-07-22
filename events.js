@@ -39,6 +39,7 @@
       <div class="ev-meta">
         <div class="row">🗓️ ${esc(e.eventAt || "時間待定")}</div>
         <div class="row">${e.locationType === "online" ? "💻" : "📍"} ${esc(e.location || "地點待定")}</div>
+        ${e.fee ? `<div class="row">💰 ${esc(e.fee)}</div>` : ""}
         <div class="row">🙋 發起人：${esc(host.nickname)}</div>
       </div>
       <div class="ev-foot">
@@ -107,6 +108,7 @@
         <div class="m"><span>時間</span><b>${esc(e.eventAt || "待定")}</b></div>
         <div class="m"><span>形式</span><b>${e.locationType === "online" ? "線上" : "線下實體"}</b></div>
         <div class="m"><span>地點</span><b>${esc(e.location || "待定")}</b></div>
+        <div class="m"><span>費用</span><b>${e.fee ? esc(e.fee) : "免費"}</b></div>
         <div class="m"><span>名額</span><b>${signups.length}${cap ? " / " + cap : ""}</b></div>
       </div>
       <h4>活動說明</h4>
@@ -114,7 +116,9 @@
       <h4>誰會去（${signups.length}）</h4>
       <div class="attendee-grid">${attendees}</div>
       <div class="safety-tip">🛡️ 第一次見面建議約公共場所、結伴同行。覺得不對勁可截圖回報 UniEmbassy。</div>
-      <div style="margin-top:16px;">${btn}</div>`;
+      <div style="margin-top:16px;">${btn}
+        ${e.signupUrl ? `<a href="${esc(e.signupUrl)}" target="_blank" rel="noopener" class="btn ghost" style="width:100%;justify-content:center;margin-top:10px;">📋 前往報名表單 →</a>` : ""}
+      </div>`;
     document.getElementById("emMask").classList.add("open");
     document.getElementById("emClose").onclick = () => document.getElementById("emMask").classList.remove("open");
     const sb = document.getElementById("signBtn");
@@ -149,6 +153,7 @@
       description: f.description.value.trim(), eventAt: f.eventAt.value.trim(),
       locationType: f.locationType.value, location: f.location.value.trim(),
       capacity: parseInt(f.capacity.value) || null,
+      fee: f.fee.value.trim(), signupUrl: f.signupUrl.value.trim(),
     };
     btn.disabled = true; btn.textContent = "送出中…";
     try {

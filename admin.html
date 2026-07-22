@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · UniEmbassy</title>
-  <link rel="stylesheet" href="styles.css?v=31" />
+  <link rel="stylesheet" href="styles.css?v=32" />
 </head>
 <body>
   <header class="nav">
@@ -57,9 +57,9 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=31"></script>
-  <script src="data.js?v=31"></script>
-  <script src="db.js?v=31"></script>
+  <script src="config.js?v=32"></script>
+  <script src="data.js?v=32"></script>
+  <script src="db.js?v=32"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -424,8 +424,10 @@
           <span class="tag">${e.locationType === "online" ? "線上" : "線下"}</span>
           <span class="tag">📍 ${esc(e.location || "待定")}</span>
           <span class="tag">上限 ${e.capacity || "—"}</span>
+          <span class="tag">💰 ${esc(e.fee || "免費")}</span>
         </div>
         <div class="q-section"><b>說明</b><div>${esc(e.description || "")}</div></div>
+        ${e.signupUrl ? `<div class="q-section"><b>報名連結</b><div><a href="${esc(e.signupUrl)}" target="_blank" rel="noopener">${esc(e.signupUrl)}</a></div></div>` : ""}
         <div class="q-actions">
           <button class="btn approve" data-eapprove="${e.id}">✓ 通過上架</button>
           <button class="btn reject" data-ereject="${e.id}">✕ 退回</button>
@@ -510,6 +512,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=31"></script>
+  <script src="nav.js?v=32"></script>
 </body>
 </html>

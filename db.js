@@ -542,6 +542,7 @@ window.DB = (function () {
       id: e.id, hostId: e.host_user_id, title: e.title, type: e.type,
       description: e.description, eventAt: e.event_at, locationType: e.location_type,
       location: e.location, capacity: e.capacity, status: e.status,
+      fee: e.fee, signupUrl: e.signup_url,
       signupIds: (e.event_signups || []).map((s) => s.user_id),
     };
   }
@@ -574,6 +575,7 @@ window.DB = (function () {
       title: form.title, type: form.type, description: form.description,
       event_at: form.eventAt || null, location_type: form.locationType || "offline",
       location: form.location, capacity: form.capacity || null,
+      fee: form.fee || null, signup_url: form.signupUrl || null,
       status: "pending",
     };
     const { error } = await sb.from("events").insert(row);
