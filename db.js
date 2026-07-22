@@ -122,6 +122,7 @@ window.DB = (function () {
       eligibility: r.eligibility, term: r.term, paid: r.paid, location: r.location,
       deadline: r.deadline, applyUrl: r.apply_url, status: r.status, reject_reason: r.reject_reason,
       recruiting: r.recruiting, recruitNote: r.recruit_note, sourceUrl: r.source_url,
+      submittedBy: r.submitted_by,
     };
   }
 
@@ -138,7 +139,10 @@ window.DB = (function () {
     const { data, error } = await sb.from("programs").select("*")
       .eq("status", "pending").order("created_at", { ascending: true });
     if (error) throw error;
-    return (data || []).map(normalizeRow);
+    const rows = (data || []).map(normalizeRow);
+    // 學生提報的補上提報人暱稱（廠商投稿 submittedBy=null，不查）
+    const map = await getAccountsMap(rows.map((r) => r.submittedBy).filter(Boolean));
+    return rows.map((r) => (r.submittedBy ? { ...r, submitterName: map[r.submittedBy]?.nickname || "學生" } : r));
   }
 
   // ========== Programs：廠商投稿（免登入，寫入 pending）==========
@@ -155,7 +159,9 @@ window.DB = (function () {
       brand: form.brand, emoji: form.emoji || "📌", category: form.category,
       title: form.title, summary: form.summary, tasks: form.tasks || [], benefits: form.benefits || [],
       eligibility: form.eligibility, term: form.term, paid: !!form.paid, location: form.location,
-      deadline: form.deadline || null, apply_url: form.applyUrl, status: "pending",
+      deadline: form.deadline || null, apply_url: form.applyUrl, source_url: form.sourceUrl || null,
+      submitted_by: currentUser ? currentUser.id : null,  // 登入者提報→記名（排行榜 +30 靠這個）；廠商免登入→null
+      status: "pending",
     };
     const { data, error } = await sb.from("programs").insert(row).select("id").single();
     if (error) throw error;

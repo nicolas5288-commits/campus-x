@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · UniEmbassy</title>
-  <link rel="stylesheet" href="styles.css?v=34" />
+  <link rel="stylesheet" href="styles.css?v=35" />
 </head>
 <body>
   <header class="nav">
@@ -54,17 +54,57 @@
       <div id="queue"></div>
     </div>
   </div>
+  <!-- 補完 / 編輯計畫 modal -->
+  <div class="modal-mask" id="apEditMask">
+    <div class="modal" id="apEditBody">
+      <button class="modal-close" id="apEditClose">✕</button>
+      <h2>✏️ 補完 / 編輯計畫</h2>
+      <p class="auth-sub">補完學生提報的計畫，或編輯任何投稿。儲存後可直接通過上架。</p>
+      <form id="apEditForm" style="margin-top:16px;">
+        <div class="form-row">
+          <div class="field"><label><span>品牌</span><input name="brand" required /></label></div>
+          <div class="field"><label><span>Emoji</span><input name="emoji" maxlength="4" placeholder="📌" /></label></div>
+        </div>
+        <div class="field"><label><span>標題</span><input name="title" required /></label></div>
+        <div class="form-row">
+          <div class="field"><label><span>分類</span><select name="category" id="apEditCat"></select></label></div>
+          <div class="field"><label><span>地區</span><input name="location" placeholder="全台 / 北部 / 遠距…" /></label></div>
+        </div>
+        <div class="field"><label><span>一句話簡介</span><textarea name="summary"></textarea></label></div>
+        <div class="field"><label><span>任務內容 <span class="hint">一行一項</span></span><textarea name="tasks" rows="3"></textarea></label></div>
+        <div class="field"><label><span>大使福利 <span class="hint">一行一項</span></span><textarea name="benefits" rows="3"></textarea></label></div>
+        <div class="field"><label><span>招募對象</span><input name="eligibility" placeholder="全台大專院校在學學生" /></label></div>
+        <div class="form-row">
+          <div class="field"><label><span>任期</span><input name="term" placeholder="一學期 / 專案制…" /></label></div>
+          <div class="field"><label><span>截止日</span><input type="date" name="deadline" /></label></div>
+        </div>
+        <div class="form-row">
+          <label class="check-line"><input type="checkbox" name="paid" /> 有薪 / 有獎金</label>
+          <label class="check-line"><input type="checkbox" name="recruiting" checked /> 🟢 招募中</label>
+        </div>
+        <div class="field"><label><span>報名連結</span><input name="applyUrl" placeholder="https://..." /></label></div>
+        <div class="field"><label><span>資料來源連結 <span class="hint">學生提報的原始出處</span></span><input name="sourceUrl" placeholder="https://..." /></label></div>
+        <div class="auth-err" id="apEditErr"></div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn ghost" id="apEditSaveOnly" style="flex:1;justify-content:center;">💾 只儲存</button>
+          <button type="submit" class="btn" id="apEditSave" style="flex:1;justify-content:center;">✓ 儲存並上架</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=34"></script>
-  <script src="data.js?v=34"></script>
-  <script src="db.js?v=34"></script>
+  <script src="config.js?v=35"></script>
+  <script src="data.js?v=35"></script>
+  <script src="db.js?v=35"></script>
   <script>
   (function () {
     const DB = window.DB;
     let tab = "stats";
     let profileView = "pending";   // 大使名片 tab 內：pending / live / report
+    let pendingProgramsCache = []; // 補完/編輯計畫 modal 用
 
     function toast(msg) {
       const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show");
@@ -88,7 +128,8 @@
     // ---- 投稿佇列 ----
     function programCard(p) {
       return `<div class="queue-card" data-id="${p.id}">
-        <div style="display:flex;gap:12px;align-items:start;">
+        ${p.submittedBy ? `<span class="rev-type-badge" style="background:#fff6d9;color:#7a5a00;border:1px solid #ffe28a;">🙋 學生提報${p.submitterName ? "・" + esc(p.submitterName) : ""}</span>` : ""}
+        <div style="display:flex;gap:12px;align-items:start;margin-top:${p.submittedBy ? "8px" : "0"};">
           <div class="card-emoji">${p.emoji || "📌"}</div>
           <div style="flex:1;">
             <h3>${esc(p.title)}</h3>
@@ -98,14 +139,16 @@
         <div class="q-meta">
           <span class="tag ${p.paid ? "paid" : "unpaid"}">${p.paid ? "有薪" : "無薪"}</span>
           <span class="tag">${esc(p.category)}</span>
-          <span class="tag">${esc(p.location)}</span>
+          ${p.location ? `<span class="tag">${esc(p.location)}</span>` : ""}
           ${p.deadline ? `<span class="tag">截止 ${esc(p.deadline)}</span>` : ""}
         </div>
         <div class="q-section"><b>簡介</b><div>${esc(p.summary)}</div></div>
         ${p.tasks && p.tasks.length ? `<div class="q-section"><b>任務</b><div>${p.tasks.map(esc).join("、")}</div></div>` : ""}
         ${p.benefits && p.benefits.length ? `<div class="q-section"><b>福利</b><div>${p.benefits.map(esc).join("、")}</div></div>` : ""}
-        <div class="q-section"><b>報名連結</b><div><a href="${esc(p.applyUrl)}" target="_blank" rel="noopener">${esc(p.applyUrl)}</a></div></div>
+        ${p.sourceUrl ? `<div class="q-section"><b>來源</b><div><a href="${esc(p.sourceUrl)}" target="_blank" rel="noopener">${esc(p.sourceUrl)}</a></div></div>` : ""}
+        <div class="q-section"><b>報名連結</b><div>${p.applyUrl ? `<a href="${esc(p.applyUrl)}" target="_blank" rel="noopener">${esc(p.applyUrl)}</a>` : "—"}</div></div>
         <div class="q-actions">
+          <button class="btn" data-editp="${p.id}" style="background:#fff;color:var(--ink);border-color:var(--line-strong);">✏️ 補完 / 編輯</button>
           <button class="btn approve" data-approve="${p.id}">✓ 通過上架</button>
           <button class="btn reject" data-reject="${p.id}">✕ 退回</button>
         </div>
@@ -145,6 +188,7 @@
           await renderStats();
         } else if (tab === "programs") {
           const list = await DB.getPendingPrograms();
+          pendingProgramsCache = list;
           updateBadge("badgeP", list.length);
           queue.innerHTML = list.length
             ? list.map(programCard).join("")
@@ -445,6 +489,7 @@
     }
 
     function bindProgramActions() {
+      document.querySelectorAll("[data-editp]").forEach(b => b.onclick = () => openEditProgram(b.dataset.editp));
       document.querySelectorAll("[data-approve]").forEach(b => b.onclick = async () => {
         b.disabled = true;
         await DB.approveProgram(b.dataset.approve);
@@ -458,6 +503,57 @@
         toast("已退回"); loadQueue();
       });
     }
+
+    // ---- 補完 / 編輯計畫 modal ----
+    (function initEditCat() {
+      const sel = document.getElementById("apEditCat");
+      (DB.CATEGORIES || []).forEach((c) => { const o = document.createElement("option"); o.value = c; o.textContent = c; sel.appendChild(o); });
+    })();
+    let editTargetId = null;
+    function openEditProgram(id) {
+      const p = pendingProgramsCache.find((x) => x.id === id);
+      if (!p) return;
+      editTargetId = id;
+      const f = document.getElementById("apEditForm");
+      f.brand.value = p.brand || ""; f.emoji.value = p.emoji || ""; f.title.value = p.title || "";
+      f.category.value = p.category || (DB.CATEGORIES || [])[0] || ""; f.location.value = p.location || "";
+      f.summary.value = p.summary === "學生提報，資料待補完。" ? "" : (p.summary || "");
+      f.tasks.value = (p.tasks || []).join("\n"); f.benefits.value = (p.benefits || []).join("\n");
+      f.eligibility.value = p.eligibility || ""; f.term.value = p.term || ""; f.deadline.value = p.deadline || "";
+      f.paid.checked = !!p.paid; f.recruiting.checked = p.recruiting !== false;
+      f.applyUrl.value = p.applyUrl || ""; f.sourceUrl.value = p.sourceUrl || "";
+      document.getElementById("apEditErr").textContent = "";
+      document.getElementById("apEditMask").classList.add("open");
+    }
+    async function saveEditProgram(approve) {
+      const f = document.getElementById("apEditForm");
+      const errEl = document.getElementById("apEditErr");
+      const lines = (v) => v.split("\n").map((x) => x.trim()).filter(Boolean);
+      if (!f.brand.value.trim() || !f.title.value.trim()) { errEl.textContent = "品牌與標題為必填"; return; }
+      const btns = [document.getElementById("apEditSave"), document.getElementById("apEditSaveOnly")];
+      btns.forEach((b) => b.disabled = true);
+      errEl.textContent = "";
+      try {
+        await DB.updateProgram(editTargetId, {
+          brand: f.brand.value.trim(), emoji: f.emoji.value.trim() || "📌", category: f.category.value,
+          title: f.title.value.trim(), summary: f.summary.value.trim(),
+          tasks: lines(f.tasks.value), benefits: lines(f.benefits.value),
+          eligibility: f.eligibility.value.trim(), term: f.term.value.trim(),
+          paid: f.paid.checked, location: f.location.value.trim(),
+          deadline: f.deadline.value || null, recruiting: f.recruiting.checked,
+          recruitNote: "", applyUrl: f.applyUrl.value.trim(), sourceUrl: f.sourceUrl.value.trim(),
+        });
+        if (approve) await DB.approveProgram(editTargetId);
+        document.getElementById("apEditMask").classList.remove("open");
+        toast(approve ? "已補完並上架 ✓" : "已儲存 ✓");
+        loadQueue();
+      } catch (err) { errEl.textContent = err.message || "儲存失敗"; }
+      finally { btns.forEach((b) => b.disabled = false); }
+    }
+    document.getElementById("apEditClose").onclick = () => document.getElementById("apEditMask").classList.remove("open");
+    document.getElementById("apEditMask").onclick = (e) => { if (e.target.id === "apEditMask") e.currentTarget.classList.remove("open"); };
+    document.getElementById("apEditForm").onsubmit = (e) => { e.preventDefault(); saveEditProgram(true); };
+    document.getElementById("apEditSaveOnly").onclick = () => saveEditProgram(false);
     function bindReviewActions() {
       document.querySelectorAll("[data-rapprove]").forEach(b => b.onclick = async () => {
         b.disabled = true;
@@ -512,6 +608,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=34"></script>
+  <script src="nav.js?v=35"></script>
 </body>
 </html>

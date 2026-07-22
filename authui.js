@@ -49,6 +49,7 @@
         <a href="member.html">🏆 我的積分</a>
         <a href="network.html">🪪 大使名片</a>
         <a href="share.html">🎉 產生分享卡</a>
+        <a href="report.html">🕵️ 提報計畫</a>
         <a href="wish.html">🪄 許願池</a>
         <a href="#" data-install>📲 安裝 App</a>
         ${DB.isAdmin && DB.isAdmin() ? '<a href="admin.html">🛠️ 審核後台</a>' : ""}
