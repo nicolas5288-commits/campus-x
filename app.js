@@ -557,17 +557,6 @@
     render();
   }
 
-  // ---------- 追蹤 IG band（新計畫通知）----------
-  const IG_READY = false; // ⭐ IG 開通後把這行改成 true：按鈕自動變成可追蹤連結（讀 config.CONTACT_IG）
-  (function initIgBand() {
-    const box = document.getElementById("followCta");
-    if (!box) return;
-    const ig = (window.DB.cfg || {}).CONTACT_IG;
-    if (IG_READY && ig) {
-      box.innerHTML = `<a href="${ig}" target="_blank" rel="noopener" class="btn">追蹤 UniEmbassy IG →</a>`;
-    }
-  })();
-
   // ---------- 登入按鈕 ----------
   document.getElementById("loginBtn").onclick = (e) => {
     e.preventDefault();
