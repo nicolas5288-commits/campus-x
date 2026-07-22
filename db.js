@@ -839,6 +839,46 @@ window.DB = (function () {
     if (error) throw error;
   }
 
+  // ========== 貢獻積分排行榜 ==========
+  // 本機模式：從 localStorage 內容照同權重動態算（demo 用）
+  function localScoreCounts() {
+    const s = loadStore();
+    const reviews = new Set((s.reviews || []).filter((r) => r.status === "live").map((r) => r.program_id)).size;
+    const notes = (s.notes || []).filter((n) => n.status === "accepted").length;
+    const programs = localAllPrograms().filter((p) => String(p.id).startsWith("u-") && p.status === "live").length;
+    const own = (s.profiles || [])[0];
+    let liveProfile = null;
+    if (own) { const m = localAllProfiles().find((p) => p.id === own.id); if (m && m.status === "live") liveProfile = m; }
+    const events = (s.events || []).filter((e) => e.status === "live").length;
+    const score = reviews * 20 + notes * 10 + programs * 30 + (liveProfile ? 10 : 0) + events * 15;
+    return { reviews, notes, programs, profile: liveProfile ? 1 : 0, events, score, liveProfile };
+  }
+  async function getMyScore() {
+    if (!sb) { const c = localScoreCounts(); return { reviews: c.reviews, notes: c.notes, programs: c.programs, profile: c.profile, events: c.events, score: c.score }; }
+    if (!currentUser) return null;
+    const { data, error } = await sb.rpc("my_score");
+    if (error) throw error;
+    return data || null;
+  }
+  async function getLeaderboard(limit = 10) {
+    if (!sb) {
+      const c = localScoreCounts();
+      if (c.score <= 0) return [];
+      const acc = loadStore().account || {};
+      return [{
+        user_id: "you", score: c.score,
+        nickname: acc.nickname || (c.liveProfile && c.liveProfile.nickname) || "你",
+        avatar_url: acc.avatar_url || (c.liveProfile && c.liveProfile.avatar_url) || null,
+        profile_id: c.liveProfile ? c.liveProfile.id : null,
+        school: c.liveProfile ? c.liveProfile.school : null,
+        badges: c.liveProfile ? (c.liveProfile.badges || []) : [],
+      }];
+    }
+    const { data, error } = await sb.rpc("leaderboard", { limit_n: limit });
+    if (error) throw error;
+    return data || [];
+  }
+
 
   return {
     MODE, configured: !!sb,
@@ -854,6 +894,7 @@ window.DB = (function () {
     reportProfile, getPendingReports, resolveReport, removeProfile, getLiveProfilesAdmin,
     getBrandWishes, submitBrandWish, toggleWishVote, deleteBrandWish,
     submitFeatureWish, getFeatureWishesAdmin, deleteFeatureWish,
+    getLeaderboard, getMyScore,
     cfg,
     CATEGORIES: (window.CATEGORIES || []).filter((c) => c !== "全部"),
   };

@@ -600,3 +600,13 @@ window.SCHOOLS_FULL = [
 window.SCHOOLS = ["全部"].concat(window.SCHOOLS_FULL);
 window.SKILL_TAGS = ["社群經營", "短影音", "活動企劃", "簡報", "數據分析", "公關", "美妝內容", "攝影", "文案", "產業研究", "工作坊帶領", "穿搭", "拍攝", "選品", "Podcast", "職涯諮詢", "剪輯", "國際交流", "外語"];
 window.EVENT_TYPES = ["面試攻略分享會", "同計畫同梯聚", "校際交流", "廠商見面會", "純吃飯哈拉"];
+
+// ===== 貢獻等級（4 階；門檻對應積分排行榜）=====
+window.LEVELS = [
+  { min: 120, emoji: "🏆", name: "外交大使" },
+  { min: 50,  emoji: "📣", name: "活躍大使" },
+  { min: 10,  emoji: "🎒", name: "見習大使" },
+  { min: 0,   emoji: "🌱", name: "新生報到" },
+];
+window.levelOf = function (score) { return window.LEVELS.find((l) => (score || 0) >= l.min) || window.LEVELS[window.LEVELS.length - 1]; };
+window.nextLevel = function (score) { const above = window.LEVELS.filter((l) => l.min > (score || 0)); return above.length ? above[above.length - 1] : null; };

@@ -284,10 +284,61 @@
     try { await DB.signInWithGoogle(); } catch (err) { toast(err.message || "登入失敗"); }
   };
 
+  // ---------- 貢獻排行榜 ----------
+  const MEDALS = ["🥇", "🥈", "🥉"];
+  function lbAv(row) {
+    return row.avatar_url
+      ? `<img src="${esc(row.avatar_url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
+      : `<span>${esc((row.nickname || "?")[0])}</span>`;
+  }
+  function lbRowHTML(row, i) {
+    const lv = (window.levelOf ? window.levelOf(row.score) : { emoji: "", name: "" });
+    const rank = i < 3 ? `<span class="lb-rank medal">${MEDALS[i]}</span>` : `<span class="lb-rank">${i + 1}</span>`;
+    const hasCard = !!row.profile_id;
+    const sub = hasCard
+      ? `${lv.emoji} ${esc(lv.name)}${row.school ? " · " + esc(row.school) : ""}`
+      : `${lv.emoji} ${esc(lv.name)} · <span class="lb-nocard">建名片後可被點開</span>`;
+    return `<div class="lb-row ${hasCard ? "clickable" : "no-card"}" ${hasCard ? `data-pid="${esc(row.profile_id)}"` : "data-nocard=\"1\""}>
+      ${rank}
+      <span class="lb-av">${lbAv(row)}</span>
+      <div class="lb-info">
+        <div class="lb-name">${esc(row.nickname)} ${badgeHTML(row.badges)}</div>
+        <div class="lb-lv">${sub}</div>
+      </div>
+      <span class="lb-score"><b>${row.score}</b> 分</span>
+    </div>`;
+  }
+  async function loadLeaderboard() {
+    const wrap = document.getElementById("lbList");
+    if (!wrap) return;
+    let rows = [];
+    try { rows = await DB.getLeaderboard(10); } catch (err) { console.error(err); }
+    if (!rows.length) {
+      wrap.innerHTML = `<div class="lb-empty">排行榜虛位以待——<b>分享第一篇心得或建一張名片</b>就能上榜 👀</div>`;
+      return;
+    }
+    wrap.innerHTML = rows.map(lbRowHTML).join("");
+    wrap.querySelectorAll(".lb-row.clickable").forEach((el) => el.onclick = () => openProfile(el.dataset.pid));
+    wrap.querySelectorAll(".lb-row.no-card").forEach((el) => el.onclick = () => {
+      toast("建一張名片，上榜時就能被大家點開 🪪");
+      openEdit();
+    });
+  }
+  // 積分說明 modal
+  (function () {
+    const mask = document.getElementById("lbHelpMask");
+    const help = document.getElementById("lbHelp");
+    if (!mask || !help) return;
+    help.onclick = () => mask.classList.add("open");
+    document.getElementById("lbHelpClose").onclick = () => mask.classList.remove("open");
+    mask.onclick = (e) => { if (e.target.id === "lbHelpMask") mask.classList.remove("open"); };
+  })();
+
   // 啟動
   async function boot() {
     try { profiles = await DB.getProfiles(); } catch (err) { console.error(err); profiles = []; }
     render();
+    loadLeaderboard();
     if (DB.initAuth) { DB.onAuth(() => {}); await DB.initAuth(); }
   }
   boot();

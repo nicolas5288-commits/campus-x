@@ -103,6 +103,35 @@
     finally { btn.disabled = false; btn.textContent = "儲存個人檔案"; }
   };
 
+  // ---------- 我的積分卡 ----------
+  async function renderScore() {
+    const card = document.getElementById("scoreCard");
+    if (!card) return;
+    let s = null;
+    try { s = await DB.getMyScore(); } catch {}
+    if (!s) { card.style.display = "none"; return; }
+    const score = s.score || 0;
+    const lv = window.levelOf ? window.levelOf(score) : { emoji: "🌱", name: "新生報到" };
+    const nx = window.nextLevel ? window.nextLevel(score) : null;
+    const pct = nx ? Math.min(100, Math.round((score / nx.min) * 100)) : 100;
+    const nextTxt = nx ? `再 <b>${nx.min - score}</b> 分升上 ${nx.emoji} ${esc(nx.name)}` : "已達最高等級 🏆 外交大使";
+    const chip = (label, n, unit) => n > 0 ? `<span>${label} <b>${n}</b>${unit}</span>` : "";
+    const breaks = [
+      chip("心得", s.reviews, " 篇"), chip("情報", s.notes, " 則"),
+      chip("計畫", s.programs, " 筆"), chip("名片", s.profile, ""), chip("活動", s.events, " 場"),
+    ].filter(Boolean).join("");
+    card.innerHTML = `
+      <div class="sc-top">
+        <span class="sc-lv">${lv.emoji || "🌱"}</span>
+        <div><div class="sc-lv-name">${esc(lv.name)}</div><div class="auth-sub" style="margin:0;font-size:13px;">你的貢獻等級</div></div>
+        <div class="sc-score"><b>${score}</b><span>貢獻積分</span></div>
+      </div>
+      <div class="sc-bar"><i style="width:${pct}%;"></i></div>
+      <div class="sc-next">${nextTxt}</div>
+      ${breaks ? `<div class="sc-break">${breaks}</div>` : `<div class="sc-next" style="margin-top:14px;">還沒有積分——<a href="index.html">分享一篇心得</a>或<a href="network.html">建一張名片</a>就開始累積 👀</div>`}`;
+    card.style.display = "block";
+  }
+
   document.getElementById("loginCta").onclick = async () => {
     try { await DB.signInWithGoogle(); } catch (e) { toast(e.message || "登入失敗"); }
   };
@@ -118,7 +147,7 @@
       // 本機模式沒有真登入，直接顯示收藏（localStorage）
       const loggedIn = DB.configured ? !!user : true;
       showLoggedIn(loggedIn);
-      if (loggedIn) { renderFavs(); loadAccount(); }
+      if (loggedIn) { renderFavs(); loadAccount(); renderScore(); }
     });
     await DB.initAuth();
   }

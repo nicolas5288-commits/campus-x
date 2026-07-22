@@ -46,6 +46,7 @@
       <div class="um-dropdown">
         <a href="member.html">👤 個人檔案</a>
         <a href="member.html">⭐ 我的收藏</a>
+        <a href="member.html">🏆 我的積分</a>
         <a href="network.html">🪪 大使名片</a>
         <a href="share.html">🎉 產生分享卡</a>
         <a href="wish.html">🪄 許願池</a>

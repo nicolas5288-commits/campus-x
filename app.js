@@ -557,6 +557,19 @@
     render();
   }
 
+  // ---------- 首頁貢獻排行 band（前 3 名頭貼）----------
+  (async function initHomeLb() {
+    const sec = document.getElementById("homeLb");
+    const avs = document.getElementById("homeLbAvs");
+    if (!sec || !avs) return;
+    const e = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    let rows = [];
+    try { rows = await window.DB.getLeaderboard(3); } catch {}
+    if (!rows.length) return;
+    avs.innerHTML = rows.map((r) => `<span class="a">${r.avatar_url ? `<img src="${e(r.avatar_url)}" alt="" style="width:100%;height:100%;object-fit:cover;">` : e((r.nickname || "?")[0])}</span>`).join("");
+    sec.style.display = "";
+  })();
+
   // ---------- 登入按鈕 ----------
   document.getElementById("loginBtn").onclick = (e) => {
     e.preventDefault();
