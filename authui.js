@@ -49,6 +49,7 @@
         <a href="network.html">🪪 大使名片</a>
         <a href="share.html">🎉 產生分享卡</a>
         <a href="wish.html">🪄 許願池</a>
+        <a href="#" data-install>📲 安裝 App</a>
         ${DB.isAdmin && DB.isAdmin() ? '<a href="admin.html">🛠️ 審核後台</a>' : ""}
         ${contactHtml}
         <button class="um-logout" type="button">登出</button>
@@ -56,6 +57,8 @@
     loginBtn.parentNode.appendChild(menu);
 
     const dd = menu.querySelector(".um-dropdown");
+    const insLink = menu.querySelector("[data-install]");
+    if (insLink) insLink.onclick = (e) => { e.preventDefault(); dd.classList.remove("open"); if (window.__uniInstall) window.__uniInstall(); };
     menu.querySelector(".um-trigger").onclick = (e) => { e.stopPropagation(); dd.classList.toggle("open"); };
     document.addEventListener("click", () => dd.classList.remove("open"));
     menu.querySelector(".um-logout").onclick = async () => { await DB.signOut(); };

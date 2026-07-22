@@ -1,0 +1,16 @@
+{
+  "name": "UniEmbassy 校園大使館",
+  "short_name": "UniEmbassy",
+  "description": "台灣校園大使機會平台：找計畫、建名片、揪活動、許願品牌，一站搞定。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a1a1a",
+  "lang": "zh-Hant",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
