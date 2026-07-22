@@ -156,9 +156,11 @@ header.nav {
   width: 46px; height: 46px; border-radius: 12px; background: var(--accent-soft);
   display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;
 }
-.fav-btn { background: none; border: none; cursor: pointer; font-size: 20px; line-height: 1; color: var(--line-strong); transition: .15s; padding: 4px; }
+.fav-btn { background: none; border: none; cursor: pointer; line-height: 1; color: var(--line-strong); transition: .15s; padding: 4px; display: inline-flex; align-items: center; justify-content: center; }
 .fav-btn:hover { transform: scale(1.15); }
 .fav-btn.on { color: #e0245e; }
+.fav-ico { width: 21px; height: 21px; display: block; }
+#modalFav .fav-ico { width: 18px; height: 18px; }
 
 /* ⋯ 更多選單 */
 .card-top-actions { display: flex; align-items: center; gap: 2px; }

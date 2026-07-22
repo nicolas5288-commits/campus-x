@@ -10,6 +10,9 @@
 
   let livePrograms = []; // 由 DB 載入
   let favSet = new Set(); // 目前使用者的收藏（快取）
+  // 圓潤飽滿的愛心（實心＝已收藏、空心＝未收藏）
+  const HEART_FILL = '<svg class="fav-ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+  const HEART_LINE = '<svg class="fav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
   let activeCat = "全部";
 
   // ---------- 分類下拉選單 ----------
@@ -106,7 +109,7 @@
           <div class="card-emoji">${p.emoji}</div>
           <div class="card-top-actions">
             ${moreMenuHTML(p)}
-            <button class="fav-btn ${isFav ? "on" : ""}" data-fav="${p.id}" title="收藏">${isFav ? "♥" : "♡"}</button>
+            <button class="fav-btn ${isFav ? "on" : ""}" data-fav="${p.id}" title="收藏">${isFav ? HEART_FILL : HEART_LINE}</button>
           </div>
         </div>
         <div>
@@ -238,11 +241,12 @@
     else favSet.delete(id);
     // 更新畫面上的按鈕（卡片＋modal）
     document.querySelectorAll(`[data-fav="${id}"]`).forEach((b) => {
+      if (b.id === "modalFav") return; // modal 按鈕另外處理（含文字）
       b.classList.toggle("on", on);
-      b.textContent = on ? "♥" : "♡";
+      b.innerHTML = on ? HEART_FILL : HEART_LINE;
     });
     const mf = document.getElementById("modalFav");
-    if (mf && mf.dataset.id === id) mf.textContent = on ? "♥ 已收藏" : "♡ 收藏";
+    if (mf && mf.dataset.id === id) mf.innerHTML = on ? HEART_FILL + " 已收藏" : HEART_LINE + " 收藏";
     toast(on ? "已加入收藏 ♥" : "已移除收藏");
   }
 
@@ -281,7 +285,7 @@
 
       <div class="modal-actions">
         <a href="${p.applyUrl}" target="_blank" rel="noopener" class="btn">${p.recruiting === false ? "查看官方頁 ↗" : "前往報名 ↗"}</a>
-        <button class="btn ghost" id="modalFav" data-fav="${p.id}" data-id="${p.id}">${favSet.has(p.id) ? "♥ 已收藏" : "♡ 收藏"}</button>
+        <button class="btn ghost" id="modalFav" data-fav="${p.id}" data-id="${p.id}">${favSet.has(p.id) ? HEART_FILL + " 已收藏" : HEART_LINE + " 收藏"}</button>
       </div>
       ${p.sourceUrl ? `<div class="source-line">資料來源：<a href="${p.sourceUrl}" target="_blank" rel="noopener">官方頁面 ↗</a>　·　查證日 2026-07-20</div>` : ""}
 
