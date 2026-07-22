@@ -381,6 +381,22 @@ window.DB = (function () {
     return (data || []).map((r) => ({ ...r, brand: r.programs?.brand || "", title: r.programs?.title || "" }));
   }
 
+  // ========== 我的提報（登入者提報的計畫，含各種狀態）==========
+  async function getMyPrograms() {
+    if (!sb) {
+      // 本機模式沒有真登入 → 「我的提報」＝這台瀏覽器提報的（id 以 u- 開頭），套用 override 狀態
+      return localAllPrograms()
+        .filter((p) => String(p.id).startsWith("u-"))
+        .sort((a, b) => String(b.id).localeCompare(String(a.id)));
+    }
+    if (!currentUser) return [];
+    // 需要 v13 的 prog_read_own policy 才讀得到自己的 pending/rejected；沒跑 v13 只會回 live
+    const { data, error } = await sb.from("programs").select("*")
+      .eq("submitted_by", currentUser.id).order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data || []).map(normalizeRow);
+  }
+
   // ========== 廠商查稿（用編號查投稿狀態）==========
   async function getProgramStatus(id) {
     const pid = String(id || "").trim();
@@ -951,7 +967,7 @@ window.DB = (function () {
   return {
     MODE, configured: !!sb,
     initAuth, onAuth, signUp, signIn, signInWithGoogle, signOut, getUser, isAdmin,
-    getPrograms, getPendingPrograms, submitProgram, approveProgram, rejectProgram, deleteProgram, getProgramStatus,
+    getPrograms, getPendingPrograms, getMyPrograms, submitProgram, approveProgram, rejectProgram, deleteProgram, getProgramStatus,
     updateProgram, setRecruiting, submitProgramNote, getPendingNotes, resolveNote,
     getFavorites, toggleFavorite,
     getReviews, getPendingReviews, submitReview, approveReview, rejectReview, deleteReview, getFeaturedReviews,

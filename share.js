@@ -24,6 +24,7 @@
       case "grad": return { kicker: "🎓 圓滿結業", pre: "我完成了", big: b, post: (c ? c + " " : "") + "校園大使任期" };
       case "review": return { kicker: "✍️ 我在 UniEmbassy", pre: "分享了", big: b, post: "大使心得，幫助學弟妹" };
       case "event": return { kicker: "🎪 我發起了活動", pre: "", big: b, post: "快來報名一起參加！" };
+      case "scout": return { kicker: "🕵️ 我挖到的情報", pre: "我提報的", big: b, post: "校園大使機會，正式上架！", badge: "＋30 貢獻積分 GET" };
       default: return { kicker: "🎉 好消息", pre: "我正式成為", big: b, post: (c ? c + " " : "") + "校園大使" };
     }
   }
@@ -82,6 +83,20 @@
     wrapText(c.post, W / 2, y, W - 160, 82);
     ctx.textBaseline = "alphabetic";
 
+    // 積分成就 badge（目前只有 scout 卡型有）— 固定位置，夾在文案與頭像之間
+    if (c.badge) {
+      ctx.textBaseline = "middle";
+      setFont(46, "800");
+      const tw = ctx.measureText(c.badge).width;
+      const padX = 46, bh = 96, bw = tw + padX * 2, by = 1235;
+      roundRectPath(W / 2 - bw / 2, by - bh / 2, bw, bh, bh / 2);
+      ctx.fillStyle = t.accent;
+      ctx.fill();
+      ctx.fillStyle = t.bg;
+      ctx.fillText(c.badge, W / 2, by + 2);
+      ctx.textBaseline = "alphabetic";
+    }
+
     // 頭像 + 名字（下方）
     const ay = 1500, ar = 90;
     ctx.save();
@@ -130,6 +145,16 @@
     const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
     return `rgba(${r},${g},${b},${a})`;
   }
+  // 圓角矩形路徑（舊 Safari 沒有 ctx.roundRect，自己畫）
+  function roundRectPath(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
 
   // ---- 配色選擇 ----
   const cp = document.getElementById("colorPicker");
@@ -147,31 +172,69 @@
   const typeSel = document.getElementById("cardType");
   const brandLabel = document.getElementById("brandLabel");
   const cohortField = document.getElementById("cohortField");
+  function syncTypeUI() {
+    brandLabel.textContent = state.type === "event" ? "活動名稱" : "品牌 / 計畫名稱";
+    cohortField.style.display = (state.type === "review" || state.type === "event" || state.type === "scout") ? "none" : "";
+  }
   typeSel.onchange = () => {
     state.type = typeSel.value;
-    brandLabel.textContent = state.type === "event" ? "活動名稱" : "品牌 / 計畫名稱";
-    cohortField.style.display = (state.type === "review" || state.type === "event") ? "none" : "";
+    syncTypeUI();
     draw();
   };
   document.getElementById("brandInput").oninput = (e) => { state.brand = e.target.value; draw(); };
   document.getElementById("cohortInput").oninput = (e) => { state.cohort = e.target.value; draw(); };
   document.getElementById("nameInput").oninput = (e) => { state.name = e.target.value; draw(); };
 
+  // ---- 產圖：canvas → File（同步，保留使用者手勢，iOS navigator.share 才不會失效）----
+  function canvasToFile() {
+    const dataUrl = canvas.toDataURL("image/png");
+    const bin = atob(dataUrl.split(",")[1]);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new File([arr], "campus-x-分享卡.png", { type: "image/png" });
+  }
+  function downloadCard() {
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = "campus-x-分享卡.png";
+    a.click();
+    toast("已下載！去 IG 發限動吧 🎉");
+  }
+
   // ---- 下載 ----
-  document.getElementById("downloadBtn").onclick = () => {
-    canvas.toBlob((blob) => {
-      if (!blob) { toast("產生失敗，請再試一次"); return; }
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "campus-x-分享卡.png";
-      a.click();
-      URL.revokeObjectURL(a.href);
-      toast("已下載！去 IG 發限動吧 🎉");
-    }, "image/png");
-  };
+  document.getElementById("downloadBtn").onclick = downloadCard;
+
+  // ---- 手機一鍵分享（跳系統分享面板，可直接選 IG 限動）----
+  const shareBtn = document.getElementById("shareBtn");
+  if (shareBtn) {
+    shareBtn.onclick = () => {
+      const file = canvasToFile();
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: "UniEmbassy 分享卡" })
+          .catch(() => {}); // 使用者取消分享，不當錯誤
+      } else {
+        downloadCard();
+        toast("此裝置不支援直接分享，已改為下載，開 IG 發限動吧 📲");
+      }
+    };
+  }
+
+  // ---- URL 參數預填（?type=scout&brand=XXX，提報上架 / 查稿頁的分享卡入口會帶）----
+  function applyUrlParams() {
+    const q = new URLSearchParams(location.search);
+    const type = q.get("type");
+    const validTypes = ["join", "grad", "review", "event", "scout"];
+    if (type && validTypes.includes(type)) { state.type = type; typeSel.value = type; }
+    const brand = q.get("brand");
+    if (brand) { state.brand = brand; document.getElementById("brandInput").value = brand; }
+    const cohort = q.get("cohort");
+    if (cohort) { state.cohort = cohort; document.getElementById("cohortInput").value = cohort; }
+    syncTypeUI();
+  }
 
   // ---- 啟動：帶入個人檔案暱稱＋頭貼 ----
   async function boot() {
+    applyUrlParams();
     draw();
     try {
       const acc = await DB.getMyAccount();

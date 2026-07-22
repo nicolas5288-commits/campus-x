@@ -132,6 +132,42 @@
     card.style.display = "block";
   }
 
+  // ---------- 我的提報 ----------
+  async function renderMyPrograms() {
+    const list = document.getElementById("myReportsList");
+    const empty = document.getElementById("myReportsEmpty");
+    if (!list) return;
+    let mine = [];
+    try { mine = await DB.getMyPrograms(); } catch { mine = []; }
+    if (!mine.length) { list.innerHTML = ""; empty.style.display = "block"; return; }
+    empty.style.display = "none";
+    const STAT = {
+      pending: { t: "⏳ 審核中", cls: "" },
+      live: { t: "✅ 已上架", cls: "paid" },
+      rejected: { t: "❌ 已退回", cls: "unpaid" },
+      closed: { t: "📁 已截止", cls: "" },
+    };
+    list.innerHTML = mine.map((p) => {
+      const s = STAT[p.status] || STAT.pending;
+      const shareBtn = p.status === "live"
+        ? `<a class="btn sm" href="share.html?type=scout&brand=${encodeURIComponent(p.brand || p.title || "")}">📸 產生分享卡</a>`
+        : "";
+      const reason = (p.status === "rejected" && p.reject_reason)
+        ? `<div class="q-section" style="margin-top:8px;"><b>退回原因</b><div>${esc(p.reject_reason)}</div></div>` : "";
+      return `<div class="queue-card" style="margin-bottom:12px;">
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <div style="flex:1;min-width:160px;">
+            <h3 style="margin:0;">${esc(p.title || p.brand)}</h3>
+            <div class="q-brand">${esc(p.brand)}</div>
+          </div>
+          <span class="tag ${s.cls}" style="font-size:13.5px;padding:5px 12px;">${s.t}</span>
+          ${shareBtn}
+        </div>
+        ${reason}
+      </div>`;
+    }).join("");
+  }
+
   document.getElementById("loginCta").onclick = async () => {
     try { await DB.signInWithGoogle(); } catch (e) { toast(e.message || "登入失敗"); }
   };
@@ -147,7 +183,7 @@
       // 本機模式沒有真登入，直接顯示收藏（localStorage）
       const loggedIn = DB.configured ? !!user : true;
       showLoggedIn(loggedIn);
-      if (loggedIn) { renderFavs(); loadAccount(); renderScore(); }
+      if (loggedIn) { renderFavs(); loadAccount(); renderScore(); renderMyPrograms(); }
     });
     await DB.initAuth();
   }

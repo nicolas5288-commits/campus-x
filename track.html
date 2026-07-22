@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>查詢投稿進度 · UniEmbassy</title>
-  <link rel="stylesheet" href="styles.css?v=38" />
+  <link rel="stylesheet" href="styles.css?v=39" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <meta name="theme-color" content="#1a1a1a" />
@@ -41,9 +41,9 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=38"></script>
-  <script src="data.js?v=38"></script>
-  <script src="db.js?v=38"></script>
+  <script src="config.js?v=39"></script>
+  <script src="data.js?v=39"></script>
+  <script src="db.js?v=39"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -84,6 +84,7 @@
             <div class="q-section" style="margin-top:14px;">${v.note}</div>
             ${r.status === "rejected" && r.reject_reason ? `<div class="q-section"><b>退回原因</b><div>${esc(r.reject_reason)}</div></div>` : ""}
             ${r.status === "rejected" ? `<div class="q-actions"><a class="btn" href="submit.html">調整後重新投稿</a></div>` : ""}
+            ${r.status === "live" ? `<div class="q-actions"><a class="btn" href="share.html?type=scout&brand=${encodeURIComponent(r.brand || r.title || "")}">📸 產生分享卡曬一下</a></div>` : ""}
           </div>`;
       } catch (err) {
         box.innerHTML = `<div class="form-msg err">查詢失敗：${esc(err.message || "請稍後再試")}</div>`;
@@ -97,7 +98,7 @@
     if (urlCode) { document.getElementById("trackCode").value = urlCode; doTrack(); }
   })();
   </script>
-  <script src="nav.js?v=38"></script>
-  <script src="install.js?v=38"></script>
+  <script src="nav.js?v=39"></script>
+  <script src="install.js?v=39"></script>
 </body>
 </html>
