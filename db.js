@@ -155,17 +155,17 @@ window.DB = (function () {
       saveStore(s);
       return { id };
     }
+    // 走 RPC（v11）：insert 後 .select() 會要求讀回 pending 列的權限，一般用戶沒有 → 整筆被 RLS 退回。
+    // submitted_by / status 由 RPC 端強制決定，這裡不傳。
     const row = {
       brand: form.brand, emoji: form.emoji || "📌", category: form.category,
       title: form.title, summary: form.summary, tasks: form.tasks || [], benefits: form.benefits || [],
       eligibility: form.eligibility, term: form.term, paid: !!form.paid, location: form.location,
       deadline: form.deadline || null, apply_url: form.applyUrl, source_url: form.sourceUrl || null,
-      submitted_by: currentUser ? currentUser.id : null,  // 登入者提報→記名（排行榜 +30 靠這個）；廠商免登入→null
-      status: "pending",
     };
-    const { data, error } = await sb.from("programs").insert(row).select("id").single();
+    const { data, error } = await sb.rpc("submit_program", { form: row });
     if (error) throw error;
-    return data;
+    return { id: data };
   }
 
   // ========== Programs：審核 ==========
