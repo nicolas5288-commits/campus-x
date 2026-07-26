@@ -661,7 +661,14 @@
       document.getElementById("noteInputLabel").innerHTML = `你建議的「${esc(f.label)}」 <span class="hint">必填</span>`;
       document.getElementById("noteInputHint").textContent = f.hint || "";
       const val = disp || "";
-      if (f.type === "list") slot.innerHTML = `<textarea id="noteInput" required placeholder="一行一項">${esc(val)}</textarea>`;
+      if (f.type === "list") {
+        // 一列一框元件（取代原本的「一行一項」大框）
+        slot.innerHTML = `<div id="noteRowList"></div>`;
+        window.RowList.mount(document.getElementById("noteRowList"), {
+          values: Array.isArray(cur) ? cur.slice() : (val ? val.split("\n") : []),
+          placeholder: f.hint || "",
+        });
+      }
       else if (f.type === "textarea") slot.innerHTML = `<textarea id="noteInput" required>${esc(val)}</textarea>`;
       else if (f.type === "bool") slot.innerHTML = `<select id="noteInput"><option value="true"${cur === true ? " selected" : ""}>有薪</option><option value="false"${cur === false ? " selected" : ""}>無薪</option></select>`;
       else if (f.type === "date") slot.innerHTML = `<input type="date" id="noteInput" required value="${esc(val)}" />`;
@@ -676,10 +683,11 @@
     e.preventDefault();
     const btn = document.getElementById("noteSubmit");
     const errEl = document.getElementById("noteErr");
-    const input = document.getElementById("noteInput");
+    const input = document.getElementById("noteInput");        // list 型別沒有這個，改用 RowList
+    const rowList = document.getElementById("noteRowList");
     errEl.textContent = "";
-    const raw = (input.value || "").trim();
-    if (!raw && notePickedField !== FREE_KEY) { errEl.textContent = "請填寫建議內容"; return; }
+    const raw = input ? (input.value || "").trim() : "";
+    if (!raw && !rowList && notePickedField !== FREE_KEY) { errEl.textContent = "請填寫建議內容"; return; }
 
     let type, content, field = null, suggest;
     if (notePickedField === FREE_KEY) {
@@ -690,7 +698,7 @@
       const f = window.noteFieldOf(notePickedField);
       const p = livePrograms.find((x) => x.id === noteTargetId);
       // 依型別把輸入轉成要存的值
-      if (f.type === "list") suggest = raw.split("\n").map((x) => x.trim()).filter(Boolean);
+      if (f.type === "list") suggest = rowList.__rowlist.getValues();
       else if (f.type === "bool") suggest = input.value === "true";
       else suggest = raw;
       if (f.type === "list" && !suggest.length) { errEl.textContent = "請至少填一項"; return; }
@@ -721,6 +729,7 @@
   // ---------- 管理員：編輯計畫 Modal ----------
   const editMask = document.getElementById("editMask");
   let editTargetId = null;
+  let editTasksList = null, editBenefitsList = null;   // RowList 實例（openEdit 時 mount）
   // 分類下拉
   (function fillEditCat() {
     const sel = document.getElementById("editCat");
@@ -740,8 +749,8 @@
     f.category.value = p.category || "";
     f.location.value = p.location || "";
     f.summary.value = p.summary || "";
-    f.tasks.value = (p.tasks || []).join("\n");
-    f.benefits.value = (p.benefits || []).join("\n");
+    editTasksList = window.RowList.mount(document.getElementById("editTasks"), { values: (p.tasks || []).slice(), placeholder: "例：經營校園社群" });
+    editBenefitsList = window.RowList.mount(document.getElementById("editBenefits"), { values: (p.benefits || []).slice(), placeholder: "例：時薪 200 元" });
     f.eligibility.value = p.eligibility || "";
     f.term.value = p.term || "";
     f.deadline.value = p.deadline || "";
@@ -768,7 +777,7 @@
       await window.DB.updateProgram(editTargetId, {
         brand: f.brand.value.trim(), emoji: f.emoji.value.trim() || "📌", category: f.category.value,
         title: f.title.value.trim(), summary: f.summary.value.trim(),
-        tasks: lines(f.tasks.value), benefits: lines(f.benefits.value),
+        tasks: editTasksList.getValues(), benefits: editBenefitsList.getValues(),
         eligibility: f.eligibility.value.trim(), term: f.term.value.trim(),
         paid: f.paid.checked, location: f.location.value.trim(),
         deadline: f.deadline.value || null, recruiting: f.recruiting.checked,

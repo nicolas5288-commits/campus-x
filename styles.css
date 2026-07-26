@@ -870,3 +870,15 @@ footer { border-top: 1px solid var(--line); padding: 38px 0; margin-top: 40px; }
   .note-diff { grid-template-columns: 1fr; }
   .note-diff-arrow { transform: rotate(90deg); justify-self: center; }
 }
+
+/* ---------- RowList：一列一框清單元件（v41） ---------- */
+.rowlist .rl-rows { display: flex; flex-direction: column; gap: 8px; }
+.rowlist .rl-row { display: flex; gap: 8px; align-items: center; }
+.rowlist .rl-input { flex: 1; min-width: 0; }
+.rowlist .rl-del {
+  flex: none; width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid var(--line-strong); background: var(--card);
+  color: var(--ink-soft); font-size: 14px; line-height: 1; cursor: pointer; transition: .15s;
+}
+.rowlist .rl-del:hover { background: #fdeaea; border-color: #f0c9c4; color: #c0392b; }
+.rowlist .rl-add { margin-top: 10px; }

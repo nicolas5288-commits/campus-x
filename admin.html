@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · UniEmbassy</title>
-  <link rel="stylesheet" href="styles.css?v=40" />
+  <link rel="stylesheet" href="styles.css?v=41" />
 </head>
 <body>
   <header class="nav">
@@ -71,8 +71,8 @@
           <div class="field"><label><span>地區</span><input name="location" placeholder="全台 / 北部 / 遠距…" /></label></div>
         </div>
         <div class="field"><label><span>一句話簡介</span><textarea name="summary"></textarea></label></div>
-        <div class="field"><label><span>任務內容 <span class="hint">一行一項</span></span><textarea name="tasks" rows="3"></textarea></label></div>
-        <div class="field"><label><span>大使福利 <span class="hint">一行一項</span></span><textarea name="benefits" rows="3"></textarea></label></div>
+        <div class="field"><span>任務內容</span><div id="apEditTasks"></div></div>
+        <div class="field"><span>大使福利</span><div id="apEditBenefits"></div></div>
         <div class="field"><label><span>招募對象</span><input name="eligibility" placeholder="全台大專院校在學學生" /></label></div>
         <div class="form-row">
           <div class="field"><label><span>任期</span><input name="term" placeholder="一學期 / 專案制…" /></label></div>
@@ -96,15 +96,16 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=40"></script>
-  <script src="data.js?v=40"></script>
-  <script src="db.js?v=40"></script>
+  <script src="config.js?v=41"></script>
+  <script src="data.js?v=41"></script>
+  <script src="db.js?v=41"></script>
   <script>
   (function () {
     const DB = window.DB;
     let tab = "stats";
     let profileView = "pending";   // 大使名片 tab 內：pending / live / report
     let pendingProgramsCache = []; // 補完/編輯計畫 modal 用
+    let apTasksList = null, apBenefitsList = null;  // RowList 實例（開 modal 時 mount）
 
     function toast(msg) {
       const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show");
@@ -592,7 +593,8 @@
       f.brand.value = p.brand || ""; f.emoji.value = p.emoji || ""; f.title.value = p.title || "";
       f.category.value = p.category || (DB.CATEGORIES || [])[0] || ""; f.location.value = p.location || "";
       f.summary.value = p.summary === "學生提報，資料待補完。" ? "" : (p.summary || "");
-      f.tasks.value = (p.tasks || []).join("\n"); f.benefits.value = (p.benefits || []).join("\n");
+      apTasksList = window.RowList.mount(document.getElementById("apEditTasks"), { values: (p.tasks || []).slice(), placeholder: "例：經營校園社群" });
+      apBenefitsList = window.RowList.mount(document.getElementById("apEditBenefits"), { values: (p.benefits || []).slice(), placeholder: "例：時薪 200 元" });
       f.eligibility.value = p.eligibility || ""; f.term.value = p.term || ""; f.deadline.value = p.deadline || "";
       f.paid.checked = !!p.paid; f.recruiting.checked = p.recruiting !== false;
       f.applyUrl.value = p.applyUrl || ""; f.sourceUrl.value = p.sourceUrl || "";
@@ -611,7 +613,7 @@
         await DB.updateProgram(editTargetId, {
           brand: f.brand.value.trim(), emoji: f.emoji.value.trim() || "📌", category: f.category.value,
           title: f.title.value.trim(), summary: f.summary.value.trim(),
-          tasks: lines(f.tasks.value), benefits: lines(f.benefits.value),
+          tasks: apTasksList.getValues(), benefits: apBenefitsList.getValues(),
           eligibility: f.eligibility.value.trim(), term: f.term.value.trim(),
           paid: f.paid.checked, location: f.location.value.trim(),
           deadline: f.deadline.value || null, recruiting: f.recruiting.checked,
@@ -689,6 +691,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=40"></script>
+  <script src="nav.js?v=41"></script>
 </body>
 </html>

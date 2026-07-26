@@ -643,3 +643,96 @@ window.noteFieldDisplay = function (key, v) {
   if (f.type === "list") return Array.isArray(v) ? v.join("\n") : String(v);
   return String(v);
 };
+
+// ---------- RowList：清單欄位「一列一框＋新增行」共用元件（v41） ----------
+// 用法：const inst = RowList.mount(容器元素, { values: ["a","b"], placeholder: "例：…" });
+//       inst.getValues() → 去空白、濾空行的字串陣列／inst.setValues(arr) → 重設內容
+// 取代原本「一個 textarea 一行一項」的填法，index / admin / submit 四處共用。
+window.RowList = (function () {
+  // 貼上時自動剝掉行首符號（* - • · ． 1. 1) 1、），根治貼 Markdown 清單把符號一起帶進資料的坑
+  const BULLET = /^\s*(?:[*\-–—•·．・]|\d+\s*[.)、．])\s*/;
+  const clean = (s) => String(s == null ? "" : s).replace(BULLET, "").trim();
+
+  function mount(container, opts) {
+    const o = opts || {};
+    const placeholder = o.placeholder || "";
+    container.classList.add("rowlist");
+    container.innerHTML = `<div class="rl-rows"></div>
+      <button type="button" class="btn ghost sm rl-add">＋ 新增一行</button>`;
+    const rowsEl = container.querySelector(".rl-rows");
+
+    function makeRow(val) {
+      const row = document.createElement("div");
+      row.className = "rl-row";
+      row.innerHTML = `<input type="text" class="rl-input" />
+        <button type="button" class="rl-del" title="刪除這一行" aria-label="刪除這一行">✕</button>`;
+      const input = row.querySelector(".rl-input");
+      input.value = val == null ? "" : val;
+      input.placeholder = placeholder;
+
+      // Enter：在下面插一列並跳過去（擋掉送出整張表單）
+      input.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        const next = makeRow("");
+        row.after(next);
+        next.querySelector(".rl-input").focus();
+      });
+
+      // 貼多行：自動拆成多列＋剝掉行首符號
+      input.addEventListener("paste", (e) => {
+        const text = (e.clipboardData || window.clipboardData).getData("text");
+        if (!text) return;
+        const parts = text.split(/\r?\n/).map(clean).filter(Boolean);
+        if (parts.length <= 1) {
+          // 單行也順手剝符號
+          e.preventDefault();
+          const before = input.value.slice(0, input.selectionStart);
+          const after = input.value.slice(input.selectionEnd);
+          const one = parts.length ? parts[0] : "";
+          input.value = before + one + after;
+          const pos = (before + one).length;
+          input.setSelectionRange(pos, pos);
+          return;
+        }
+        e.preventDefault();
+        const before = input.value.slice(0, input.selectionStart);
+        const after = input.value.slice(input.selectionEnd);
+        input.value = before + parts[0];
+        let anchor = row;
+        parts.slice(1).forEach((p, i, arr) => {
+          const r = makeRow(i === arr.length - 1 ? p + after : p);
+          anchor.after(r); anchor = r;
+        });
+        anchor.querySelector(".rl-input").focus();
+      });
+
+      row.querySelector(".rl-del").addEventListener("click", () => {
+        row.remove();
+        if (!rowsEl.querySelector(".rl-row")) rowsEl.appendChild(makeRow(""));  // 刪光留一列空框
+      });
+      return row;
+    }
+
+    function setValues(arr) {
+      rowsEl.innerHTML = "";
+      const vals = (arr && arr.length) ? arr : [""];
+      vals.forEach((v) => rowsEl.appendChild(makeRow(v)));
+    }
+    function getValues() {
+      return [...rowsEl.querySelectorAll(".rl-input")].map((i) => i.value.trim()).filter(Boolean);
+    }
+
+    container.querySelector(".rl-add").addEventListener("click", () => {
+      const r = makeRow("");
+      rowsEl.appendChild(r);
+      r.querySelector(".rl-input").focus();
+    });
+
+    setValues(o.values || []);
+    const inst = { getValues, setValues, el: container };
+    container.__rowlist = inst;   // 讓外部可用 el.__rowlist 取回實例
+    return inst;
+  }
+  return { mount, clean };
+})();
