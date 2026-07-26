@@ -236,31 +236,64 @@ window.DB = (function () {
   }
 
   // ========== 計畫補充/回報 program_notes ==========
-  async function submitProgramNote(programId, type, content) {
+  // field/suggest 為 v14 逐格建議制：field=格子代號（NOTE_FIELDS 的 key）、suggest=建議值。
+  // 兩者留空＝舊的自由文字回報，行為完全不變。
+  async function submitProgramNote(programId, type, content, field = null, suggest = undefined) {
     if (!sb) {
       const s = loadStore();
       s.notes = s.notes || [];
-      s.notes.push({ id: "n-" + Date.now(), program_id: programId, user_id: "local", type, content, status: "pending", created_at: new Date(0).toISOString() });
+      // 本機模式也擋同格重複待審（跟雲端的 partial unique index 對齊）
+      if (field && (s.notes || []).some((n) => n.program_id === programId && n.field === field && n.status === "pending")) {
+        throw new Error("你已經補充過這一格，等審核中 🙌");
+      }
+      s.notes.push({ id: "n-" + Date.now(), program_id: programId, user_id: "local", type, content, field, suggest, status: "pending", created_at: new Date(0).toISOString() });
       saveStore(s);
       return { ok: true };
     }
     if (!currentUser) throw new Error("請先登入再回報");
-    const { error } = await sb.from("program_notes").insert({ program_id: programId, user_id: currentUser.id, type, content, status: "pending" });
-    if (error) throw error;
+    const row = { program_id: programId, user_id: currentUser.id, type, content, status: "pending" };
+    if (field) { row.field = field; row.suggest = suggest === undefined ? null : suggest; }
+    const { error } = await sb.from("program_notes").insert(row);
+    if (error) {
+      // 撞到 pnote_one_pending_per_field 唯一索引 → 講人話
+      if (error.code === "23505" || /duplicate key|unique/i.test(error.message || "")) {
+        throw new Error("你已經補充過這一格，等審核中 🙌");
+      }
+      throw error;
+    }
     return { ok: true };
   }
+  // 後台對照卡要顯示「目前值」，所以把計畫的主要欄位一起撈回來
+  const NOTE_JOIN_COLS = "title, brand, summary, tasks, benefits, eligibility, term, paid, location, deadline, apply_url";
   async function getPendingNotes() {
     if (!sb) {
       const s = loadStore();
       return (s.notes || []).filter((n) => n.status === "pending").map((n) => {
         const p = localAllPrograms().find((x) => x.id === n.program_id);
-        return { ...n, programs: p ? { title: p.title, brand: p.brand } : null };
+        return { ...n, programs: p ? { ...p, apply_url: p.applyUrl } : null };
       });
     }
-    const { data, error } = await sb.from("program_notes").select("*, programs(title, brand)")
+    const { data, error } = await sb.from("program_notes").select(`*, programs(${NOTE_JOIN_COLS})`)
       .eq("status", "pending").order("created_at", { ascending: true });
     if (error) throw error;
     return data || [];
+  }
+  // 逐格採用：只更新計畫的「那一欄」，不碰其他欄位（updateProgram 是整包覆蓋，不能拿來做這件事）
+  async function applyNoteField(programId, fieldKey, value) {
+    const spec = (window.NOTE_FIELDS || []).find((f) => f.key === fieldKey);
+    if (!spec) throw new Error("未知的欄位：" + fieldKey);
+    if (!sb) {
+      const s = loadStore();
+      s.programEdits = s.programEdits || {};
+      // 本機模式的計畫物件用前台 camelCase（localAllPrograms 直接 spread 覆蓋）
+      s.programEdits[programId] = { ...(s.programEdits[programId] || {}), [spec.key]: value };
+      saveStore(s);
+      return { ok: true };
+    }
+    if (!isAdmin()) throw new Error("只有管理員能採用建議");
+    const { error } = await sb.from("programs").update({ [spec.col]: value }).eq("id", programId);
+    if (error) throw error;
+    return { ok: true };
   }
   async function resolveNote(id, status) {
     if (!sb) {
@@ -968,7 +1001,7 @@ window.DB = (function () {
     MODE, configured: !!sb,
     initAuth, onAuth, signUp, signIn, signInWithGoogle, signOut, getUser, isAdmin,
     getPrograms, getPendingPrograms, getMyPrograms, submitProgram, approveProgram, rejectProgram, deleteProgram, getProgramStatus,
-    updateProgram, setRecruiting, submitProgramNote, getPendingNotes, resolveNote,
+    updateProgram, setRecruiting, submitProgramNote, getPendingNotes, resolveNote, applyNoteField,
     getFavorites, toggleFavorite,
     getReviews, getPendingReviews, submitReview, approveReview, rejectReview, deleteReview, getFeaturedReviews,
     getProfiles, getPendingProfiles, getMyProfile, saveProfile, approveProfile, rejectProfile, deleteProfile, uploadAvatar,

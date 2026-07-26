@@ -377,6 +377,8 @@
   function escapeHtml(s) {
     return String(s == null ? "" : s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
   }
+  // 短別名（逐格補充 modal 用；也順手把引號跳脫，因為會塞進 value="…"）
+  function esc(s) { return escapeHtml(s).replace(/"/g, "&quot;"); }
 
   // ---------- 分享經驗 Modal ----------
   let reviewFormType = "interview";
@@ -582,7 +584,9 @@
 
   // ---------- 補充 / 回報 Modal ----------
   const noteMask = document.getElementById("noteMask");
-  let noteTargetId = null;
+  let noteTargetId = null, notePickedField = null;
+  const FREE_KEY = "__free__";   // 舊制自由文字回報
+
   function openNote(id) {
     // 需登入（雲端模式）
     if (window.DB.configured && !window.DB.getUser()) {
@@ -592,28 +596,125 @@
     const p = livePrograms.find((x) => x.id === id);
     noteTargetId = id;
     document.getElementById("noteFor").textContent = p ? `${p.title}（${p.brand}）` : "";
-    document.getElementById("noteErr").textContent = "";
-    document.getElementById("noteForm").reset();
+    showNoteStep1();
     noteMask.classList.add("open");
   }
   function closeNote() { noteMask.classList.remove("open"); }
   document.getElementById("noteClose").onclick = closeNote;
   noteMask.onclick = (e) => { if (e.target.id === "noteMask") closeNote(); };
+  document.getElementById("noteBack").onclick = showNoteStep1;
+
+  // ---- Step 1：格子清單（空白格排前面，鼓勵補洞）----
+  function showNoteStep1() {
+    notePickedField = null;
+    document.getElementById("noteStep1").style.display = "";
+    document.getElementById("noteStep2").style.display = "none";
+    const p = livePrograms.find((x) => x.id === noteTargetId);
+    const picker = document.getElementById("noteFieldPicker");
+    const isEmpty = (v) => v === null || v === undefined || v === "" || (Array.isArray(v) && !v.length);
+    const items = (window.NOTE_FIELDS || []).map((f) => {
+      const cur = window.noteFieldValue(p, f.key);
+      // 有薪/無薪是 boolean，false 也是有效值，不算空
+      const empty = f.type === "bool" ? (cur === null || cur === undefined) : isEmpty(cur);
+      return { f, empty };
+    });
+    items.sort((a, b) => (a.empty === b.empty ? 0 : a.empty ? -1 : 1));
+    picker.innerHTML = items.map(({ f, empty }) => `
+      <button type="button" class="note-field-chip${empty ? " empty" : ""}" data-nf="${f.key}">
+        <span class="nf-label">${esc(f.label)}</span>
+        <span class="nf-state">${empty ? "目前空白 · 幫忙補" : "已有資料 · 可修正"}</span>
+      </button>`).join("") + `
+      <button type="button" class="note-field-chip free" data-nf="${FREE_KEY}">
+        <span class="nf-label">🚩 其他問題回報</span>
+        <span class="nf-state">計畫倒了 / 連結失效 / 其他</span>
+      </button>`;
+    picker.querySelectorAll("[data-nf]").forEach((b) => b.onclick = () => pickNoteField(b.dataset.nf));
+  }
+
+  // ---- Step 2：依格子型別長出輸入控件 ----
+  function pickNoteField(key) {
+    notePickedField = key;
+    const p = livePrograms.find((x) => x.id === noteTargetId);
+    const slot = document.getElementById("noteInputSlot");
+    const curBox = document.getElementById("noteCurrent");
+    document.getElementById("noteErr").textContent = "";
+
+    if (key === FREE_KEY) {
+      document.getElementById("noteInputLabel").innerHTML = '回報內容 <span class="hint">必填</span>';
+      document.getElementById("noteInputHint").textContent = "不屬於任何欄位的問題都可以寫這裡";
+      curBox.innerHTML = `<select name="freeType" id="noteFreeType" style="width:100%;">
+        <option value="資訊有誤">資訊有誤</option>
+        <option value="已截止或重新開放">已截止 / 重新開放</option>
+        <option value="連結失效">連結失效</option>
+        <option value="其他補充">其他補充</option>
+      </select>`;
+      document.querySelector(".note-current-label").textContent = "問題類型";
+      slot.innerHTML = `<textarea id="noteInput" required placeholder="請描述問題或要補充的內容…"></textarea>`;
+    } else {
+      const f = window.noteFieldOf(key);
+      const cur = window.noteFieldValue(p, key);
+      const disp = window.noteFieldDisplay(key, cur);
+      document.querySelector(".note-current-label").textContent = `目前的「${f.label}」`;
+      curBox.innerHTML = disp
+        ? (f.type === "list" ? `<ul class="note-cur-list">${disp.split("\n").map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : esc(disp))
+        : `<span class="note-empty">目前沒有資料 — 你的補充會直接幫到後面看的人 🙌</span>`;
+      document.getElementById("noteInputLabel").innerHTML = `你建議的「${esc(f.label)}」 <span class="hint">必填</span>`;
+      document.getElementById("noteInputHint").textContent = f.hint || "";
+      const val = disp || "";
+      if (f.type === "list") slot.innerHTML = `<textarea id="noteInput" required placeholder="一行一項">${esc(val)}</textarea>`;
+      else if (f.type === "textarea") slot.innerHTML = `<textarea id="noteInput" required>${esc(val)}</textarea>`;
+      else if (f.type === "bool") slot.innerHTML = `<select id="noteInput"><option value="true"${cur === true ? " selected" : ""}>有薪</option><option value="false"${cur === false ? " selected" : ""}>無薪</option></select>`;
+      else if (f.type === "date") slot.innerHTML = `<input type="date" id="noteInput" required value="${esc(val)}" />`;
+      else if (f.type === "url") slot.innerHTML = `<input type="url" id="noteInput" required placeholder="https://…" value="${esc(val)}" />`;
+      else slot.innerHTML = `<input type="text" id="noteInput" required value="${esc(val)}" />`;
+    }
+    document.getElementById("noteStep1").style.display = "none";
+    document.getElementById("noteStep2").style.display = "";
+  }
+
   document.getElementById("noteForm").onsubmit = async (e) => {
     e.preventDefault();
-    const f = e.target;
     const btn = document.getElementById("noteSubmit");
     const errEl = document.getElementById("noteErr");
+    const input = document.getElementById("noteInput");
     errEl.textContent = "";
+    const raw = (input.value || "").trim();
+    if (!raw && notePickedField !== FREE_KEY) { errEl.textContent = "請填寫建議內容"; return; }
+
+    let type, content, field = null, suggest;
+    if (notePickedField === FREE_KEY) {
+      type = document.getElementById("noteFreeType").value;
+      content = raw;
+      if (!content) { errEl.textContent = "請填寫回報內容"; return; }
+    } else {
+      const f = window.noteFieldOf(notePickedField);
+      const p = livePrograms.find((x) => x.id === noteTargetId);
+      // 依型別把輸入轉成要存的值
+      if (f.type === "list") suggest = raw.split("\n").map((x) => x.trim()).filter(Boolean);
+      else if (f.type === "bool") suggest = input.value === "true";
+      else suggest = raw;
+      if (f.type === "list" && !suggest.length) { errEl.textContent = "請至少填一項"; return; }
+      // 擋「跟目前一模一樣」的空建議
+      const cur = window.noteFieldValue(p, notePickedField);
+      const same = f.type === "list"
+        ? JSON.stringify(Array.isArray(cur) ? cur : []) === JSON.stringify(suggest)
+        : String(cur === null || cur === undefined ? "" : cur) === String(suggest);
+      if (same) { errEl.textContent = "跟目前的內容一樣，換點不一樣的再送出 🙂"; return; }
+      type = "格子補充";
+      field = f.key;
+      content = `建議「${f.label}」：${f.type === "list" ? suggest.join("、") : window.noteFieldDisplay(f.key, suggest)}`;
+    }
+
     btn.disabled = true; btn.textContent = "送出中…";
     try {
-      await window.DB.submitProgramNote(noteTargetId, f.type.value, f.content.value.trim());
-      closeNote();
-      toast("已送出，感謝回報！我們會盡快確認 🙌");
+      await window.DB.submitProgramNote(noteTargetId, type, content, field, suggest);
+      toast(field ? "已送出！審核採用後 +10 積分 🎉" : "已送出，感謝回報！我們會盡快確認 🙌");
+      if (field) showNoteStep1();   // 補完一格可以接著補下一格
+      else closeNote();
     } catch (err) {
       errEl.textContent = err.message || "送出失敗，請稍後再試";
     } finally {
-      btn.disabled = false; btn.textContent = "送出回報";
+      btn.disabled = false; btn.textContent = "送出建議";
     }
   };
 

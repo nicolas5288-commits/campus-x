@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · UniEmbassy</title>
-  <link rel="stylesheet" href="styles.css?v=39" />
+  <link rel="stylesheet" href="styles.css?v=40" />
 </head>
 <body>
   <header class="nav">
@@ -96,9 +96,9 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=39"></script>
-  <script src="data.js?v=39"></script>
-  <script src="db.js?v=39"></script>
+  <script src="config.js?v=40"></script>
+  <script src="data.js?v=40"></script>
+  <script src="db.js?v=40"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -216,6 +216,7 @@
           bindEventActions();
         } else if (tab === "notes") {
           const list = await DB.getPendingNotes();
+          pendingNotesCache = list;
           updateBadge("badgeNote", list.length);
           queue.innerHTML = list.length
             ? list.map(noteCard).join("")
@@ -244,8 +245,39 @@
     }
 
     // ---- 計畫回報卡 ----
+    // 值→顯示（list 用 bullet，空值講「目前沒有資料」）
+    function noteValHTML(key, v) {
+      const f = window.noteFieldOf(key);
+      const disp = window.noteFieldDisplay(key, v);
+      if (!disp) return '<span class="note-empty">目前沒有資料</span>';
+      if (f && f.type === "list") return `<ul class="note-cur-list">${disp.split("\n").map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
+      return esc(disp);
+    }
     function noteCard(n) {
       const prog = n.programs ? `${esc(n.programs.brand)}｜${esc(n.programs.title)}` : n.program_id;
+      // v14 逐格建議卡：目前 vs 建議 對照，可一鍵採用
+      if (n.field && window.noteFieldOf(n.field)) {
+        const f = window.noteFieldOf(n.field);
+        // 「目前」取審核當下的計畫現值（不是提交當下）→ 建議過時一眼看得出
+        const cur = window.noteFieldValue(n.programs, n.field);
+        return `<div class="queue-card" data-id="${n.id}">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="rev-type-badge">🧩 格子補充：${esc(f.label)}</span>
+          </div>
+          <div class="q-brand" style="margin-top:8px;">計畫：${prog}</div>
+          <div class="note-diff">
+            <div class="note-diff-col"><b>目前</b><div>${noteValHTML(n.field, cur)}</div></div>
+            <div class="note-diff-arrow">→</div>
+            <div class="note-diff-col suggest"><b>建議</b><div>${noteValHTML(n.field, n.suggest)}</div></div>
+          </div>
+          <div class="q-actions">
+            <button class="btn" data-applynote="${n.id}" data-pid="${esc(n.program_id)}" data-nf="${esc(n.field)}" style="background:#0f8a5f;color:#fff;">✓ 採用並更新計畫</button>
+            <button class="btn reject" data-notereject="${n.id}">✕ 退回</button>
+            <button class="btn ghost" data-editnote="${esc(n.program_id)}">✏️ 編輯此計畫</button>
+          </div>
+        </div>`;
+      }
+      // 舊制自由文字回報，維持原樣
       return `<div class="queue-card" data-id="${n.id}">
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <span class="rev-type-badge">${esc(n.type)}</span>
@@ -259,6 +291,8 @@
         </div>
       </div>`;
     }
+    // 待審清單原始資料（採用時要拿 suggest 值）
+    let pendingNotesCache = [];
     function bindNoteActions() {
       document.querySelectorAll("[data-editnote]").forEach(b => b.onclick = () => {
         // 帶去前台該計畫的編輯（管理員登入態同一 session）
@@ -269,6 +303,21 @@
       });
       document.querySelectorAll("[data-notereject]").forEach(b => b.onclick = async () => {
         b.disabled = true; await DB.resolveNote(b.dataset.notereject, "rejected"); toast("已退回"); loadQueue();
+      });
+      // 逐格採用：先寫進計畫本體，再標記 accepted（+10 積分靠 accepted）
+      document.querySelectorAll("[data-applynote]").forEach(b => b.onclick = async () => {
+        const n = pendingNotesCache.find(x => x.id === b.dataset.applynote);
+        if (!n) { toast("找不到這筆建議，請重新整理"); return; }
+        b.disabled = true; b.textContent = "採用中…";
+        try {
+          await DB.applyNoteField(b.dataset.pid, b.dataset.nf, n.suggest);
+          await DB.resolveNote(n.id, "accepted");
+          toast("已採用，計畫已更新 ✓（提報人 +10 分）");
+          loadQueue();
+        } catch (err) {
+          toast(err.message || "採用失敗");
+          b.disabled = false; b.textContent = "✓ 採用並更新計畫";
+        }
       });
     }
 
@@ -640,6 +689,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=39"></script>
+  <script src="nav.js?v=40"></script>
 </body>
 </html>

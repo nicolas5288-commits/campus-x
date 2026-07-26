@@ -610,3 +610,36 @@ window.LEVELS = [
 ];
 window.levelOf = function (score) { return window.LEVELS.find((l) => (score || 0) >= l.min) || window.LEVELS[window.LEVELS.length - 1]; };
 window.nextLevel = function (score) { const above = window.LEVELS.filter((l) => l.min > (score || 0)); return above.length ? above[above.length - 1] : null; };
+
+// ---------- 逐格補充建議制（v40）：開放使用者提議的計畫格子 ----------
+// key=格子代號（存 program_notes.field）／col=programs 資料表欄位／
+// type=輸入控件（text｜textarea｜list 一行一項→陣列｜bool｜date｜url）
+// index（前台提議）與 admin（後台採用）共用這份定義，改一處兩邊同步。
+window.NOTE_FIELDS = [
+  { key: "summary",    label: "簡介",     col: "summary",     type: "textarea", hint: "一兩句話說明這個計畫在做什麼" },
+  { key: "tasks",      label: "任務內容", col: "tasks",       type: "list",     hint: "一行一項，例：經營校園社群" },
+  { key: "benefits",   label: "大使福利", col: "benefits",    type: "list",     hint: "一行一項，例：時薪 200 元" },
+  { key: "eligibility",label: "申請資格", col: "eligibility", type: "textarea", hint: "例：大專院校在學生，不限科系" },
+  { key: "term",       label: "任期",     col: "term",        type: "text",     hint: "例：2026/9 – 2027/6" },
+  { key: "paid",       label: "有薪/無薪",col: "paid",        type: "bool",     hint: "" },
+  { key: "location",   label: "地點",     col: "location",    type: "text",     hint: "例：遠距、台北" },
+  { key: "deadline",   label: "截止日",   col: "deadline",    type: "date",     hint: "" },
+  { key: "applyUrl",   label: "報名連結", col: "apply_url",   type: "url",      hint: "官方報名表單或說明頁網址" },
+];
+window.noteFieldOf = function (key) { return (window.NOTE_FIELDS || []).find((f) => f.key === key) || null; };
+// 把計畫物件的某格取出成「目前值」（前台 camelCase／後台 DB snake_case 都吃）
+window.noteFieldValue = function (program, key) {
+  if (!program) return null;
+  const f = window.noteFieldOf(key);
+  if (!f) return null;
+  const v = program[f.key] !== undefined ? program[f.key] : program[f.col];
+  return v === undefined ? null : v;
+};
+// 值→顯示文字（空值統一講「目前沒有資料」由呼叫端處理）
+window.noteFieldDisplay = function (key, v) {
+  const f = window.noteFieldOf(key);
+  if (!f || v === null || v === undefined || v === "") return "";
+  if (f.type === "bool") return v ? "有薪" : "無薪";
+  if (f.type === "list") return Array.isArray(v) ? v.join("\n") : String(v);
+  return String(v);
+};
