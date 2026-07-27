@@ -91,12 +91,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://uniembassy.tw/p/6d8c6aa2-8c2d-44c5-a766-3b29d570ddd0/</loc>
-    <lastmod>2026-07-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://uniembassy.tw/p/kkbox-11/</loc>
     <lastmod>2026-07-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -109,7 +103,19 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://uniembassy.tw/p/6d8c6aa2-8c2d-44c5-a766-3b29d570ddd0/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://uniembassy.tw/p/0c5f830a-af9f-4e98-96e3-6feae9eedbb6/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://uniembassy.tw/p/8bcbef22-4b3d-4ba4-ac2a-05cf46487687/</loc>
     <lastmod>2026-07-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
