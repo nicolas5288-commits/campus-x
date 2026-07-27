@@ -286,6 +286,7 @@
       <div class="modal-actions">
         <a href="${p.applyUrl}" target="_blank" rel="noopener" class="btn">${p.recruiting === false ? "查看官方頁 ↗" : "前往報名 ↗"}</a>
         <button class="btn ghost" id="modalFav" data-fav="${p.id}" data-id="${p.id}">${favSet.has(p.id) ? HEART_FILL + " 已收藏" : HEART_LINE + " 收藏"}</button>
+        <button class="btn ghost" id="modalShare">🔗 分享</button>
       </div>
       ${p.sourceUrl ? `<div class="source-line">資料來源：<a href="${p.sourceUrl}" target="_blank" rel="noopener">官方頁面 ↗</a>　·　查證日 2026-07-20</div>` : ""}
 
@@ -305,6 +306,7 @@
     document.getElementById("modalMask").classList.add("open");
     document.getElementById("modalClose").onclick = closeModal;
     document.getElementById("modalFav").onclick = () => handleFav(p.id);
+    document.getElementById("modalShare").onclick = () => shareProgram(p);
     document.getElementById("shareExpBtn").onclick = () => openReview(p);
     bindMoreMenus(body);
 
@@ -460,6 +462,22 @@
   };
   function closeModal() {
     document.getElementById("modalMask").classList.remove("open");
+  }
+
+  // 分享計畫專屬連結（?p=id 深連結，打開即彈出該計畫詳情）
+  function shareProgram(p) {
+    const url = `https://uniembassy.tw/?p=${encodeURIComponent(p.id)}`;
+    const title = `${p.brand}「${p.title}」校園大使招募中！`;
+    // 手機跳系統分享面板（可直接傳 LINE / IG）；桌機直接複製連結
+    if (navigator.share && matchMedia("(pointer: coarse)").matches) {
+      navigator.share({ title, url }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url)
+        .then(() => toast("已複製專屬連結 🔗 貼給任何人，打開就是這格"))
+        .catch(() => prompt("手動複製這個連結：", url));
+    } else {
+      prompt("手動複製這個連結：", url);
+    }
   }
   document.getElementById("modalMask").onclick = (e) => {
     if (e.target.id === "modalMask") closeModal();

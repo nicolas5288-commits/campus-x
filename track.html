@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>查詢投稿進度 · UniEmbassy</title>
-  <link rel="stylesheet" href="styles.css?v=41" />
+  <link rel="stylesheet" href="styles.css?v=42" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <meta name="theme-color" content="#1a1a1a" />
@@ -41,9 +41,9 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=41"></script>
-  <script src="data.js?v=41"></script>
-  <script src="db.js?v=41"></script>
+  <script src="config.js?v=42"></script>
+  <script src="data.js?v=42"></script>
+  <script src="db.js?v=42"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -85,7 +85,25 @@
             ${r.status === "rejected" && r.reject_reason ? `<div class="q-section"><b>退回原因</b><div>${esc(r.reject_reason)}</div></div>` : ""}
             ${r.status === "rejected" ? `<div class="q-actions"><a class="btn" href="submit.html">調整後重新投稿</a></div>` : ""}
             ${r.status === "live" ? `<div class="q-actions"><a class="btn" href="share.html?type=scout&brand=${encodeURIComponent(r.brand || r.title || "")}">📸 產生分享卡曬一下</a></div>` : ""}
+            ${r.status === "live" ? `
+            <div class="q-section" style="margin-top:14px;">
+              <b>🔗 你的專屬招募連結</b>
+              <div style="margin-top:8px;">任何人打開這個連結，就會直接看到你的招募資訊。歡迎貼到官網、社群或傳給有興趣的同學：</div>
+              <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;">
+                <code id="shareUrl" style="flex:1;min-width:220px;padding:10px 12px;background:var(--accent-soft,#f4f4f4);border-radius:10px;font-size:14px;word-break:break-all;">https://uniembassy.tw/?p=${encodeURIComponent(code)}</code>
+                <button class="btn" id="copyShareUrl" type="button">複製連結</button>
+              </div>
+            </div>` : ""}
           </div>`;
+        const copyBtn = document.getElementById("copyShareUrl");
+        if (copyBtn) copyBtn.onclick = () => {
+          const url = document.getElementById("shareUrl").textContent;
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(url)
+              .then(() => { copyBtn.textContent = "已複製 ✓"; setTimeout(() => copyBtn.textContent = "複製連結", 2000); })
+              .catch(() => prompt("手動複製這個連結：", url));
+          } else prompt("手動複製這個連結：", url);
+        };
       } catch (err) {
         box.innerHTML = `<div class="form-msg err">查詢失敗：${esc(err.message || "請稍後再試")}</div>`;
       }
@@ -98,7 +116,7 @@
     if (urlCode) { document.getElementById("trackCode").value = urlCode; doTrack(); }
   })();
   </script>
-  <script src="nav.js?v=41"></script>
-  <script src="install.js?v=41"></script>
+  <script src="nav.js?v=42"></script>
+  <script src="install.js?v=42"></script>
 </body>
 </html>

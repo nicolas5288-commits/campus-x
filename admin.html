@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · UniEmbassy</title>
-  <link rel="stylesheet" href="styles.css?v=41" />
+  <link rel="stylesheet" href="styles.css?v=42" />
 </head>
 <body>
   <header class="nav">
@@ -96,9 +96,9 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=41"></script>
-  <script src="data.js?v=41"></script>
-  <script src="db.js?v=41"></script>
+  <script src="config.js?v=42"></script>
+  <script src="data.js?v=42"></script>
+  <script src="db.js?v=42"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -556,12 +556,33 @@
       });
     }
 
+    // 上架成功 → 一鍵複製「給廠商的上架通知＋專屬連結」（貼 LINE / Email 都可）
+    function offerVendorNotice(id, brand, title) {
+      if (!brand) {
+        const p = pendingProgramsCache.find((x) => x.id === id);
+        if (p) { brand = p.brand; title = p.title; }
+      }
+      const url = "https://uniembassy.tw/?p=" + encodeURIComponent(id);
+      const label = brand ? brand + "｜" + (title || "") : "您的校園大使計畫";
+      const msg = `您好，「${label}」已在 UniEmbassy 正式上架 🎉\n這是專屬頁面連結，打開就會直接看到您的招募資訊，歡迎分享到官網、社群或給有興趣的同學：\n${url}`;
+      if (!confirm("要複製「給廠商的上架通知＋專屬連結」嗎？\n\n" + msg)) return;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(msg)
+          .then(() => toast("通知訊息已複製 📋"))
+          .catch(() => prompt("手動複製：", msg));
+      } else {
+        prompt("手動複製：", msg);
+      }
+    }
+
     function bindProgramActions() {
       document.querySelectorAll("[data-editp]").forEach(b => b.onclick = () => openEditProgram(b.dataset.editp));
       document.querySelectorAll("[data-approve]").forEach(b => b.onclick = async () => {
         b.disabled = true;
         await DB.approveProgram(b.dataset.approve);
-        toast("已通過上架 ✓"); loadQueue();
+        toast("已通過上架 ✓");
+        offerVendorNotice(b.dataset.approve);
+        loadQueue();
       });
       document.querySelectorAll("[data-reject]").forEach(b => b.onclick = async () => {
         const reason = prompt("退回原因（選填，會記錄下來）：") ?? null;
@@ -622,6 +643,7 @@
         if (approve) await DB.approveProgram(editTargetId);
         document.getElementById("apEditMask").classList.remove("open");
         toast(approve ? "已補完並上架 ✓" : "已儲存 ✓");
+        if (approve) offerVendorNotice(editTargetId, f.brand.value.trim(), f.title.value.trim());
         loadQueue();
       } catch (err) { errEl.textContent = err.message || "儲存失敗"; }
       finally { btns.forEach((b) => b.disabled = false); }
@@ -691,6 +713,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=41"></script>
+  <script src="nav.js?v=42"></script>
 </body>
 </html>
