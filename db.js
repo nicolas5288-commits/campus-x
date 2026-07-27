@@ -165,6 +165,7 @@ window.DB = (function () {
       title: form.title, summary: form.summary, tasks: form.tasks || [], benefits: form.benefits || [],
       eligibility: form.eligibility, term: form.term, paid: !!form.paid, location: form.location,
       deadline: form.deadline || null, apply_url: form.applyUrl, source_url: form.sourceUrl || null,
+      contact_email: form.contactEmail || null,   // RPC 存進 program_contacts（RLS 只給 admin 讀），不進公開的 programs 表
     };
     const { data, error } = await sb.rpc("submit_program", { form: row });
     if (error) throw error;
@@ -176,6 +177,23 @@ window.DB = (function () {
     if (!sb) return localSetStatus(id, "live");
     const { error } = await sb.from("programs").update({ status: "live" }).eq("id", id);
     if (error) throw error;
+  }
+  // 通過上架後寄通知信給廠商（Edge Function notify-approved → Resend）。
+  // 回傳 {sent} / {skipped} / {error}，一律不 throw —— 寄信失敗不該讓上架流程看起來失敗。
+  async function notifyApproved(id) {
+    if (!sb) return { skipped: "local", message: "本機模式不寄信" };
+    try {
+      const { data, error } = await sb.functions.invoke("notify-approved", { body: { program_id: id } });
+      if (error) {
+        // FunctionsHttpError 的細節藏在 context 的 response body 裡，撈出來給 toast 用
+        let detail = error.message || "寄信失敗";
+        try { const body = await error.context.json(); detail = body.error || detail; } catch {}
+        return { error: detail };
+      }
+      return data || { error: "沒有回應內容" };
+    } catch (e) {
+      return { error: e.message || "寄信失敗" };
+    }
   }
   async function rejectProgram(id, reason) {
     if (!sb) return localSetStatus(id, "rejected", reason);
@@ -1009,7 +1027,7 @@ window.DB = (function () {
   return {
     MODE, configured: !!sb,
     initAuth, onAuth, signUp, signIn, signInWithGoogle, signOut, getUser, isAdmin,
-    getPrograms, getPendingPrograms, getMyPrograms, submitProgram, approveProgram, rejectProgram, deleteProgram, getProgramStatus,
+    getPrograms, getPendingPrograms, getMyPrograms, submitProgram, approveProgram, notifyApproved, rejectProgram, deleteProgram, getProgramStatus,
     updateProgram, setRecruiting, submitProgramNote, getPendingNotes, resolveNote, applyNoteField,
     getFavorites, toggleFavorite,
     getReviews, getPendingReviews, submitReview, approveReview, rejectReview, deleteReview, getFeaturedReviews,

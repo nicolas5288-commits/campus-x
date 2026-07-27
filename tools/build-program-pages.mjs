@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = "https://uniembassy.tw";
 const OG_IMAGE = `${SITE}/og-image.png?v=2`;
-const ASSET_VER = "43";           // 跟 HTML 的 ?v= 版控一致，改版時一起調
+const ASSET_VER = "44";           // 跟 HTML 的 ?v= 版控一致，改版時一起調
 const PAGES_DIR = join(ROOT, "p");
 
 // 首頁以外的公開頁（sitemap 用；順序＝重要性）

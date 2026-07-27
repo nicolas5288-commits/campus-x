@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · UniEmbassy</title>
-  <link rel="stylesheet" href="styles.css?v=43" />
+  <link rel="stylesheet" href="styles.css?v=44" />
 </head>
 <body>
   <header class="nav">
@@ -97,9 +97,9 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=43"></script>
-  <script src="data.js?v=43"></script>
-  <script src="db.js?v=43"></script>
+  <script src="config.js?v=44"></script>
+  <script src="data.js?v=44"></script>
+  <script src="db.js?v=44"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -557,6 +557,16 @@
       });
     }
 
+    // 上架成功 → 自動寄通知信給廠商（背景執行，結果用 toast 回報，不擋審核流程）
+    async function notifyAndReport(id) {
+      const r = await DB.notifyApproved(id);
+      if (r.sent) toast(`📧 上架通知信已寄給 ${r.to}`);
+      else if (r.skipped === "no_email") toast("這筆沒留 Email，未寄通知信（改用下面的複製訊息通知）");
+      else if (r.skipped === "already_sent") toast("先前已寄過通知信，不重寄");
+      else if (r.skipped === "local") { /* 本機模式安靜跳過 */ }
+      else if (r.error) toast("⚠️ 通知信寄送失敗：" + r.error);
+    }
+
     // 上架成功 → 一鍵複製「給廠商的上架通知＋專屬連結」（貼 LINE / Email 都可）
     function offerVendorNotice(id, brand, title, slug) {
       const cached = pendingProgramsCache.find((x) => x.id === id);
@@ -581,6 +591,7 @@
         b.disabled = true;
         await DB.approveProgram(b.dataset.approve);
         toast("已通過上架 ✓");
+        notifyAndReport(b.dataset.approve);
         offerVendorNotice(b.dataset.approve);
         loadQueue();
       });
@@ -647,6 +658,7 @@
         document.getElementById("apEditMask").classList.remove("open");
         if (saved && saved.slugSkipped) toast("已儲存，但網址代稱沒存到 —— 請先跑 schema_v15_program_slug.sql");
         else toast(approve ? "已補完並上架 ✓" : "已儲存 ✓");
+        if (approve) notifyAndReport(editTargetId);
         if (approve) offerVendorNotice(editTargetId, f.brand.value.trim(), f.title.value.trim(), saved && saved.slugSkipped ? null : slug);
         loadQueue();
       } catch (err) {
@@ -723,6 +735,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=43"></script>
+  <script src="nav.js?v=44"></script>
 </body>
 </html>
