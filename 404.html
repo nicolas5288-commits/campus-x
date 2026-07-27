@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>找不到頁面 · UniEmbassy</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="/styles.css?v=43" />
+  <script>
+    // 計畫獨立頁 /p/<代稱>/ 是由 GitHub Action 定時產生的靜態檔。
+    // 剛上架、Action 還沒跑到的空窗期，連結會落到這裡 —— 轉回首頁用深連結開詳情，
+    // 讓廠商拿到手的連結「當下就能用」，等 Action 跑完再自動變成真正的獨立頁。
+    (function () {
+      var m = location.pathname.match(/^\/p\/([A-Za-z0-9-]+)\/?$/);
+      if (m) location.replace("/?p=" + encodeURIComponent(m[1]));
+    })();
+  </script>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="/" class="logo"><span class="dot"></span>UniEmbassy</a>
+    </div>
+  </header>
+  <div class="page" style="text-align:center;">
+    <div class="page-head">
+      <h1>找不到這個頁面</h1>
+      <p>連結可能已經過期，或是網址打錯了。</p>
+    </div>
+    <div style="margin-top:24px;"><a class="btn" href="/">回首頁看所有計畫</a></div>
+  </div>
+</body>
+</html>

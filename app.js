@@ -304,6 +304,8 @@
       </div>`;
 
     document.getElementById("modalMask").classList.add("open");
+    // 網址列同步成專屬頁網址 → 直接複製網址列也是對的連結；重新整理會落到獨立頁（內容一致）
+    try { history.replaceState({ p: p.id }, "", `/p/${encodeURIComponent(p.slug || p.id)}/`); } catch {}
     document.getElementById("modalClose").onclick = closeModal;
     document.getElementById("modalFav").onclick = () => handleFav(p.id);
     document.getElementById("modalShare").onclick = () => shareProgram(p);
@@ -462,11 +464,20 @@
   };
   function closeModal() {
     document.getElementById("modalMask").classList.remove("open");
+    // 關閉還原成首頁網址（開窗時改過網址列）
+    if (location.pathname.startsWith("/p/")) {
+      try { history.replaceState({}, "", "/"); } catch {}
+    }
   }
 
-  // 分享計畫專屬連結（?p=id 深連結，打開即彈出該計畫詳情）
+  // 計畫專屬網址：/p/<代稱>/ 獨立頁（Action 還沒產出前，404.html 會轉回 ?p= 深連結，連結不會壞）
+  function programUrl(p) {
+    return `https://uniembassy.tw/p/${encodeURIComponent(p.slug || p.id)}/`;
+  }
+
+  // 分享計畫專屬連結
   function shareProgram(p) {
-    const url = `https://uniembassy.tw/?p=${encodeURIComponent(p.id)}`;
+    const url = programUrl(p);
     const title = `${p.brand}「${p.title}」校園大使招募中！`;
     // 手機跳系統分享面板（可直接傳 LINE / IG）；桌機直接複製連結
     if (navigator.share && matchMedia("(pointer: coarse)").matches) {
@@ -878,12 +889,14 @@
     // 從會員頁「看詳情」帶 ?p=id 進來 → 自動開該計畫詳情
     // admin 深連結 ?p=id&edit=1（後台看完回報一鍵編輯）
     const params = new URLSearchParams(location.search);
+    // ?p= 可以是系統編號或網址代稱（獨立頁還沒產出時，404.html 會把 /p/<代稱>/ 轉成 ?p=<代稱>）
     const wantP = params.get("p");
-    if (wantP && livePrograms.some((x) => x.id === wantP)) {
+    const target = wantP && livePrograms.find((x) => x.id === wantP || x.slug === wantP);
+    if (target) {
       const wantEdit = params.get("edit") === "1";
       setTimeout(() => {
-        if (wantEdit && window.DB.isAdmin && window.DB.isAdmin()) openEdit(wantP);
-        else openModal(wantP);
+        if (wantEdit && window.DB.isAdmin && window.DB.isAdmin()) openEdit(target.id);
+        else openModal(target.id);
       }, 400);
     }
 

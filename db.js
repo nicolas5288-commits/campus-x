@@ -125,7 +125,7 @@ window.DB = (function () {
       eligibility: r.eligibility, term: r.term, paid: r.paid, location: r.location,
       deadline: r.deadline, applyUrl: r.apply_url, status: r.status, reject_reason: r.reject_reason,
       recruiting: r.recruiting, recruitNote: r.recruit_note, sourceUrl: r.source_url,
-      submittedBy: r.submitted_by,
+      submittedBy: r.submitted_by, slug: r.slug || null,
     };
   }
 
@@ -208,6 +208,8 @@ window.DB = (function () {
       recruiting: f.recruiting !== false, recruit_note: f.recruitNote || null,
       apply_url: f.applyUrl || null, source_url: f.sourceUrl || null,
     };
+    // slug 選填：沒送這個 key 就不動它（避免其他呼叫端不小心把既有 slug 清掉）
+    if ("slug" in f) fields.slug = (f.slug || "").trim() || null;
     if (!sb) {
       const s = loadStore();
       s.programEdits = s.programEdits || {};
@@ -216,7 +218,14 @@ window.DB = (function () {
       return { ok: true };
     }
     if (!isAdmin()) throw new Error("只有管理員能編輯計畫");
-    const { error } = await sb.from("programs").update(fields).eq("id", id);
+    let { error } = await sb.from("programs").update(fields).eq("id", id);
+    // 還沒跑 schema_v15_program_slug.sql 時 slug 欄位不存在 → 拿掉它重試，
+    // 別讓「網址代稱」這個選填欄位擋住整個編輯功能。
+    if (error && "slug" in fields && /slug/i.test(error.message || "")) {
+      const { slug, ...rest } = fields;
+      ({ error } = await sb.from("programs").update(rest).eq("id", id));
+      if (!error) return { ok: true, slugSkipped: true };
+    }
     if (error) throw error;
     return { ok: true };
   }
@@ -437,7 +446,7 @@ window.DB = (function () {
     if (!sb) {
       const p = localAllPrograms().find((x) => x.id === pid);
       return p
-        ? { found: true, title: p.title, brand: p.brand, status: p.status, reject_reason: p.reject_reason || null }
+        ? { found: true, title: p.title, brand: p.brand, status: p.status, reject_reason: p.reject_reason || null, slug: p.slug || null }
         : { found: false };
     }
     // 雲端：走 RPC（security definer，只回這一筆的狀態，不會外洩其他待審資料）

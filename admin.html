@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · UniEmbassy</title>
-  <link rel="stylesheet" href="styles.css?v=42" />
+  <link rel="stylesheet" href="styles.css?v=43" />
 </head>
 <body>
   <header class="nav">
@@ -84,6 +84,7 @@
         </div>
         <div class="field"><label><span>報名連結</span><input name="applyUrl" placeholder="https://..." /></label></div>
         <div class="field"><label><span>資料來源連結 <span class="hint">學生提報的原始出處</span></span><input name="sourceUrl" placeholder="https://..." /></label></div>
+        <div class="field"><label><span>網址代稱 slug <span class="hint">選填，決定專屬頁網址 uniembassy.tw/p/<b>代稱</b>/。留空就用系統編號；只能用小寫英數與連字號。⚠️ 改代稱會讓已分享出去的舊連結失效</span></span><input name="slug" placeholder="例：kkbox-2026" pattern="[a-z0-9-]*" /></label></div>
         <div class="auth-err" id="apEditErr"></div>
         <div style="display:flex;gap:10px;">
           <button type="button" class="btn ghost" id="apEditSaveOnly" style="flex:1;justify-content:center;">💾 只儲存</button>
@@ -96,9 +97,9 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=42"></script>
-  <script src="data.js?v=42"></script>
-  <script src="db.js?v=42"></script>
+  <script src="config.js?v=43"></script>
+  <script src="data.js?v=43"></script>
+  <script src="db.js?v=43"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -557,12 +558,11 @@
     }
 
     // 上架成功 → 一鍵複製「給廠商的上架通知＋專屬連結」（貼 LINE / Email 都可）
-    function offerVendorNotice(id, brand, title) {
-      if (!brand) {
-        const p = pendingProgramsCache.find((x) => x.id === id);
-        if (p) { brand = p.brand; title = p.title; }
-      }
-      const url = "https://uniembassy.tw/?p=" + encodeURIComponent(id);
+    function offerVendorNotice(id, brand, title, slug) {
+      const cached = pendingProgramsCache.find((x) => x.id === id);
+      if (!brand && cached) { brand = cached.brand; title = cached.title; }
+      if (slug === undefined) slug = cached && cached.slug;
+      const url = "https://uniembassy.tw/p/" + encodeURIComponent(slug || id) + "/";
       const label = brand ? brand + "｜" + (title || "") : "您的校園大使計畫";
       const msg = `您好，「${label}」已在 UniEmbassy 正式上架 🎉\n這是專屬頁面連結，打開就會直接看到您的招募資訊，歡迎分享到官網、社群或給有興趣的同學：\n${url}`;
       if (!confirm("要複製「給廠商的上架通知＋專屬連結」嗎？\n\n" + msg)) return;
@@ -618,7 +618,7 @@
       apBenefitsList = window.RowList.mount(document.getElementById("apEditBenefits"), { values: (p.benefits || []).slice(), placeholder: "例：時薪 200 元" });
       f.eligibility.value = p.eligibility || ""; f.term.value = p.term || ""; f.deadline.value = p.deadline || "";
       f.paid.checked = !!p.paid; f.recruiting.checked = p.recruiting !== false;
-      f.applyUrl.value = p.applyUrl || ""; f.sourceUrl.value = p.sourceUrl || "";
+      f.applyUrl.value = p.applyUrl || ""; f.sourceUrl.value = p.sourceUrl || ""; f.slug.value = p.slug || "";
       document.getElementById("apEditErr").textContent = "";
       document.getElementById("apEditMask").classList.add("open");
     }
@@ -627,11 +627,13 @@
       const errEl = document.getElementById("apEditErr");
       const lines = (v) => v.split("\n").map((x) => x.trim()).filter(Boolean);
       if (!f.brand.value.trim() || !f.title.value.trim()) { errEl.textContent = "品牌與標題為必填"; return; }
+      const slug = f.slug.value.trim().toLowerCase();
+      if (slug && !/^[a-z0-9][a-z0-9-]*$/.test(slug)) { errEl.textContent = "網址代稱只能用小寫英文、數字與連字號，且不能用連字號開頭"; return; }
       const btns = [document.getElementById("apEditSave"), document.getElementById("apEditSaveOnly")];
       btns.forEach((b) => b.disabled = true);
       errEl.textContent = "";
       try {
-        await DB.updateProgram(editTargetId, {
+        const saved = await DB.updateProgram(editTargetId, {
           brand: f.brand.value.trim(), emoji: f.emoji.value.trim() || "📌", category: f.category.value,
           title: f.title.value.trim(), summary: f.summary.value.trim(),
           tasks: apTasksList.getValues(), benefits: apBenefitsList.getValues(),
@@ -639,13 +641,21 @@
           paid: f.paid.checked, location: f.location.value.trim(),
           deadline: f.deadline.value || null, recruiting: f.recruiting.checked,
           recruitNote: "", applyUrl: f.applyUrl.value.trim(), sourceUrl: f.sourceUrl.value.trim(),
+          slug,
         });
         if (approve) await DB.approveProgram(editTargetId);
         document.getElementById("apEditMask").classList.remove("open");
-        toast(approve ? "已補完並上架 ✓" : "已儲存 ✓");
-        if (approve) offerVendorNotice(editTargetId, f.brand.value.trim(), f.title.value.trim());
+        if (saved && saved.slugSkipped) toast("已儲存，但網址代稱沒存到 —— 請先跑 schema_v15_program_slug.sql");
+        else toast(approve ? "已補完並上架 ✓" : "已儲存 ✓");
+        if (approve) offerVendorNotice(editTargetId, f.brand.value.trim(), f.title.value.trim(), saved && saved.slugSkipped ? null : slug);
         loadQueue();
-      } catch (err) { errEl.textContent = err.message || "儲存失敗"; }
+      } catch (err) {
+        const m = err.message || "儲存失敗";
+        // slug 撞名時 Postgres 回的是 duplicate key，翻成人話
+        errEl.textContent = /duplicate key|programs_slug_uniq/i.test(m)
+          ? `網址代稱「${slug}」已經被其他計畫用了，請換一個`
+          : m;
+      }
       finally { btns.forEach((b) => b.disabled = false); }
     }
     document.getElementById("apEditClose").onclick = () => document.getElementById("apEditMask").classList.remove("open");
@@ -713,6 +723,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=42"></script>
+  <script src="nav.js?v=43"></script>
 </body>
 </html>
