@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · UniEmbassy</title>
-  <link rel="stylesheet" href="styles.css?v=44" />
+  <link rel="stylesheet" href="styles.css?v=45" />
 </head>
 <body>
   <header class="nav">
@@ -97,9 +97,9 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=44"></script>
-  <script src="data.js?v=44"></script>
-  <script src="db.js?v=44"></script>
+  <script src="config.js?v=45"></script>
+  <script src="data.js?v=45"></script>
+  <script src="db.js?v=45"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -114,6 +114,12 @@
     }
     function esc(s) { return (s == null ? "" : String(s)).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
     function stars(n) { n = n || 0; return "★".repeat(n) + "☆".repeat(5 - n); }
+    // 相對天數：「今天」「3 天前」——名片修改標記用
+    function relDays(ts) {
+      const d = Math.floor((Date.now() - new Date(ts).getTime()) / 86400000);
+      if (!isFinite(d) || d < 0) return "";
+      return d === 0 ? "今天" : d + " 天前";
+    }
 
     // ---- 畫面切換 ----
     function showGate(msg) {
@@ -377,8 +383,12 @@
         b.disabled = true; await DB.approveProfile(b.dataset.napprove); toast("名片已通過 ✓"); loadQueue();
       });
       document.querySelectorAll("[data-nreject]").forEach(b => b.onclick = async () => {
-        if (!confirm("確定退回這張名片？")) return;
-        b.disabled = true; await DB.rejectProfile(b.dataset.nreject); toast("已退回"); loadQueue();
+        const reason = prompt("退回原因（選填，大使會在會員頁看到）：") ?? null;
+        if (reason === null) return;
+        b.disabled = true;
+        const r = await DB.rejectProfile(b.dataset.nreject, reason);
+        toast(r && r.reasonSkipped ? "已退回，但原因沒存到 —— 請先跑 schema_v17_profile_edit.sql" : "已退回");
+        loadQueue();
       });
       document.querySelectorAll("[data-delprof]").forEach(b => b.onclick = async () => {
         if (!confirm("永久刪除這張名片？\n\n此動作無法復原，資料會從資料庫徹底移除。\n若只是不想上架，請改用「退回」。")) return;
@@ -426,8 +436,13 @@
       const avatarHtml = p.avatar_url
         ? `<img src="${esc(p.avatar_url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
         : (p.avatar || "👤");
+      // 上架後本人改過的名片標一下（改動直接生效不重審，所以這裡供抽查；不當內容可下架）
+      const edited = p.edited_at
+        ? `<span class="rev-type-badge" style="background:#fff6d9;color:#7a5a00;border:1px solid #ffe28a;">✏️ ${relDays(p.edited_at)}修改過</span>`
+        : "";
       return `<div class="queue-card" data-id="${p.id}">
-        <div style="display:flex;gap:12px;align-items:center;">
+        ${edited}
+        <div style="display:flex;gap:12px;align-items:center;margin-top:${edited ? "8px" : "0"};">
           <div class="pc-avatar" style="overflow:hidden;">${avatarHtml}</div>
           <div style="flex:1;"><h3>${esc(p.nickname)}</h3><div class="q-brand">${esc(p.school || "")} ${esc(p.grade || "")}</div></div>
         </div>
@@ -735,6 +750,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=44"></script>
+  <script src="nav.js?v=45"></script>
 </body>
 </html>

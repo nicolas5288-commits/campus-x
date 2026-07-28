@@ -486,12 +486,12 @@ window.DB = (function () {
       return ov ? { ...p, status: ov.status } : p;
     });
   }
-  function localSetProfileStatus(id, status) {
+  function localSetProfileStatus(id, status, reason) {
     const s = loadStore();
     s.profileOverrides = s.profileOverrides || {};
     const own = (s.profiles || []).find((p) => p.id === id);
-    if (own) own.status = status;
-    else s.profileOverrides[id] = { status };
+    if (own) { own.status = status; if (reason !== undefined) own.reject_reason = reason || null; }
+    else s.profileOverrides[id] = { status, ...(reason !== undefined ? { reject_reason: reason || null } : {}) };
     saveStore(s);
   }
   // 大使名片 DB row(snake) → 前端(camel)：igUrl/contactOpen
@@ -521,30 +521,55 @@ window.DB = (function () {
     if (error) throw error;
     return data ? normalizeProfile(data) : null;
   }
+  // 建立/更新名片。status 由後端 RPC 決定（v17）：
+  // 無名片→pending；pending→維持；rejected→轉回 pending 清原因；live→維持 live 並蓋 edited_at（改完直接生效）
+  // 回傳 { ok, status } —— 前端靠 status 決定要說「已送出審核」還是「已更新，立即生效」
   async function saveProfile(form) {
-    // 建立/更新名片（送出後為 pending 待審）
     if (!sb) {
       const s = loadStore();
       s.profiles = s.profiles || [];
       const existing = s.profiles[0];
-      if (existing) Object.assign(existing, form, { status: "pending" });
-      else s.profiles.push({ ...form, id: "mp-" + Date.now(), badges: [], status: "pending" });
+      // 本機模式也照同一套規則，方便 demo 兩種情境
+      const next = !existing ? "pending" : (existing.status === "live" ? "live" : "pending");
+      if (existing) {
+        // form 沒有 avatar_url 這個 key 時 Object.assign 不會蓋掉既有照片，等同雲端的 coalesce 行為
+        Object.assign(existing, form, { status: next, reject_reason: null });
+        if (next === "live") existing.edited_at = new Date().toISOString();
+      } else {
+        s.profiles.push({ ...form, id: "mp-" + Date.now(), badges: [], status: next });
+      }
       saveStore(s);
-      return { ok: true };
+      return { ok: true, status: next };
     }
     if (!currentUser) throw new Error("請先登入");
-    // 前端 camelCase → 資料表 snake_case（欄位名要對得上）
-    const row = {
-      user_id: currentUser.id,
-      nickname: form.nickname, avatar: form.avatar, avatar_url: form.avatar_url || null,
+    // 前端 camelCase → RPC 收的 snake_case（欄位名要對得上）
+    const payload = {
+      nickname: form.nickname, avatar: form.avatar,
+      // 沒重新選照片就不傳這個 key，RPC 那邊 coalesce 會沿用既有照片
+      ...(form.avatar_url ? { avatar_url: form.avatar_url } : {}),
       school: form.school, grade: form.grade, headline: form.headline,
       skills: form.skills || [], experiences: form.experiences || [],
       ig_url: form.igUrl || null, contact_open: !!form.contactOpen,
-      status: "pending",
     };
-    const { error } = await sb.from("profiles").upsert(row, { onConflict: "user_id" });
-    if (error) throw error;
-    return { ok: true };
+    const { data, error } = await sb.rpc("save_my_profile", { form: payload });
+    if (error) {
+      // v17 還沒跑 → RPC 不存在。降級走舊的 upsert（一律 pending），並讓前端提示先跑 SQL。
+      if (/save_my_profile|function .* does not exist|schema cache/i.test(error.message || "")) {
+        const row = {
+          user_id: currentUser.id,
+          nickname: form.nickname, avatar: form.avatar, avatar_url: form.avatar_url || null,
+          school: form.school, grade: form.grade, headline: form.headline,
+          skills: form.skills || [], experiences: form.experiences || [],
+          ig_url: form.igUrl || null, contact_open: !!form.contactOpen,
+          status: "pending",
+        };
+        const { error: e2 } = await sb.from("profiles").upsert(row, { onConflict: "user_id" });
+        if (e2) throw e2;
+        return { ok: true, status: "pending", rpcMissing: true };
+      }
+      throw error;
+    }
+    return { ok: true, status: data || "pending" };
   }
   // ========== 個人檔案 accounts（會員基本身分，跟大使名片分開）==========
   async function getMyAccount() {
@@ -621,9 +646,16 @@ window.DB = (function () {
     const { error } = await sb.from("profiles").update({ status: "live" }).eq("id", id);
     if (error) throw error;
   }
-  async function rejectProfile(id) {
-    if (!sb) return localSetProfileStatus(id, "rejected");
-    const { error } = await sb.from("profiles").update({ status: "rejected" }).eq("id", id);
+  async function rejectProfile(id, reason) {
+    if (!sb) return localSetProfileStatus(id, "rejected", reason);
+    const patch = { status: "rejected" };
+    if (reason != null) patch.reject_reason = reason;
+    let { error } = await sb.from("profiles").update(patch).eq("id", id);
+    // v17 沒跑時沒有 reject_reason 欄位 → 拿掉原因重試，別讓退回功能整個壞掉
+    if (error && "reject_reason" in patch && /reject_reason/i.test(error.message || "")) {
+      ({ error } = await sb.from("profiles").update({ status: "rejected" }).eq("id", id));
+      if (!error) return { reasonSkipped: true };
+    }
     if (error) throw error;
   }
   // 永久刪除（不可逆）：RLS prof_admin_delete(v12)；子表(reports)on delete cascade

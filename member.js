@@ -132,6 +132,43 @@
     card.style.display = "block";
   }
 
+  // ---------- 我的名片 ----------
+  async function renderMyProfile() {
+    const list = document.getElementById("myProfileList");
+    const empty = document.getElementById("myProfileEmpty");
+    if (!list) return;
+    let p = null;
+    try { p = await DB.getMyProfile(); } catch { p = null; }
+    if (!p) { list.innerHTML = ""; empty.style.display = "block"; return; }
+    empty.style.display = "none";
+    const STAT = {
+      pending: { t: "⏳ 審核中", cls: "" },
+      live: { t: "✅ 已上架", cls: "paid" },
+      rejected: { t: "❌ 已退回", cls: "unpaid" },
+    };
+    const s = STAT[p.status] || STAT.pending;
+    const reason = (p.status === "rejected" && p.reject_reason)
+      ? `<div class="q-section" style="margin-top:8px;"><b>退回原因</b><div>${esc(p.reject_reason)}</div></div>` : "";
+    const av = p.avatar_url
+      ? `<img src="" alt="" data-av="1" style="width:44px;height:44px;border-radius:50%;object-fit:cover;" />`
+      : `<span style="font-size:34px;">${esc(p.avatar || "👤")}</span>`;
+    list.innerHTML = `<div class="queue-card">
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+        ${av}
+        <div style="flex:1;min-width:150px;">
+          <h3 style="margin:0;">${esc(p.nickname || "我的名片")}</h3>
+          <div class="q-brand">${esc([p.school, p.grade].filter(Boolean).join(" · ") || p.headline || "")}</div>
+        </div>
+        <span class="tag ${s.cls}" style="font-size:13.5px;padding:5px 12px;">${s.t}</span>
+        <a class="btn sm" href="network.html?edit=1">✏️ 編輯</a>
+      </div>
+      ${reason}
+    </div>`;
+    // 照片用 DOM 設 src（esc 不跳脫引號，不拼進屬性字串）
+    const img = list.querySelector("[data-av]");
+    if (img) img.src = p.avatar_url;
+  }
+
   // ---------- 我的提報 ----------
   async function renderMyPrograms() {
     const list = document.getElementById("myReportsList");
@@ -183,7 +220,7 @@
       // 本機模式沒有真登入，直接顯示收藏（localStorage）
       const loggedIn = DB.configured ? !!user : true;
       showLoggedIn(loggedIn);
-      if (loggedIn) { renderFavs(); loadAccount(); renderScore(); renderMyPrograms(); }
+      if (loggedIn) { renderFavs(); loadAccount(); renderScore(); renderMyPrograms(); renderMyProfile(); }
     });
     await DB.initAuth();
   }

@@ -234,9 +234,97 @@
   }
   renderSkillChips();
 
+  // ---------- 我的名片：預填 / 編輯 ----------
+  let myProfile = null;   // 目前使用者的名片（沒有就是 null）
+
+  // 把既有名片內容倒回表單（編輯用）
+  function fillForm(p) {
+    const f = document.getElementById("profileForm");
+    f.nickname.value = p.nickname || "";
+    f.school.value = p.school || "";
+    f.grade.value = p.grade || "";
+    f.headline.value = p.headline || "";
+    f.igUrl.value = p.igUrl || p.ig_url || "";
+    f.contactOpen.checked = p.contactOpen !== false;
+
+    // 專長 chips 還原選中態
+    selectedSkills.clear();
+    (p.skills || []).forEach((s) => selectedSkills.add(s));
+    renderSkillChips();
+
+    // 做過的計畫：jsonb 陣列還原成「計畫名 / 第X屆 / 年份」一行一筆
+    f.experiences.value = (p.experiences || [])
+      .map((x) => [x.programName, x.cohort, x.year].filter(Boolean).join(" / "))
+      .join("\n");
+
+    // 頭像：有照片就顯示照片（不重選就沿用，pickedFile 維持 null）
+    pickedFile = null; previewUrl = null;
+    document.getElementById("avatarFile").value = "";
+    pickedAvatar = p.avatar || "🦊";
+    ap.querySelectorAll(".emoji-opt").forEach((x) =>
+      x.classList.toggle("sel", x.textContent === pickedAvatar));
+    if (p.avatar_url) {
+      // 用 DOM 塞而不是字串拼 src=""（esc 不跳脫引號，拼字串會有屬性跳脫風險）
+      preview.innerHTML = "";
+      const img = document.createElement("img");
+      img.src = p.avatar_url; img.alt = "";
+      preview.appendChild(img);
+      clearBtn.style.display = "";
+    } else {
+      clearBtn.style.display = "none";
+      showEmojiPreview();
+    }
+  }
+
+  function resetForm() {
+    const f = document.getElementById("profileForm");
+    f.reset();
+    selectedSkills.clear();
+    renderSkillChips();
+    pickedFile = null; previewUrl = null;
+    document.getElementById("avatarFile").value = "";
+    clearBtn.style.display = "none";
+    pickedAvatar = "🦊";
+    ap.querySelectorAll(".emoji-opt").forEach((x, i) => x.classList.toggle("sel", i === 0));
+    showEmojiPreview();
+  }
+
+  // 依有沒有名片，切換按鈕/標題/送出鈕的文案
+  function syncProfileUI() {
+    const btn = document.getElementById("createProfileBtn");
+    const title = document.getElementById("editTitle");
+    const submit = document.getElementById("editSubmit");
+    const sub = document.querySelector("#editBody .auth-sub");
+    if (myProfile) {
+      btn.textContent = "✏️ 編輯我的名片";
+      title.textContent = "編輯我的名片";
+      if (myProfile.status === "live") {
+        submit.textContent = "儲存變更";
+        if (sub) sub.textContent = "你的名片已上架，修改後會立即生效。";
+      } else {
+        submit.textContent = "送出審核";
+        if (sub) sub.textContent = myProfile.status === "rejected"
+          ? "這張名片先前被退回，修改後會重新送審。"
+          : "名片審核中，修改後會以最新內容繼續審核。";
+      }
+    } else {
+      btn.textContent = "＋ 建立我的名片";
+      title.textContent = "建立我的名片";
+      submit.textContent = "送出審核";
+      if (sub) sub.textContent = "填好送出後由 UniEmbassy 審核，通過就會出現在人脈網。";
+    }
+  }
+
+  async function loadMyProfile() {
+    try { myProfile = await DB.getMyProfile(); } catch { myProfile = null; }
+    syncProfileUI();
+  }
+
   function openEdit() {
     if (DB.configured && !DB.getUser()) { toast("請先登入再建立名片 🔑"); return; }
     document.getElementById("editErr").textContent = "";
+    if (myProfile) fillForm(myProfile); else resetForm();
+    syncProfileUI();
     document.getElementById("editMask").classList.add("open");
   }
   document.getElementById("createProfileBtn").onclick = openEdit;
@@ -267,14 +355,15 @@
         form.avatar_url = await DB.uploadAvatar(pickedFile);
       }
       btn.textContent = "送出中…";
-      await DB.saveProfile(form);
+      const res = await DB.saveProfile(form);
       document.getElementById("editMask").classList.remove("open");
-      toast("名片已送出審核！通過後會出現在人脈網 🙌");
-      f.reset();
-      selectedSkills.clear();
-      renderSkillChips();
+      if (res.rpcMissing) toast("已送出，但請先跑 schema_v17_profile_edit.sql 才會有「修改直接生效」");
+      else if (res.status === "live") toast("名片已更新，立即生效 ✓");
+      else toast("名片已送出審核！通過後會出現在人脈網 🙌");
+      await loadMyProfile();        // 重讀狀態，按鈕/文案跟著更新
+      try { profiles = await DB.getProfiles(); render(); } catch {}   // 已上架的改動立刻反映在人脈網
     } catch (err) { errEl.textContent = err.message || "送出失敗"; }
-    finally { btn.disabled = false; btn.textContent = "送出審核"; }
+    finally { btn.disabled = false; syncProfileUI(); }
   };
 
   // 登入按鈕（Google 登入）
@@ -339,7 +428,19 @@
     try { profiles = await DB.getProfiles(); } catch (err) { console.error(err); profiles = []; }
     render();
     loadLeaderboard();
-    if (DB.initAuth) { DB.onAuth(() => {}); await DB.initAuth(); }
+    // 會員頁的「✏️ 編輯」是連 network.html?edit=1 過來的（member 頁沒有這個 modal，不重複做一份）
+    const wantEdit = new URLSearchParams(location.search).get("edit") === "1";
+    if (DB.initAuth) {
+      // 登入狀態一確定就重讀名片；帶 ?edit=1 進來的等名片載好再自動開窗
+      DB.onAuth(async () => {
+        await loadMyProfile();
+        if (wantEdit && !document.getElementById("editMask").classList.contains("open")) openEdit();
+      });
+      await DB.initAuth();
+    } else {
+      await loadMyProfile();
+      if (wantEdit) openEdit();
+    }
   }
   boot();
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") document.querySelectorAll(".modal-mask.open").forEach(m => m.classList.remove("open")); });
