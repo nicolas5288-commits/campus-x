@@ -105,6 +105,8 @@
     const DB = window.DB;
     let tab = "stats";
     let profileView = "pending";   // 大使名片 tab 內：pending / live / report
+    let programView = "pending";   // 計畫投稿 tab 內：pending / live
+    let liveProgramsCache = [];    // 已上架檢視的編輯 modal 查這裡
     let pendingProgramsCache = []; // 補完/編輯計畫 modal 用
     let apTasksList = null, apBenefitsList = null;  // RowList 實例（開 modal 時 mount）
 
@@ -197,13 +199,7 @@
         if (tab === "stats") {
           await renderStats();
         } else if (tab === "programs") {
-          const list = await DB.getPendingPrograms();
-          pendingProgramsCache = list;
-          updateBadge("badgeP", list.length);
-          queue.innerHTML = list.length
-            ? list.map(programCard).join("")
-            : '<div class="admin-empty">目前沒有待審的投稿 🎉</div>';
-          bindProgramActions();
+          await renderProgramsTab();
         } else if (tab === "reviews") {
           const list = await DB.getPendingReviews();
           updateBadge("badgeR", list.length);
@@ -600,6 +596,80 @@
       }
     }
 
+    // ---- 計畫投稿 tab：雙檢視（待審核 / 已上架），仿大使名片 tab ----
+    async function renderProgramsTab() {
+      const queue = document.getElementById("queue");
+      let pendingN = 0;
+      try { pendingN = (await DB.getPendingPrograms()).length; } catch {}
+      updateBadge("badgeP", pendingN);
+      const subBadge = (n) => n > 0 ? `<span class="badge">${n}</span>` : "";
+      queue.innerHTML = `
+        <div class="sub-tabs">
+          <button class="sub-tab ${programView === "pending" ? "active" : ""}" data-pgv="pending">待審核 ${subBadge(pendingN)}</button>
+          <button class="sub-tab ${programView === "live" ? "active" : ""}" data-pgv="live">已上架</button>
+        </div>
+        <div id="progSub"><div class="admin-empty">載入中…</div></div>`;
+      queue.querySelectorAll("[data-pgv]").forEach(b => b.onclick = () => { programView = b.dataset.pgv; renderProgramsTab(); });
+      const sub = document.getElementById("progSub");
+      try {
+        if (programView === "pending") {
+          const list = await DB.getPendingPrograms();
+          pendingProgramsCache = list;
+          sub.innerHTML = list.length
+            ? list.map(programCard).join("")
+            : '<div class="admin-empty">目前沒有待審的投稿 🎉</div>';
+          bindProgramActions();
+        } else {
+          const list = await DB.getPrograms();
+          liveProgramsCache = list;
+          sub.innerHTML = list.length
+            ? list.map(liveProgramCard).join("")
+            : '<div class="admin-empty">目前沒有已上架的計畫</div>';
+          bindLiveProgramActions();
+        }
+      } catch (err) { sub.innerHTML = `<div class="admin-empty">載入失敗：${esc(err.message)}</div>`; }
+    }
+    function liveProgramCard(p) {
+      return `<div class="queue-card" data-id="${p.id}">
+        <div style="display:flex;gap:12px;align-items:start;">
+          <div class="card-emoji">${p.emoji || "📌"}</div>
+          <div style="flex:1;">
+            <h3>${esc(p.title)}</h3>
+            <div class="q-brand">${esc(p.brand)}</div>
+          </div>
+        </div>
+        <div class="q-meta">
+          <span class="tag ${p.paid ? "paid" : "unpaid"}">${p.paid ? "有薪" : "無薪"}</span>
+          <span class="tag">${esc(p.category)}</span>
+          ${p.location ? `<span class="tag">${esc(p.location)}</span>` : ""}
+          ${p.deadline ? `<span class="tag">截止 ${esc(p.deadline)}</span>` : ""}
+        </div>
+        <div class="q-actions">
+          <button class="btn" data-editp="${p.id}" style="background:#fff;color:var(--ink);border-color:var(--line-strong);">✏️ 編輯</button>
+          <button class="btn reject" data-unpub="${p.id}">⬇️ 下架</button>
+          <button class="btn danger" data-dellive="${p.id}">🗑️ 永久刪除</button>
+        </div>
+      </div>`;
+    }
+    function bindLiveProgramActions() {
+      document.querySelectorAll("[data-editp]").forEach(b => b.onclick = () => openEditProgram(b.dataset.editp));
+      document.querySelectorAll("[data-unpub]").forEach(b => b.onclick = async () => {
+        const reason = prompt("下架原因（選填；廠商在查稿頁會看到「退回＋原因」）：") ?? null;
+        if (reason === null) return;
+        b.disabled = true;
+        try { await DB.rejectProgram(b.dataset.unpub, reason); toast("已下架 ⬇️"); }
+        catch (e) { toast("下架失敗：" + e.message); b.disabled = false; return; }
+        renderProgramsTab();
+      });
+      document.querySelectorAll("[data-dellive]").forEach(b => b.onclick = async () => {
+        if (!confirm("永久刪除這筆「已上架」的計畫？\n\n此動作無法復原：計畫連同它的收藏、心得、回報會一併從資料庫徹底刪除；獨立頁會在下次自動重生時移除。\n若只是暫時不想展示，請改用「下架」（資料保留、可再上架）。")) return;
+        b.disabled = true;
+        try { await DB.deleteProgram(b.dataset.dellive); toast("已永久刪除 🗑️"); }
+        catch (e) { toast("刪除失敗：" + e.message); b.disabled = false; return; }
+        renderProgramsTab();
+      });
+    }
+
     function bindProgramActions() {
       document.querySelectorAll("[data-editp]").forEach(b => b.onclick = () => openEditProgram(b.dataset.editp));
       document.querySelectorAll("[data-approve]").forEach(b => b.onclick = async () => {
@@ -633,7 +703,7 @@
     })();
     let editTargetId = null;
     function openEditProgram(id) {
-      const p = pendingProgramsCache.find((x) => x.id === id);
+      const p = pendingProgramsCache.find((x) => x.id === id) || liveProgramsCache.find((x) => x.id === id);
       if (!p) return;
       editTargetId = id;
       const f = document.getElementById("apEditForm");
