@@ -553,19 +553,10 @@ window.DB = (function () {
     };
     const { data, error } = await sb.rpc("save_my_profile", { form: payload });
     if (error) {
-      // v17 還沒跑 → RPC 不存在。降級走舊的 upsert（一律 pending），並讓前端提示先跑 SQL。
+      // v17 已上線，寫入只走 RPC。剛跑完 SQL 的頭幾分鐘 API 層快取可能還不認得函式，
+      // 這裡不降級直接寫表（權限已收掉，只會爆 RLS 誤導人），改請使用者稍後重試。
       if (/save_my_profile|function .* does not exist|schema cache/i.test(error.message || "")) {
-        const row = {
-          user_id: currentUser.id,
-          nickname: form.nickname, avatar: form.avatar, avatar_url: form.avatar_url || null,
-          school: form.school, grade: form.grade, headline: form.headline,
-          skills: form.skills || [], experiences: form.experiences || [],
-          ig_url: form.igUrl || null, contact_open: !!form.contactOpen,
-          status: "pending",
-        };
-        const { error: e2 } = await sb.from("profiles").upsert(row, { onConflict: "user_id" });
-        if (e2) throw e2;
-        return { ok: true, status: "pending", rpcMissing: true };
+        throw new Error("系統剛更新完，請過 1-2 分鐘再存一次");
       }
       throw error;
     }
