@@ -6,7 +6,7 @@
 //   RESEND_API_KEY  — Resend 的 API key
 //   ADMIN_EMAIL     — 管理員 email（跟 is_admin() 用的同一個）
 //   FROM_EMAIL      — 寄件人，網域要先在 Resend 驗證，例：UniEmbassy 校園大使館 <notify@uniembassy.tw>
-//   REPLY_TO        — 選填，廠商按「回覆」時寄到哪，例：4gpt4used@gmail.com
+//   REPLY_TO        — 選填，廠商按「回覆」時寄到哪，例：chiwen5288@gmail.com
 // （SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / SUPABASE_ANON_KEY 平台會自動注入，不用設）
 
 import { createClient } from "npm:@supabase/supabase-js@2";

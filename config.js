@@ -12,5 +12,5 @@ window.CAMPUSX_CONFIG = {
   ADMIN_EMAIL: "chiwen5288@gmail.com",   // UniEmbassy 管理員（已設定）
   // 聯絡我們（可自由修改；留空的項目不顯示）
   CONTACT_IG: "https://www.instagram.com/uniembassy.tw/",
-  CONTACT_EMAIL: "4gpt4used@gmail.com",
+  CONTACT_EMAIL: "chiwen5288@gmail.com",
 };
