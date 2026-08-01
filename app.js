@@ -41,6 +41,12 @@
     if (dl <= 7) return { text: `剩 ${dl} 天截止`, soon: true };
     return { text: `${dateStr} 截止`, soon: false };
   }
+  // 是否還開放報名：recruiting 旗標是手動維護的，截止日過了旗標可能還沒翻，兩者都要看
+  function isOpen(p) {
+    if (p.recruiting === false) return false;
+    if (p.deadline && daysLeft(p.deadline) < 0) return false;
+    return true;
+  }
 
   // ---------- 篩選 ----------
   function getFiltered() {
@@ -48,7 +54,7 @@
     const list = livePrograms.filter((p) => {
       if (activeCat !== "全部" && p.category !== activeCat) return false;
       if (paidOnly.checked && !p.paid) return false;
-      if (recruitingOnly.checked && p.recruiting === false) return false;
+      if (recruitingOnly.checked && !isOpen(p)) return false;
       if (q) {
         const hay = (p.brand + p.title + p.summary + p.category).toLowerCase();
         if (!hay.includes(q)) return false;
@@ -56,7 +62,7 @@
       return true;
     });
     // 預設排序：招募中排前面，已截止的沉底（stable sort 維持組內原序）
-    return list.sort((a, b) => (a.recruiting === false ? 1 : 0) - (b.recruiting === false ? 1 : 0));
+    return list.sort((a, b) => (isOpen(a) ? 0 : 1) - (isOpen(b) ? 0 : 1));
   }
 
   // ---------- ⋯ 選單（依身分變臉）----------
@@ -266,15 +272,15 @@
       <div class="m-brand">${p.brand}</div>
       <div class="m-tags">${paidTag}<span class="tag">${p.category}</span><span class="tag">${p.location}</span></div>
       <p style="color:var(--ink-soft);font-size:15.5px;">${p.summary}</p>
-      ${p.recruiting === false
-        ? `<div class="recruit-banner closed">🔴 ${p.recruitNote || "本梯報名已截止"}</div>`
+      ${!isOpen(p)
+        ? `<div class="recruit-banner closed">🔴 ${p.recruiting === false && p.recruitNote ? p.recruitNote : "本梯報名已截止"}</div>`
         : (p.recruitNote ? `<div class="recruit-banner open">🟢 ${p.recruitNote}</div>` : "")}
 
       <div class="meta-grid">
         <div class="m"><span>招募對象</span><b>${p.eligibility || "—"}</b></div>
         <div class="m"><span>任期</span><b>${p.term || "—"}</b></div>
         <div class="m"><span>地區</span><b>${p.location || "—"}</b></div>
-        <div class="m"><span>報名狀態</span><b>${p.recruiting === false ? (p.deadline ? "已截止 " + p.deadline : "見官方公告") : (p.deadline || "隨到隨審")}</b></div>
+        <div class="m"><span>報名狀態</span><b>${!isOpen(p) ? (p.deadline ? "已截止 " + p.deadline : "見官方公告") : (p.deadline || "隨到隨審")}</b></div>
       </div>
 
       <h4>任務內容</h4>
@@ -284,7 +290,7 @@
       <div class="benefit-pills">${(p.benefits || []).length ? p.benefits.map((b) => `<span>${b}</span>`).join("") : '<span style="background:var(--accent-soft);color:var(--ink-soft);">詳見官方頁</span>'}</div>
 
       <div class="modal-actions">
-        <a href="${p.applyUrl}" target="_blank" rel="noopener" class="btn">${p.recruiting === false ? "查看官方頁 ↗" : "前往報名 ↗"}</a>
+        <a href="${p.applyUrl}" target="_blank" rel="noopener" class="btn">${!isOpen(p) ? "查看官方頁 ↗" : "前往報名 ↗"}</a>
         <button class="btn ghost" id="modalFav" data-fav="${p.id}" data-id="${p.id}">${favSet.has(p.id) ? HEART_FILL + " 已收藏" : HEART_LINE + " 收藏"}</button>
         <button class="btn ghost" id="modalShare">🔗 分享</button>
       </div>
