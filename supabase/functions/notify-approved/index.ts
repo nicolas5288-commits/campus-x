@@ -1,10 +1,10 @@
 // notify-approved — 計畫通過上架時寄通知信給廠商（Resend）
 //
 // 呼叫方式：admin.html 按「通過上架」後 sb.functions.invoke("notify-approved", { body: { program_id } })
-// 防護：1) 驗證呼叫者 JWT 必須是 ADMIN_EMAIL  2) notified_at 蓋章防重寄
+// 防護：1) 驗證呼叫者在 staff 團隊名單裡（v18 起支援多人審核）  2) notified_at 蓋章防重寄
 // 需要的 Secrets（Supabase 後台 Edge Functions → Secrets 設定）：
 //   RESEND_API_KEY  — Resend 的 API key
-//   ADMIN_EMAIL     — 管理員 email（跟 is_admin() 用的同一個）
+//   ADMIN_EMAIL     — 只在 staff 表還不存在（v18 沒跑）時當退路用
 //   FROM_EMAIL      — 寄件人，網域要先在 Resend 驗證，例：UniEmbassy 校園大使館 <notify@uniembassy.tw>
 //   REPLY_TO        — 選填，廠商按「回覆」時寄到哪，例：chiwen5288@gmail.com
 // （SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / SUPABASE_ANON_KEY 平台會自動注入，不用設）
@@ -33,10 +33,22 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } },
     );
     const { data: { user } } = await anon.auth.getUser();
-    const adminEmail = Deno.env.get("ADMIN_EMAIL") ?? "";
-    if (!user || !adminEmail || user.email !== adminEmail) {
-      return json(403, { error: "只有管理員能觸發通知信" });
-    }
+    if (!user?.email) return json(403, { error: "只有管理員能觸發通知信" });
+
+    const svc = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    // v18 起後台可以多人：查 staff 名單，不再只認單一 ADMIN_EMAIL
+    // （staff 表還不存在＝v18 沒跑 → 退回舊的單一 email 判斷，不讓上架通知信整條掛掉）
+    const callerEmail = user.email.toLowerCase();
+    const { data: staffRow, error: staffErr } = await svc.from("staff")
+      .select("role").eq("email", callerEmail).maybeSingle();
+    const allowed = staffErr
+      ? callerEmail === (Deno.env.get("ADMIN_EMAIL") ?? "").toLowerCase()
+      : !!staffRow;
+    if (!allowed) return json(403, { error: "只有管理員能觸發通知信" });
 
     const { program_id } = await req.json().catch(() => ({}));
     if (!program_id || typeof program_id !== "string") {
@@ -44,10 +56,6 @@ Deno.serve(async (req) => {
     }
 
     // ---- 2. service role 讀計畫＋聯絡信箱 ----
-    const svc = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
     const { data: prog, error: pErr } = await svc.from("programs").select("*").eq("id", program_id).maybeSingle();
     if (pErr) throw pErr;
     if (!prog) return json(404, { error: "查無此計畫" });

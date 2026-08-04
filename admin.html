@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · UniEmbassy</title>
-  <link rel="stylesheet" href="styles.css?v=45" />
+  <link rel="stylesheet" href="styles.css?v=48" />
 </head>
 <body>
   <header class="nav">
@@ -49,6 +49,7 @@
         <button class="admin-tab" data-tab="events">活動 <span class="badge" id="badgeE" style="display:none;">0</span></button>
         <button class="admin-tab" data-tab="notes">計畫回報 <span class="badge" id="badgeNote" style="display:none;">0</span></button>
         <button class="admin-tab" data-tab="wishes">許願池</button>
+        <button class="admin-tab" data-tab="staff" id="tabStaff" style="display:none;">👥 團隊</button>
         <button class="btn ghost sm" id="adLogout" style="margin-left:auto;">登出</button>
       </div>
       <div id="queue"></div>
@@ -97,9 +98,9 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=45"></script>
-  <script src="data.js?v=45"></script>
-  <script src="db.js?v=46"></script>
+  <script src="config.js?v=48"></script>
+  <script src="data.js?v=48"></script>
+  <script src="db.js?v=48"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -132,6 +133,10 @@
     function showPanel() {
       document.getElementById("gate").style.display = "none";
       document.getElementById("panel").style.display = "block";
+      // 「團隊」分頁只有主理人看得到；夥伴就算手動把 tab 切過去也擋掉（DB 那層也擋，這只是體驗）
+      const owner = DB.isOwner ? DB.isOwner() : true;
+      document.getElementById("tabStaff").style.display = owner ? "" : "none";
+      if (!owner && tab === "staff") tab = "stats";
       loadQueue();
     }
 
@@ -211,6 +216,8 @@
           await renderProfilesTab();
         } else if (tab === "wishes") {
           await renderWishes();
+        } else if (tab === "staff") {
+          await renderStaff();
         } else if (tab === "events") {
           const list = await DB.getPendingEvents();
           updateBadge("badgeE", list.length);
@@ -781,6 +788,81 @@
       });
     }
 
+    // ---- 團隊名單（只有 owner 看得到這個 tab）----
+    async function renderStaff() {
+      const queue = document.getElementById("queue");
+      queue.innerHTML = '<div class="admin-empty">載入中…</div>';
+      let list = [];
+      try {
+        list = await DB.getStaff();
+      } catch (e) {
+        queue.innerHTML = `<div class="admin-empty">載入失敗：${esc(e.message)}<br/><br/>
+          若訊息提到 staff 不存在，代表 <code>supabase/schema_v18_staff_roles.sql</code> 還沒跑。</div>`;
+        return;
+      }
+      // 用卡片列而不是表格：email 很長，表格在手機會把右邊欄位（含移除鈕）擠出畫面
+      const rows = list.map((s) => {
+        const owner = s.role === "owner";
+        return `<div class="queue-card" style="margin-bottom:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <div style="flex:1;min-width:180px;">
+            <div style="font-weight:600;word-break:break-all;">${esc(s.email)}</div>
+            <div style="color:var(--ink-soft);font-size:12.5px;margin-top:3px;">
+              ${owner ? "主理人 · 權限最高" : "審核夥伴"}${s.added_at ? " · " + esc(String(s.added_at).slice(0, 10)) + " 加入" : ""}
+            </div>
+          </div>
+          ${owner
+            ? '<span class="tag paid">主理人</span>'
+            : `<span class="tag">審核夥伴</span>
+               <button class="mini-del" data-delstaff="${esc(s.email)}" title="移除">🗑️ 移除</button>`}
+        </div>`;
+      }).join("");
+
+      queue.innerHTML = `
+        <h3 style="margin:8px 0 6px;">👥 審核團隊</h3>
+        <p style="color:var(--ink-soft);font-size:13.5px;line-height:1.7;margin:0 0 14px;">
+          審核夥伴可以做<b>全部的內容審核</b>（通過上架、退回、編輯、下架、永久刪除），
+          但看不到這個「團隊」分頁，也<b>無法更動任何人的權限</b>——這是資料庫層擋住的，不是只把按鈕藏起來。
+        </p>
+        ${rows}
+
+        <h3 style="margin:28px 0 6px;">＋ 新增審核夥伴</h3>
+        <p style="color:var(--ink-soft);font-size:13.5px;line-height:1.7;margin:0 0 12px;">
+          填他<b>登入這個網站用的 Google 帳號 Email</b>。建議請對方先用 Google 登入過一次網站，確認是哪個信箱再加。<br/>
+          加完請他重新整理頁面，頭貼選單就會出現「🛠️ 審核後台」。移除也是即時生效。
+        </p>
+        <div class="queue-card">
+          <div class="field"><label><span>夥伴的 Email</span>
+            <input type="email" id="staffEmail" placeholder="partner@gmail.com" autocomplete="off" /></label></div>
+          <div class="auth-err" id="staffErr"></div>
+          <button class="btn approve" id="staffAdd">＋ 加入團隊</button>
+        </div>`;
+
+      queue.querySelectorAll("[data-delstaff]").forEach(b => b.onclick = async () => {
+        const email = b.dataset.delstaff;
+        if (!confirm(`移除 ${email} 的後台權限？\n\n他會立刻失去所有審核權限（已審過的內容不受影響）。`)) return;
+        b.disabled = true;
+        try { await DB.removeStaff(email); toast("已移除"); renderStaff(); }
+        catch (e) { b.disabled = false; alert(e.message); }
+      });
+      const addBtn = document.getElementById("staffAdd");
+      const emailInput = document.getElementById("staffEmail");
+      const errBox = document.getElementById("staffErr");
+      async function doAdd() {
+        errBox.textContent = "";
+        addBtn.disabled = true;
+        try {
+          const r = await DB.addStaff(emailInput.value);
+          toast(`已加入 ${r.email || ""}`.trim());
+          renderStaff();
+        } catch (e) {
+          errBox.textContent = e.message;
+          addBtn.disabled = false;
+        }
+      }
+      addBtn.onclick = doAdd;
+      emailInput.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); doAdd(); } };
+    }
+
     // ---- Tabs ----
     document.querySelectorAll(".admin-tab").forEach(t => t.onclick = () => {
       tab = t.dataset.tab;
@@ -811,8 +893,14 @@
     // ---- 啟動 ----
     async function boot() {
       DB.onAuth((user) => {
-        if (DB.isAdmin()) showPanel();
-        else if (DB.configured) showGate(user ? "這個帳號沒有管理員權限。" : "請以管理員帳號登入後台。");
+        if (DB.isAdmin()) {
+          showPanel();
+          // v18 SQL 還沒跑：仍可用（退回舊的單一管理員判斷），但團隊功能不會生效
+          if (DB.needsStaffSql && DB.needsStaffSql()) {
+            toast("團隊權限的資料庫設定還沒跑，目前是單人模式");
+          }
+        }
+        else if (DB.configured) showGate(user ? "這個帳號沒有後台權限。若你是審核夥伴，請確認主理人已把這個 Email 加進團隊。" : "請以管理員帳號登入後台。");
         else showPanel(); // 本機模式直接進（方便 demo）
       });
       await DB.initAuth();
@@ -820,6 +908,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=45"></script>
+  <script src="nav.js?v=48"></script>
 </body>
 </html>

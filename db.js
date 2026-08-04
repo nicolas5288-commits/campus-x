@@ -76,17 +76,37 @@ window.DB = (function () {
 
   // ========== Auth ==========
   let currentUser = null;
+  let currentRole = null;      // 'owner' | 'mod' | null（v18 團隊角色，登入後快取）
+  let roleRpcMissing = false;  // true = v18 SQL 還沒跑，isAdmin 退回舊的 email 比對
   const authListeners = [];
   function onAuth(cb) { authListeners.push(cb); cb(currentUser); }
   function emitAuth() { authListeners.forEach((cb) => cb(currentUser)); }
+
+  // 查自己的團隊角色。這是唯讀判斷，所以 v18 沒跑時可以安全退回舊的 email 比對
+  // （⚠️ v46 教訓：會「寫入」的功能絕不留降級路徑，只有唯讀判斷可以）
+  async function refreshRole() {
+    if (!currentUser) { currentRole = null; return; }
+    const { data, error } = await sb.rpc("get_my_role");
+    if (error) {
+      // PGRST202 = 函式不存在（v18 沒跑）；其他錯誤也一律走保守的舊判斷
+      roleRpcMissing = true;
+      const me = String(currentUser.email || "").toLowerCase();
+      currentRole = me === String(cfg.ADMIN_EMAIL || "").toLowerCase() ? "owner" : null;
+      return;
+    }
+    roleRpcMissing = false;
+    currentRole = data || null;
+  }
 
   async function initAuth() {
     if (!sb) return;
     const { data } = await sb.auth.getSession();
     currentUser = data.session?.user || null;
+    await refreshRole();
     emitAuth();
-    sb.auth.onAuthStateChange((_e, session) => {
+    sb.auth.onAuthStateChange(async (_e, session) => {
       currentUser = session?.user || null;
+      await refreshRole();
       emitAuth();
     });
   }
@@ -112,9 +132,69 @@ window.DB = (function () {
   }
   async function signOut() { if (sb) await sb.auth.signOut(); }
   function getUser() { return currentUser; }
+  // 有後台權限＝在 staff 名單裡（owner 或 mod 都算）
   function isAdmin() {
     if (!sb) return true; // 本機模式：你就是管理員（方便 demo 後台）
-    return !!currentUser && currentUser.email === cfg.ADMIN_EMAIL;
+    return !!currentUser && currentRole != null;
+  }
+  // 只有 owner 能管團隊名單
+  function isOwner() {
+    if (!sb) return true; // 本機模式同上
+    return !!currentUser && currentRole === "owner";
+  }
+  function myRole() { return sb ? currentRole : "owner"; }
+  function needsStaffSql() { return !!sb && roleRpcMissing; }
+
+  // ========== 團隊名單 staff（v18）==========
+  // 寫入權限由 RLS 保證（只有 owner 能增刪），前端這層只是把話講清楚
+  async function getStaff() {
+    if (!sb) {
+      const s = loadStore();
+      return [{ email: cfg.ADMIN_EMAIL, role: "owner", added_at: null }].concat(s.staff || []);
+    }
+    const { data, error } = await sb.from("staff").select("*").order("added_at", { ascending: true });
+    if (error) throw error;
+    return data || [];
+  }
+  async function addStaff(email) {
+    const clean = String(email || "").trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) throw new Error("Email 格式看起來不對");
+    if (!sb) {
+      const s = loadStore();
+      s.staff = s.staff || [];
+      if (clean === String(cfg.ADMIN_EMAIL || "").toLowerCase() || s.staff.some((x) => x.email === clean)) {
+        throw new Error("這個 Email 已經在團隊名單裡了");
+      }
+      s.staff.push({ email: clean, role: "mod", added_at: new Date().toISOString() });
+      saveStore(s);
+      return { ok: true, email: clean };
+    }
+    if (!isOwner()) throw new Error("只有主理人能新增審核夥伴");
+    const { error } = await sb.from("staff").insert({
+      email: clean, role: "mod", added_by: currentUser ? currentUser.email : null,
+    });
+    if (error) {
+      if (error.code === "23505") throw new Error("這個 Email 已經在團隊名單裡了");
+      if (/get_my_role|staff/i.test(error.message || "") && /does not exist/i.test(error.message || "")) {
+        throw new Error("團隊功能的資料庫設定還沒跑（schema_v18_staff_roles.sql）");
+      }
+      throw error;
+    }
+    return { ok: true, email: clean };
+  }
+  async function removeStaff(email) {
+    if (!sb) {
+      const s = loadStore();
+      s.staff = (s.staff || []).filter((x) => x.email !== email);
+      saveStore(s);
+      return { ok: true };
+    }
+    if (!isOwner()) throw new Error("只有主理人能移除審核夥伴");
+    // 回讀確認真的刪到列（RLS 擋下時 delete 不會報錯，只會 0 列——沿用 v12 的防靜默假成功寫法）
+    const { data, error } = await sb.from("staff").delete().eq("email", email).select("email");
+    if (error) throw error;
+    if (!data || !data.length) throw new Error("沒有移除成功（可能是權限不足，或這是主理人帳號）");
+    return { ok: true };
   }
 
   // 欄位對應：DB(snake_case) → 前台(camelCase)
@@ -1050,6 +1130,7 @@ window.DB = (function () {
   return {
     MODE, configured: !!sb,
     initAuth, onAuth, signUp, signIn, signInWithGoogle, signOut, getUser, isAdmin,
+    isOwner, myRole, needsStaffSql, getStaff, addStaff, removeStaff,
     getPrograms, getPendingPrograms, getMyPrograms, submitProgram, approveProgram, notifyApproved, rejectProgram, deleteProgram, getProgramStatus,
     updateProgram, setRecruiting, submitProgramNote, getPendingNotes, resolveNote, applyNoteField,
     getFavorites, toggleFavorite,
