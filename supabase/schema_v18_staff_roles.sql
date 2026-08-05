@@ -31,23 +31,23 @@ on conflict (email) do update set role = 'owner';
 
 -- 3) 改寫 is_admin()：從「比對寫死 email」→「查 staff 名單」
 --    簽名不變 → 全站既有 policy 原封不動繼續生效
-create or replace function is_admin() returns boolean as $$
+create or replace function is_admin() returns boolean as $fn$
   select exists (
     select 1 from staff where email = lower(auth.jwt()->>'email')
   );
-$$ language sql stable security definer set search_path = public;
+$fn$ language sql stable security definer set search_path = public;
 
 -- 4) is_owner()：只有 owner 才能改權限名單
-create or replace function is_owner() returns boolean as $$
+create or replace function is_owner() returns boolean as $fn$
   select exists (
     select 1 from staff where email = lower(auth.jwt()->>'email') and role = 'owner'
   );
-$$ language sql stable security definer set search_path = public;
+$fn$ language sql stable security definer set search_path = public;
 
 -- 5) 前端判斷身分用（回 'owner' / 'mod' / null）
-create or replace function get_my_role() returns text as $$
+create or replace function get_my_role() returns text as $fn$
   select role from staff where email = lower(auth.jwt()->>'email');
-$$ language sql stable security definer set search_path = public;
+$fn$ language sql stable security definer set search_path = public;
 
 -- 6) staff 表的權限：夥伴看得到名單（只讀），只有 owner 能增刪改
 --    → 「夥伴不能更動別人權限」由資料庫保證，不是靠前端把按鈕藏起來
@@ -62,9 +62,25 @@ create policy staff_update on staff for update using (is_owner() and role = 'mod
 create policy staff_delete on staff for delete using (is_owner() and role <> 'owner');    -- owner 那列刪不掉（防手滑把自己踢掉、鎖死後台）
 
 -- ============================================================
--- 跑完自我檢查（在 SQL Editor 用 owner 帳號跑）：
---   select is_admin(), is_owner(), get_my_role();   -- 應回 true, true, owner
---   select * from staff;                            -- 應看得到自己那列
--- 若 select is_admin() 卡住或報 stack depth exceeded
---   ＝ security definer 沒生效，回頭檢查第 3、4 段有沒有漏掉
+-- 跑完怎麼驗
+--
+-- ⚠️ 不要用 `select is_admin();` 驗——SQL Editor 是用資料庫管理員身分直連、
+--    沒有登入者的 JWT，auth.jwt() 是 null，所以這三個函式在這裡永遠回
+--    false / false / null。那是正常的，不代表沒裝好。
+--
+-- 1) 名單有沒有建好：
+--      select * from staff;            -- 應看得到自己那列（owner）
+--
+-- 2) 函式有沒有建好（在終端機，換成自己的 publishable key）：
+--      curl -s -X POST "https://<專案>.supabase.co/rest/v1/rpc/get_my_role" \
+--        -H "apikey: <publishable key>" -H "Content-Type: application/json" -d '{}'
+--      → 回 null ＝ 成功（沒裝好會回 PGRST202「找不到函式」）
+--
+-- 3) 名單有沒有被保護：
+--      curl -s "https://<專案>.supabase.co/rest/v1/staff?select=email" -H "apikey: <publishable key>"
+--      → 回 [] ＝ RLS 正常（匿名看不到名單）
+--
+-- 4) 真正的驗證：用 owner 帳號登入 /admin.html，分頁列出現「👥 團隊」就成了
+--
+-- 若跑的當下報 stack depth exceeded ＝ security definer 沒生效，回頭檢查第 3、4 段
 -- ============================================================
