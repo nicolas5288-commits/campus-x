@@ -91,12 +91,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://uniembassy.tw/p/6d8c6aa2-8c2d-44c5-a766-3b29d570ddd0/</loc>
-    <lastmod>2026-08-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://uniembassy.tw/p/kkbox-11/</loc>
     <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
@@ -109,13 +103,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://uniembassy.tw/p/0c5f830a-af9f-4e98-96e3-6feae9eedbb6/</loc>
+    <loc>https://uniembassy.tw/p/6d8c6aa2-8c2d-44c5-a766-3b29d570ddd0/</loc>
     <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://uniembassy.tw/p/inventec-2025/</loc>
+    <loc>https://uniembassy.tw/p/0c5f830a-af9f-4e98-96e3-6feae9eedbb6/</loc>
     <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -127,13 +121,25 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://uniembassy.tw/p/inventec-2025/</loc>
+    <lastmod>2026-08-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://uniembassy.tw/p/82f2471c-1a5a-4d92-a539-23b99c33925f/</loc>
     <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://uniembassy.tw/p/40952630-e969-4ab1-95a7-3ec01b831bfa/</loc>
+    <loc>https://uniembassy.tw/p/820fa6e8-4a21-4275-a767-daf5bb563b89/</loc>
+    <lastmod>2026-08-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://uniembassy.tw/p/e74512b9-57ad-4159-86f3-19430390120e/</loc>
     <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -145,7 +151,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://uniembassy.tw/p/e74512b9-57ad-4159-86f3-19430390120e/</loc>
+    <loc>https://uniembassy.tw/p/40952630-e969-4ab1-95a7-3ec01b831bfa/</loc>
     <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -175,7 +181,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://uniembassy.tw/p/roots-2026/</loc>
+    <loc>https://uniembassy.tw/p/adecco-2026/</loc>
     <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -187,13 +193,25 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://uniembassy.tw/p/adecco-2026/</loc>
+    <loc>https://uniembassy.tw/p/roots-2026/</loc>
     <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://uniembassy.tw/p/semi-2026/</loc>
+    <loc>https://uniembassy.tw/p/48d0439c-9a5f-412e-8ce8-02b362752203/</loc>
+    <lastmod>2026-08-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://uniembassy.tw/p/fbf63b03-ab64-4d1e-9bd2-cce4afede60f/</loc>
+    <lastmod>2026-08-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://uniembassy.tw/p/garena-aov-2025/</loc>
     <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -211,19 +229,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://uniembassy.tw/p/garena-aov-2025/</loc>
-    <lastmod>2026-08-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://uniembassy.tw/p/48d0439c-9a5f-412e-8ce8-02b362752203/</loc>
-    <lastmod>2026-08-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://uniembassy.tw/p/fbf63b03-ab64-4d1e-9bd2-cce4afede60f/</loc>
+    <loc>https://uniembassy.tw/p/semi-2026/</loc>
     <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
