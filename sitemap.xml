@@ -133,7 +133,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://uniembassy.tw/p/820fa6e8-4a21-4275-a767-daf5bb563b89/</loc>
+    <loc>https://uniembassy.tw/p/2b1dccbe-7191-46b6-93fc-0562d19f0ed0/</loc>
     <lastmod>2026-08-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -157,6 +157,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://uniembassy.tw/p/820fa6e8-4a21-4275-a767-daf5bb563b89/</loc>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://uniembassy.tw/p/9ab64d5e-3091-410b-b557-5f919ee09ea3/</loc>
     <lastmod>2026-08-31</lastmod>
     <changefreq>weekly</changefreq>
@@ -170,12 +176,6 @@
   </url>
   <url>
     <loc>https://uniembassy.tw/p/twbank-hokii-115/</loc>
-    <lastmod>2026-08-31</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://uniembassy.tw/p/e899f1fd-f24d-465e-94b6-34377692b5a5/</loc>
     <lastmod>2026-08-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -217,12 +217,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://uniembassy.tw/p/frusirnana-2026/</loc>
-    <lastmod>2026-08-31</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://uniembassy.tw/p/casetify-2025/</loc>
     <lastmod>2026-08-31</lastmod>
     <changefreq>weekly</changefreq>
@@ -235,7 +229,19 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://uniembassy.tw/p/frusirnana-2026/</loc>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://uniembassy.tw/p/itri-2026/</loc>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://uniembassy.tw/p/e899f1fd-f24d-465e-94b6-34377692b5a5/</loc>
     <lastmod>2026-08-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
