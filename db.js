@@ -84,12 +84,19 @@ window.DB = (function () {
 
   // 查自己的團隊角色。這是唯讀判斷，所以 v18 沒跑時可以安全退回舊的 email 比對
   // （⚠️ v46 教訓：會「寫入」的功能絕不留降級路徑，只有唯讀判斷可以）
-  async function refreshRole() {
+  async function refreshRole(retried) {
     if (!currentUser) { currentRole = null; return; }
     const { data, error } = await sb.rpc("get_my_role");
     if (error) {
-      // PGRST202 = 函式不存在（v18 沒跑）；其他錯誤也一律走保守的舊判斷
-      roleRpcMissing = true;
+      // PGRST202 = 函式不存在（v18 沒跑）→ 退回舊的 email 比對
+      const rpcMissing = error.code === "PGRST202" || /could not find|does not exist/i.test(error.message || "");
+      // 其他錯誤（多半是網路偶發）：重試一次再放棄，否則審核夥伴會被靜默當成一般會員
+      if (!rpcMissing && !retried) {
+        await new Promise((r) => setTimeout(r, 1200));
+        return refreshRole(true);
+      }
+      console.warn("[UniEmbassy] 查詢團隊角色失敗：", error.code, error.message);
+      roleRpcMissing = rpcMissing;
       const me = String(currentUser.email || "").toLowerCase();
       currentRole = me === String(cfg.ADMIN_EMAIL || "").toLowerCase() ? "owner" : null;
       return;

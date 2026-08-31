@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · UniEmbassy</title>
-  <link rel="stylesheet" href="styles.css?v=48" />
+  <link rel="stylesheet" href="styles.css?v=49" />
 </head>
 <body>
   <header class="nav">
@@ -98,9 +98,9 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=48"></script>
-  <script src="data.js?v=48"></script>
-  <script src="db.js?v=48"></script>
+  <script src="config.js?v=49"></script>
+  <script src="data.js?v=49"></script>
+  <script src="db.js?v=49"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -900,7 +900,7 @@
             toast("團隊權限的資料庫設定還沒跑，目前是單人模式");
           }
         }
-        else if (DB.configured) showGate(user ? "這個帳號沒有後台權限。若你是審核夥伴，請確認主理人已把這個 Email 加進團隊。" : "請以管理員帳號登入後台。");
+        else if (DB.configured) showGate(user ? `你目前登入的帳號是 ${user.email || "（讀不到 Email）"}，它沒有後台權限。若你是審核夥伴，請把上面這個 Email 一字不差地給主理人加進團隊（常見狀況：手機同時登入多個 Google 帳號，登入時選到另一個）。` : "請以管理員帳號登入後台。");
         else showPanel(); // 本機模式直接進（方便 demo）
       });
       await DB.initAuth();
@@ -908,6 +908,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=48"></script>
+  <script src="nav.js?v=49"></script>
 </body>
 </html>
