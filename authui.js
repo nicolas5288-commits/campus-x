@@ -21,8 +21,20 @@
 
     const old = document.getElementById("userMenu");
     if (old) old.remove();
+    const oldAdminLink = document.getElementById("adminNavLink");
+    if (oldAdminLink) oldAdminLink.remove();
     if (!user) { loginBtn.style.display = ""; return; }
     loginBtn.style.display = "none";
+
+    // 管理員／審核夥伴：後台入口直接放進導覽列一級位置。
+    // 只放頭貼下拉的話，手機版它被收進漢堡選單裡，夥伴會找不到（2026-09-01 實際發生過）
+    if (DB.isAdmin && DB.isAdmin()) {
+      const adminLink = document.createElement("a");
+      adminLink.id = "adminNavLink";
+      adminLink.href = "admin.html";
+      adminLink.textContent = "🛠️ 審核後台";
+      loginBtn.parentNode.insertBefore(adminLink, loginBtn);
+    }
 
     const nickname = (account && account.nickname) || (user.email || "").split("@")[0] || "會員";
     const avatarHtml = (account && account.avatar_url)
