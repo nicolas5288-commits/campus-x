@@ -349,6 +349,118 @@ window.DB = (function () {
     return { ok: true };
   }
 
+  // ========== 過期待清（v52）==========
+  // 規則：status=live 且（截止日早於今天〔台灣時間〕或 recruiting=false 被手動標已截止）。
+  // ⚠️ supabase/functions/expired-programs/index.ts 有同一套規則（函式要整份貼上部署，沒辦法共用檔案），改一邊要改另一邊。
+  function taipeiToday() {
+    return new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+  }
+  function expiryOf(p, today = taipeiToday()) {
+    if (!p || p.status !== "live") return null;
+    const dl = p.deadline ? String(p.deadline).slice(0, 10) : null;
+    const pastDeadline = !!dl && dl < today;
+    if (!pastDeadline && p.recruiting !== false) return null;
+    return {
+      reason: pastDeadline ? "deadline" : "manual",
+      daysPast: pastDeadline ? Math.round((Date.parse(today) - Date.parse(dl)) / 86400000) : null,
+    };
+  }
+  function sortExpired(items) {
+    // 截止日已過的排前面（過越久越前面），手動標已截止（沒有天數）排後面
+    return items.sort((a, b) => (b.daysPast ?? -1) - (a.daysPast ?? -1) || String(a.brand).localeCompare(String(b.brand)));
+  }
+  function toExpiredItem(p, ex, counts) {
+    return {
+      id: p.id, slug: p.slug || null, emoji: p.emoji || "📌", brand: p.brand, title: p.title,
+      deadline: p.deadline || null, recruiting: p.recruiting !== false,
+      reason: ex.reason, daysPast: ex.daysPast,
+      url: "https://uniembassy.tw/p/" + encodeURIComponent(p.slug || p.id) + "/",
+      reviews: counts.reviews, favorites: counts.favorites,
+    };
+  }
+  // 回傳 { today, items:[...], partial, warning }。只讀，不改任何資料。
+  async function getExpiredPrograms() {
+    const today = taipeiToday();
+    if (!sb) {
+      const s = loadStore();
+      const favs = localFavs.get();
+      const items = localAllPrograms().map((p) => [p, expiryOf(p, today)]).filter(([, ex]) => ex)
+        .map(([p, ex]) => toExpiredItem(p, ex, {
+          reviews: s.reviews.filter((r) => r.program_id === p.id && r.status === "live").length,
+          favorites: favs.includes(p.id) ? 1 : 0,
+        }));
+      return { today, items: sortExpired(items), partial: false };
+    }
+    // 雲端：優先問 Edge Function（要 service role 才數得到別人的收藏；跟每日寄信是同一份清單）
+    let fnError = null;
+    try {
+      const { data, error } = await sb.functions.invoke("expired-programs", { body: { action: "list" } });
+      if (!error && data && Array.isArray(data.items)) {
+        return { today: data.today || today, items: sortExpired(data.items), partial: false };
+      }
+      fnError = error ? (error.context && error.context.status ? "HTTP " + error.context.status : error.message) : "回應格式不對";
+    } catch (e) { fnError = e.message; }
+    // 退路：函式還沒部署 → 用前台讀得到的資料算（別人的收藏讀不到，顯示 —）
+    const rows = (await getPrograms()).map((p) => [p, expiryOf(p, today)]).filter(([, ex]) => ex);
+    const ids = rows.map(([p]) => p.id);
+    const revCount = {};
+    if (ids.length) {
+      const { data } = await sb.from("reviews").select("program_id").eq("status", "live").in("program_id", ids);
+      (data || []).forEach((r) => { revCount[r.program_id] = (revCount[r.program_id] || 0) + 1; });
+    }
+    const items = rows.map(([p, ex]) => toExpiredItem(p, ex, { reviews: revCount[p.id] || 0, favorites: null }));
+    return { today, items: sortExpired(items), partial: true, warning: `收藏數要等 expired-programs 函式部署好才看得到（${fnError}）` };
+  }
+  // 後台「寄一封測試信給我」：同一支函式，寄給按按鈕的人
+  async function sendExpiredDigestTest() {
+    if (!sb) return { skipped: "local", message: "本機模式不寄信" };
+    const { data, error } = await sb.functions.invoke("expired-programs", { body: { action: "digest" } });
+    if (error) {
+      let detail = error.message || "寄信失敗";
+      try { const body = await error.context.json(); detail = body.error || detail; } catch {}
+      throw new Error(detail);
+    }
+    return data;
+  }
+  // 下架（status=closed）：資料全留（心得/收藏/回報都在），前台與專屬頁看不到，reopenProgram 可救回。
+  // 只動「目前是 live」的列，並回讀確認真的改到（RLS 擋下時 update 不報錯、只回 0 列）。
+  async function closeProgram(id) {
+    if (!sb) {
+      const p = localAllPrograms().find((x) => x.id === id);
+      if (!p || p.status !== "live") throw new Error("這筆已經不是上架狀態");
+      localSetStatus(id, "closed");
+      return { ok: true };
+    }
+    if (!isAdmin()) throw new Error("只有管理員能下架計畫");
+    const { data, error } = await sb.from("programs").update({ status: "closed" })
+      .eq("id", id).eq("status", "live").select("id");
+    if (error) throw error;
+    if (!data || !data.length) throw new Error("沒有下架成功（可能已經不是上架狀態，或權限不足）");
+    return { ok: true };
+  }
+  async function reopenProgram(id) {
+    if (!sb) {
+      const p = localAllPrograms().find((x) => x.id === id);
+      if (!p || p.status !== "closed") throw new Error("這筆不是已下架狀態");
+      localSetStatus(id, "live");
+      return { ok: true };
+    }
+    if (!isAdmin()) throw new Error("只有管理員能重新上架");
+    const { data, error } = await sb.from("programs").update({ status: "live" })
+      .eq("id", id).eq("status", "closed").select("id");
+    if (error) throw error;
+    if (!data || !data.length) throw new Error("沒有重新上架成功（可能已經不是下架狀態，或權限不足）");
+    return { ok: true };
+  }
+  async function getClosedPrograms() {
+    if (!sb) return localAllPrograms().filter((p) => p.status === "closed");
+    if (!isAdmin()) throw new Error("只有管理員能看已下架的計畫");
+    const { data, error } = await sb.from("programs").select("*")
+      .eq("status", "closed").order("deadline", { ascending: false, nullsFirst: false });
+    if (error) throw error;
+    return (data || []).map(normalizeRow);
+  }
+
   // ========== 計畫補充/回報 program_notes ==========
   // field/suggest 為 v14 逐格建議制：field=格子代號（NOTE_FIELDS 的 key）、suggest=建議值。
   // 兩者留空＝舊的自由文字回報，行為完全不變。
@@ -1139,7 +1251,9 @@ window.DB = (function () {
     initAuth, onAuth, signUp, signIn, signInWithGoogle, signOut, getUser, isAdmin,
     isOwner, myRole, needsStaffSql, getStaff, addStaff, removeStaff,
     getPrograms, getPendingPrograms, getMyPrograms, submitProgram, approveProgram, notifyApproved, rejectProgram, deleteProgram, getProgramStatus,
-    updateProgram, setRecruiting, submitProgramNote, getPendingNotes, resolveNote, applyNoteField,
+    updateProgram, setRecruiting,
+    expiryOf, getExpiredPrograms, sendExpiredDigestTest, closeProgram, reopenProgram, getClosedPrograms,
+    submitProgramNote, getPendingNotes, resolveNote, applyNoteField,
     getFavorites, toggleFavorite,
     getReviews, getPendingReviews, submitReview, approveReview, rejectReview, deleteReview, getFeaturedReviews,
     getProfiles, getPendingProfiles, getMyProfile, saveProfile, approveProfile, rejectProfile, deleteProfile, uploadAvatar,

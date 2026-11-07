@@ -1,0 +1,50 @@
+name: 過期計畫每日清單
+
+# 每天早上檢查「截止日已過（或被標已截止）卻還在上架」的計畫，有的話寄對照表給主理人。
+# ⚠️ 只寄信，不改任何資料。下架要到後台「⏰ 過期待清」分頁勾選＋確認。
+# 實際檢查和寄信在 Supabase Edge Function expired-programs 裡做（Resend 金鑰已經在那邊）；
+# 這支只負責每天叫它一次，用 GitHub 發的 OIDC 身分證證明「是這個 repo 的排程」，不用設任何 secret。
+on:
+  schedule:
+    - cron: "17 1 * * *"   # 每天 UTC 01:17 = 台灣 09:17（避開整點，GitHub 整點排程常塞車延遲）
+  workflow_dispatch:         # 想立刻寄一封，到 Actions 頁手動按 Run workflow
+
+permissions:
+  contents: read
+  id-token: write   # 跟 GitHub 要 OIDC 身分證
+
+concurrency:
+  group: expired-programs-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 檢查過期計畫並寄清單
+        env:
+          FN_URL: https://xjoggvwngsvowjnwwrnc.supabase.co/functions/v1/expired-programs
+          AUDIENCE: uniembassy-expired-programs
+        run: |
+          set -euo pipefail
+          TOKEN=$(curl -sSf -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -r .value)
+          echo "::add-mask::$TOKEN"
+          HTTP=$(curl -sS -o resp.json -w '%{http_code}' -X POST "$FN_URL" \
+            -H "Content-Type: application/json" -H "x-github-oidc: $TOKEN" \
+            -d '{"action":"digest"}') || true   # 連不上時 curl 會印 000，交給下面判斷
+          echo "函式回 HTTP $HTTP"
+          cat resp.json 2>/dev/null || true
+          echo
+          if [ "$HTTP" != "200" ]; then
+            case "$HTTP" in
+              404) echo "::error::expired-programs 函式還沒部署（Supabase → Edge Functions）" ;;
+              401) echo "::error::被 Supabase 擋在門口：到 expired-programs 函式設定把 Verify JWT 關掉" ;;
+              403) echo "::error::函式不認這張 GitHub 身分證（repo／分支／workflow 檔名對不上）" ;;
+              *)   echo "::error::函式執行失敗，看上面的回應內容" ;;
+            esac
+            exit 1
+          fi
+          jq -r '"### 過期計畫每日清單\n- 檢查日（台灣）：\(.today)\n- 過期還在上架：\(.count) 筆\n- 寄信：\(if .sent then "已寄出（\(.recipients) 位收件人）" else (.message // "沒寄") end)"' \
+            resp.json >> "$GITHUB_STEP_SUMMARY"

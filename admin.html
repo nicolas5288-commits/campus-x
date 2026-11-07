@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · UniEmbassy</title>
-  <link rel="stylesheet" href="styles.css?v=51" />
+  <link rel="stylesheet" href="styles.css?v=52" />
 </head>
 <body>
   <header class="nav">
@@ -48,6 +48,7 @@
         <button class="admin-tab" data-tab="profiles">大使名片 <span class="badge" id="badgeN" style="display:none;">0</span></button>
         <button class="admin-tab" data-tab="events">活動 <span class="badge" id="badgeE" style="display:none;">0</span></button>
         <button class="admin-tab" data-tab="notes">計畫回報 <span class="badge" id="badgeNote" style="display:none;">0</span></button>
+        <button class="admin-tab" data-tab="expired">⏰ 過期待清 <span class="badge" id="badgeX" style="display:none;">0</span></button>
         <button class="admin-tab" data-tab="wishes">許願池</button>
         <button class="admin-tab" data-tab="staff" id="tabStaff" style="display:none;">👥 團隊</button>
         <button class="btn ghost sm" id="adLogout" style="margin-left:auto;">登出</button>
@@ -55,6 +56,35 @@
       <div id="queue"></div>
     </div>
   </div>
+  <style>
+    /* ⏰ 過期待清分頁（放這裡不放 styles.css：減少跟其他分支的衝突） */
+    .exp-intro { font-size: 14px; line-height: 1.7; color: var(--ink-soft); margin: 4px 0 14px; }
+    .exp-sum { font-size: 14px; margin: 0 0 12px; }
+    .exp-warn { font-size: 13px; background: #fff6d9; border: 1px solid #ffe28a; color: #7a5a00; border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; }
+    .exp-bar { position: sticky; top: 0; z-index: 2; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--bg, #fff); padding: 10px 0; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+    .exp-bar .exp-n { font-size: 13.5px; color: var(--ink-soft); }
+    .exp-bar .btn { margin-left: auto; }
+    .exp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .exp-table th { text-align: left; font-size: 12.5px; color: var(--ink-soft); font-weight: 600; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    .exp-table td { padding: 10px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .exp-table tr.on td { background: #fdf3f2; }
+    .exp-table .exp-title { font-weight: 600; }
+    .exp-table .exp-past, .exp-table .exp-date { white-space: nowrap; }
+    .exp-table .exp-past { color: #c0392b; }
+    .exp-table .exp-num { text-align: right; white-space: nowrap; }
+    .exp-table a { overflow-wrap: anywhere; }
+    .exp-table input[type=checkbox] { width: 18px; height: 18px; }
+    @media (max-width: 680px) {
+      .exp-table thead { display: none; }
+      .exp-table, .exp-table tbody, .exp-table tr, .exp-table td { display: block; width: 100%; }
+      .exp-table tr { position: relative; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px 10px 44px; margin-bottom: 10px; }
+      .exp-table tr.on { background: #fdf3f2; }
+      .exp-table td { border: none; padding: 2px 0; }
+      .exp-table td.exp-check { position: absolute; left: 12px; top: 12px; width: auto; }
+      .exp-table td.exp-num { text-align: left; display: inline-block; width: auto; margin-right: 14px; }
+      .exp-table td[data-label]::before { content: attr(data-label) "："; color: var(--ink-soft); font-size: 12.5px; }
+    }
+  </style>
   <!-- 補完 / 編輯計畫 modal -->
   <div class="modal-mask" id="apEditMask">
     <div class="modal" id="apEditBody">
@@ -118,10 +148,10 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=51"></script>
-  <script src="data.js?v=51"></script>
-  <script src="db.js?v=51"></script>
-  <script src="carousel.js?v=51"></script>
+  <script src="config.js?v=52"></script>
+  <script src="data.js?v=52"></script>
+  <script src="db.js?v=52"></script>
+  <script src="carousel.js?v=52"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -248,6 +278,8 @@
           await renderWishes();
         } else if (tab === "staff") {
           await renderStaff();
+        } else if (tab === "expired") {
+          await renderExpired();
         } else if (tab === "events") {
           const list = await DB.getPendingEvents();
           updateBadge("badgeE", list.length);
@@ -283,6 +315,7 @@
       } catch {}
       try { updateBadge("badgeE", (await DB.getPendingEvents()).length); } catch {}
       try { updateBadge("badgeNote", (await DB.getPendingNotes()).length); } catch {}
+      try { updateBadge("badgeX", (await DB.getPrograms()).filter((p) => DB.expiryOf(p)).length); } catch {}
     }
 
     // ---- 計畫回報卡 ----
@@ -968,6 +1001,151 @@
     }
 
     // ---- 團隊名單（只有 owner 看得到這個 tab）----
+    // ---- ⏰ 過期待清 ----
+    // 每天 09:17 GitHub Action 會把同一份清單寄到信箱；真正動資料只有這裡：勾選 → 按鈕 → confirm 才下架（status=closed）。
+    let expiredView = "todo";        // todo（待清）/ closed（已下架）
+    let expiredCache = [];
+    const expiredPicked = new Set();
+    function attr(s) { return esc(s).replace(/"/g, "&quot;"); }
+    function expPastLabel(it) {
+      if (it.reason === "deadline") return `已過 ${it.daysPast} 天`;
+      return it.deadline ? "手動標已截止（截止日還沒到）" : "手動標已截止";
+    }
+    async function renderExpired() {
+      const queue = document.getElementById("queue");
+      queue.innerHTML = `
+        <p class="exp-intro">每天早上 9 點自動檢查：<b>截止日已過</b>或<b>被標成已截止</b>、卻還在上架的計畫，有的話寄清單到你信箱。
+          系統不會自己動資料——要在這裡勾選、按下架、再確認一次才會執行。下架後心得、收藏都保留，可在「已下架」一鍵重新上架。</p>
+        <div class="sub-tabs">
+          <button class="sub-tab ${expiredView === "todo" ? "active" : ""}" data-xv="todo">待清</button>
+          <button class="sub-tab ${expiredView === "closed" ? "active" : ""}" data-xv="closed">已下架</button>
+        </div>
+        <div id="expSub"><div class="admin-empty">載入中…</div></div>`;
+      queue.querySelectorAll("[data-xv]").forEach(b => b.onclick = () => { expiredView = b.dataset.xv; renderExpired(); });
+      const sub = document.getElementById("expSub");
+      try {
+        if (expiredView === "todo") await renderExpiredTodo(sub);
+        else await renderExpiredClosed(sub);
+      } catch (err) { sub.innerHTML = `<div class="admin-empty">載入失敗：${esc(err.message)}</div>`; }
+    }
+    async function renderExpiredTodo(sub) {
+      const r = await DB.getExpiredPrograms();
+      expiredCache = r.items;
+      updateBadge("badgeX", r.items.length);
+      // 清單變了（剛下架、或日期跨過一天）→ 勾選只保留還在清單裡的
+      [...expiredPicked].forEach(id => { if (!r.items.some(it => it.id === id)) expiredPicked.delete(id); });
+      if (!r.items.length) {
+        sub.innerHTML = `<div class="admin-empty">${esc(r.today)} 沒有過期還在上架的計畫 🎉</div>`;
+        return;
+      }
+      const nDl = r.items.filter(it => it.reason === "deadline").length;
+      const num = (n) => n == null ? "—" : n;
+      sub.innerHTML = `
+        ${r.partial ? `<div class="exp-warn">⚠️ ${esc(r.warning)}</div>` : ""}
+        <p class="exp-sum">${esc(r.today)}（台灣時間）共 <b>${r.items.length}</b> 筆：截止日已過 ${nDl} 筆、手動標已截止 ${r.items.length - nDl} 筆。</p>
+        <div class="exp-bar">
+          <label class="check-line"><input type="checkbox" id="expAll" /> 全選</label>
+          <span class="exp-n" id="expN"></span>
+          <button class="btn ghost sm" id="expTest">📧 寄測試信給我</button>
+          <button class="btn reject" id="expGo" disabled>⬇️ 下架勾選的計畫</button>
+        </div>
+        <table class="exp-table">
+          <thead><tr><th></th><th>品牌</th><th>計畫名稱</th><th>截止日</th><th>已過幾天</th><th>專屬頁</th><th class="exp-num">心得</th><th class="exp-num">收藏</th></tr></thead>
+          <tbody>${r.items.map(it => `
+            <tr data-xrow="${attr(it.id)}">
+              <td class="exp-check"><input type="checkbox" data-xid="${attr(it.id)}" ${expiredPicked.has(it.id) ? "checked" : ""} aria-label="勾選 ${attr(it.brand)}" /></td>
+              <td>${esc(it.emoji)} ${esc(it.brand)}</td>
+              <td class="exp-title">${esc(it.title)}</td>
+              <td class="exp-date" data-label="截止日">${it.deadline ? esc(it.deadline) : "沒有截止日"}</td>
+              <td class="exp-past">${esc(expPastLabel(it))}</td>
+              <td data-label="專屬頁"><a href="${attr(it.url)}" target="_blank" rel="noopener">${esc(it.url.replace("https://", ""))}</a></td>
+              <td class="exp-num" data-label="💬 心得">${num(it.reviews)}</td>
+              <td class="exp-num" data-label="⭐ 收藏">${num(it.favorites)}</td>
+            </tr>`).join("")}
+          </tbody>
+        </table>`;
+      const all = document.getElementById("expAll"), go = document.getElementById("expGo"), nEl = document.getElementById("expN");
+      function sync() {
+        const n = expiredPicked.size;
+        nEl.textContent = n ? `已勾 ${n} 筆` : "還沒勾選";
+        go.disabled = n === 0;
+        go.textContent = n ? `⬇️ 下架勾選的 ${n} 筆` : "⬇️ 下架勾選的計畫";
+        all.checked = n === r.items.length;
+        all.indeterminate = n > 0 && n < r.items.length;
+        sub.querySelectorAll("[data-xrow]").forEach(tr => {
+          const on = expiredPicked.has(tr.dataset.xrow);
+          tr.classList.toggle("on", on);
+          tr.querySelector("[data-xid]").checked = on;
+        });
+      }
+      const toggle = (id, on) => { on ? expiredPicked.add(id) : expiredPicked.delete(id); sync(); };
+      sub.querySelectorAll("[data-xid]").forEach(cb => cb.onchange = () => toggle(cb.dataset.xid, cb.checked));
+      // 點整列也能勾（點連結、點勾選框本身除外）
+      sub.querySelectorAll("[data-xrow]").forEach(tr => tr.onclick = (e) => {
+        if (e.target.closest("a, input")) return;
+        toggle(tr.dataset.xrow, !expiredPicked.has(tr.dataset.xrow));
+      });
+      all.onchange = () => { r.items.forEach(it => all.checked ? expiredPicked.add(it.id) : expiredPicked.delete(it.id)); sync(); };
+      sync();
+      document.getElementById("expTest").onclick = async (e) => {
+        const b = e.currentTarget; b.disabled = true; b.textContent = "寄送中…";
+        try {
+          const res = await DB.sendExpiredDigestTest();
+          toast(res.sent ? `測試信已寄到 ${(res.to || []).join(", ")}` : (res.message || "沒有寄出"));
+        } catch (err) { toast("寄信失敗：" + err.message); }
+        b.disabled = false; b.textContent = "📧 寄測試信給我";
+      };
+      go.onclick = () => runExpiredClose(go);
+    }
+    async function runExpiredClose(go) {
+      const picked = expiredCache.filter(it => expiredPicked.has(it.id));
+      if (!picked.length) return;
+      const revs = picked.reduce((s, it) => s + (it.reviews || 0), 0);
+      const favs = picked.some(it => it.favorites == null) ? null : picked.reduce((s, it) => s + it.favorites, 0);
+      const names = picked.slice(0, 12).map(it => `• ${it.brand}｜${it.title}`).join("\n")
+        + (picked.length > 12 ? `\n…還有 ${picked.length - 12} 筆` : "");
+      if (!confirm(`確定下架這 ${picked.length} 筆計畫？\n\n${names}\n\n下架後：前台列表看不到，專屬頁會在下次自動重生（6 小時內）時移除。\n心得 ${revs} 則${favs == null ? "" : `、收藏 ${favs} 筆`}全部保留，之後可在「已下架」一鍵重新上架。`)) return;
+      go.disabled = true;
+      const fails = [];
+      for (let i = 0; i < picked.length; i++) {
+        go.textContent = `下架中 ${i + 1}/${picked.length}…`;
+        try { await DB.closeProgram(picked[i].id); expiredPicked.delete(picked[i].id); }
+        catch (e) { fails.push(`${picked[i].brand}：${e.message}`); }
+      }
+      const ok = picked.length - fails.length;
+      if (fails.length) alert(`下架成功 ${ok} 筆，失敗 ${fails.length} 筆：\n\n${fails.join("\n")}`);
+      else toast(`已下架 ${ok} 筆 ⬇️`);
+      renderExpired();
+    }
+    async function renderExpiredClosed(sub) {
+      const list = await DB.getClosedPrograms();
+      if (!list.length) { sub.innerHTML = '<div class="admin-empty">目前沒有已下架的計畫</div>'; return; }
+      sub.innerHTML = `<p class="exp-sum">共 ${list.length} 筆。重新上架後，如果截止日還是過去的日期，明天又會出現在「待清」——記得到「廠商投稿 → 已上架」改截止日。</p>
+        ${list.map(p => `<div class="queue-card">
+          <div style="display:flex;gap:12px;align-items:start;">
+            <div class="card-emoji">${esc(p.emoji || "📌")}</div>
+            <div style="flex:1;"><h3>${esc(p.title)}</h3><div class="q-brand">${esc(p.brand)}</div></div>
+          </div>
+          <div class="q-meta">
+            <span class="tag">${p.deadline ? "截止 " + esc(p.deadline) : "沒有截止日"}</span>
+            ${p.recruiting === false ? '<span class="tag">已標截止</span>' : ""}
+          </div>
+          <div class="q-actions"><button class="btn" data-reopen="${attr(p.id)}" style="background:#fff;color:var(--ink);border-color:var(--line-strong);">↩️ 重新上架</button></div>
+        </div>`).join("")}`;
+      sub.querySelectorAll("[data-reopen]").forEach(b => b.onclick = async () => {
+        const p = list.find(x => x.id === b.dataset.reopen);
+        if (!p) return;
+        const ex = DB.expiryOf({ ...p, status: "live" });
+        const warn = ex ? `\n\n⚠️ 它還是符合過期條件（${ex.reason === "deadline" ? "截止日已過" : "被標成已截止"}），明天會再出現在待清清單。建議上架後馬上改截止日或招募狀態。` : "";
+        if (!confirm(`重新上架「${p.brand}｜${p.title}」？${warn}`)) return;
+        b.disabled = true;
+        try { await DB.reopenProgram(p.id); toast("已重新上架 ✓（專屬頁 6 小時內會重新產生）"); }
+        catch (e) { toast("重新上架失敗：" + e.message); b.disabled = false; return; }
+        renderExpired();
+        refreshBadges();   // 待清筆數可能變多（重新上架的還是過期的話）
+      });
+    }
+
     async function renderStaff() {
       const queue = document.getElementById("queue");
       queue.innerHTML = '<div class="admin-empty">載入中…</div>';
@@ -1071,8 +1249,21 @@
 
     // ---- 啟動 ----
     async function boot() {
+      // 每日清單信裡的「到後台確認」帶 ?tab=expired → 直接打開那個分頁
+      // （Google 登入回來會把 ?tab= 吃掉，所以先記在 sessionStorage，進到後台再清掉）
+      let wantTab = null;
+      try {
+        wantTab = new URLSearchParams(location.search).get("tab") || sessionStorage.getItem("ue_admin_tab");
+        if (wantTab) sessionStorage.setItem("ue_admin_tab", wantTab);
+      } catch {}
+      const wantBtn = wantTab && wantTab !== "staff" && document.querySelector(`.admin-tab[data-tab="${CSS.escape(wantTab)}"]`);
+      if (wantBtn) {
+        tab = wantTab;
+        document.querySelectorAll(".admin-tab").forEach(x => x.classList.toggle("active", x === wantBtn));
+      }
       DB.onAuth((user) => {
         if (DB.isAdmin()) {
+          try { sessionStorage.removeItem("ue_admin_tab"); } catch {}
           showPanel();
           // v18 SQL 還沒跑：仍可用（退回舊的單一管理員判斷），但團隊功能不會生效
           if (DB.needsStaffSql && DB.needsStaffSql()) {
@@ -1087,6 +1278,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=51"></script>
+  <script src="nav.js?v=52"></script>
 </body>
 </html>

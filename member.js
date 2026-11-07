@@ -145,6 +145,7 @@
       pending: { t: "⏳ 審核中", cls: "" },
       live: { t: "✅ 已上架", cls: "paid" },
       rejected: { t: "❌ 已退回", cls: "unpaid" },
+      closed: { t: "📁 已截止", cls: "" },
     };
     const s = STAT[p.status] || STAT.pending;
     const reason = (p.status === "rejected" && p.reject_reason)
