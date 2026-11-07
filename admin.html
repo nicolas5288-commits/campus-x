@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>審核後台 · UniEmbassy</title>
-  <link rel="stylesheet" href="styles.css?v=50" />
+  <link rel="stylesheet" href="styles.css?v=51" />
 </head>
 <body>
   <header class="nav">
@@ -95,12 +95,33 @@
     </div>
   </div>
 
+  <!-- IG 輪播素材 modal（carousel.js 產圖＋模板文案） -->
+  <div class="modal-mask" id="igKitMask">
+    <div class="modal ig-modal">
+      <button class="modal-close" id="igKitClose">✕</button>
+      <h2>📸 IG 輪播素材</h2>
+      <p class="auth-sub" id="igKitSub"></p>
+      <div class="ig-strip" id="igKitStrip"><span class="ig-loading">排版中…</span></div>
+      <div class="ig-modal-actions">
+        <button class="btn" id="igKitZip">⬇️ 下載全部圖片（zip）</button>
+        <button class="btn ghost" id="igKitShare" style="display:none;">📱 存到手機／分享</button>
+      </div>
+      <div class="field" style="margin-top:22px;">
+        <label><span>IG 貼文文案 <span class="hint">可以直接在這裡改，改完再複製</span></span>
+          <textarea id="igKitCap" rows="14"></textarea></label>
+      </div>
+      <div class="ig-modal-actions"><button class="btn" id="igKitCopy">📋 複製文案</button></div>
+      <p class="ig-note">※ 圖片和文案都是照投稿資料自動排的。資料有錯先按「✏️ 補完 / 編輯」改好，素材會自動更新。手機上可以長按圖片存到相簿。</p>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="config.js?v=50"></script>
-  <script src="data.js?v=50"></script>
-  <script src="db.js?v=50"></script>
+  <script src="config.js?v=51"></script>
+  <script src="data.js?v=51"></script>
+  <script src="db.js?v=51"></script>
+  <script src="carousel.js?v=51"></script>
   <script>
   (function () {
     const DB = window.DB;
@@ -162,6 +183,15 @@
         ${p.benefits && p.benefits.length ? `<div class="q-section"><b>福利</b><div>${p.benefits.map(esc).join("、")}</div></div>` : ""}
         ${p.sourceUrl ? `<div class="q-section"><b>來源</b><div><a href="${esc(p.sourceUrl)}" target="_blank" rel="noopener">${esc(p.sourceUrl)}</a></div></div>` : ""}
         <div class="q-section"><b>報名連結</b><div>${p.applyUrl ? `<a href="${esc(p.applyUrl)}" target="_blank" rel="noopener">${esc(p.applyUrl)}</a>` : "—"}</div></div>
+        <div class="ig-kit">
+          <div class="ig-kit-head"><b>📸 IG 輪播素材</b><span>投稿進來自動排好；資料用「補完 / 編輯」改過會跟著更新</span></div>
+          <div class="ig-thumbs" data-igthumbs="${p.id}"><span class="ig-loading">排版中…</span></div>
+          <div class="ig-kit-actions">
+            <button class="btn ghost sm" data-igopen="${p.id}">🔍 預覽圖片＋文案</button>
+            <button class="btn ghost sm" data-igzip="${p.id}">⬇️ 下載全部圖片</button>
+            <button class="btn ghost sm" data-igcap="${p.id}">📋 複製 IG 文案</button>
+          </div>
+        </div>
         <div class="q-actions">
           <button class="btn" data-editp="${p.id}" style="background:#fff;color:var(--ink);border-color:var(--line-strong);">✏️ 補完 / 編輯</button>
           <button class="btn approve" data-approve="${p.id}">✓ 通過上架</button>
@@ -626,6 +656,7 @@
             ? list.map(programCard).join("")
             : '<div class="admin-empty">目前沒有待審的投稿 🎉</div>';
           bindProgramActions();
+          fillIgThumbs(); // 背景排 IG 輪播縮圖，不擋審核操作
         } else {
           const list = await DB.getPrograms();
           liveProgramsCache = list;
@@ -653,6 +684,7 @@
         </div>
         <div class="q-actions">
           <button class="btn" data-editp="${p.id}" style="background:#fff;color:var(--ink);border-color:var(--line-strong);">✏️ 編輯</button>
+          <button class="btn ghost" data-igopen="${p.id}">📸 IG 素材</button>
           <button class="btn reject" data-unpub="${p.id}">⬇️ 下架</button>
           <button class="btn danger" data-dellive="${p.id}">🗑️ 永久刪除</button>
         </div>
@@ -702,6 +734,153 @@
         loadQueue();
       });
     }
+
+    // ---- IG 輪播素材：投稿卡自動排縮圖、modal 預覽＋下載＋文案（carousel.js）----
+    const igCache = {}; // 計畫 id → { key: 資料快照, promise: {blobs, urls, caption} }；資料沒變就不重排
+    function findProgram(id) {
+      return pendingProgramsCache.find((x) => x.id === id) || liveProgramsCache.find((x) => x.id === id);
+    }
+    function igKit(p) {
+      const key = JSON.stringify(p);
+      const hit = igCache[p.id];
+      if (hit && hit.key === key) return hit.promise;
+      if (hit) hit.promise.then((k) => k.urls.forEach((u) => URL.revokeObjectURL(u))).catch(() => {});
+      const promise = (async () => {
+        const blobs = await window.Carousel.toBlobs(await window.Carousel.render(p));
+        return { blobs, urls: blobs.map((b) => URL.createObjectURL(b)), caption: window.Carousel.caption(p) };
+      })();
+      igCache[p.id] = { key, promise };
+      promise.catch(() => { if (igCache[p.id] && igCache[p.id].promise === promise) delete igCache[p.id]; });
+      return promise;
+    }
+    async function fillIgThumbs() {
+      if (!window.Carousel) return;
+      for (const el of document.querySelectorAll("[data-igthumbs]")) {
+        const p = findProgram(el.dataset.igthumbs);
+        if (!p) continue;
+        try {
+          const kit = await igKit(p);
+          el.innerHTML = kit.urls.map((u, i) => `<img src="${u}" alt="第 ${i + 1} 張" data-igopen="${p.id}" data-igidx="${i}" />`).join("");
+        } catch (e) {
+          el.innerHTML = `<span class="ig-loading">排版失敗：${esc(e.message)}</span>`;
+        }
+      }
+    }
+    function igFileBase(p) {
+      return "UniEmbassy_" + window.Carousel.brandName(p).replace(/[\\/:*?"<>|\s]+/g, "") + "_IG輪播";
+    }
+    function saveBlob(blob, name) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }
+    let jszipLoading = null;
+    function loadJSZip() {
+      if (window.JSZip) return Promise.resolve(window.JSZip);
+      if (!jszipLoading) {
+        jszipLoading = new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+          s.onload = () => (window.JSZip ? resolve(window.JSZip) : reject(new Error("zip 工具載入失敗")));
+          s.onerror = () => { jszipLoading = null; reject(new Error("zip 工具載入失敗")); };
+          document.head.appendChild(s);
+        });
+      }
+      return jszipLoading;
+    }
+    async function igDownload(p, btn) {
+      if (btn) btn.disabled = true;
+      try {
+        const kit = await igKit(p);
+        const base = igFileBase(p);
+        const capText = document.getElementById("igKitMask").classList.contains("open") && igModalId === p.id
+          ? document.getElementById("igKitCap").value : kit.caption;
+        try {
+          const JSZip = await loadJSZip();
+          const zip = new JSZip();
+          kit.blobs.forEach((b, i) => zip.file(`${String(i + 1).padStart(2, "0")}.png`, b));
+          zip.file("IG文案.txt", capText);
+          saveBlob(await zip.generateAsync({ type: "blob" }), base + ".zip");
+          toast(`已下載 ${kit.blobs.length} 張圖＋文案 ⬇️`);
+        } catch (zipErr) {
+          // zip 工具載不到 → 退回一張一張下載（瀏覽器可能會問一次「允許下載多個檔案」）
+          for (let i = 0; i < kit.blobs.length; i++) {
+            saveBlob(kit.blobs[i], `${base}_${String(i + 1).padStart(2, "0")}.png`);
+            await new Promise((r) => setTimeout(r, 400));
+          }
+          toast(`已逐張下載 ${kit.blobs.length} 張圖 ⬇️`);
+        }
+      } catch (e) {
+        toast("圖片產生失敗：" + e.message);
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+    async function copyText(text) {
+      try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
+    }
+    async function igCopyCaption(p) {
+      const text = Carousel.caption(p);
+      if (await copyText(text)) toast("IG 文案已複製 📋");
+      else openIgKit(p.id); // 複製被擋（例如非 https）→ 打開 modal 讓人手動選取
+    }
+
+    let igModalId = null;
+    async function openIgKit(id, idx) {
+      const p = findProgram(id);
+      if (!p || !window.Carousel) return;
+      igModalId = id;
+      const strip = document.getElementById("igKitStrip");
+      document.getElementById("igKitSub").textContent = `${p.brand || ""}｜${p.title || ""}`;
+      document.getElementById("igKitCap").value = window.Carousel.caption(p);
+      strip.innerHTML = '<span class="ig-loading">排版中…</span>';
+      document.getElementById("igKitShare").style.display = "none";
+      document.getElementById("igKitMask").classList.add("open");
+      try {
+        const kit = await igKit(p);
+        if (igModalId !== id) return;
+        strip.innerHTML = kit.urls.map((u, i) => `<img src="${u}" alt="第 ${i + 1} 張" />`).join("");
+        if (idx) {
+          const img = strip.children[+idx];
+          if (img) img.onload = () => { strip.scrollLeft = img.offsetLeft - strip.offsetLeft; };
+        }
+        // 手機：系統分享面板可以一次存進相簿或直接丟 IG
+        const files = kit.blobs.map((b, i) => new File([b], `${igFileBase(p)}_${i + 1}.png`, { type: "image/png" }));
+        if (navigator.canShare && navigator.canShare({ files })) {
+          const shareBtn = document.getElementById("igKitShare");
+          shareBtn.style.display = "";
+          shareBtn.onclick = async () => {
+            const copied = await copyText(document.getElementById("igKitCap").value);
+            try {
+              await navigator.share({ files });
+              if (copied) toast("文案已複製，發文時直接貼上 📋");
+            } catch (e) { if (e.name !== "AbortError") toast("分享失敗：" + e.message); }
+          };
+        }
+      } catch (e) {
+        strip.innerHTML = `<span class="ig-loading">排版失敗：${esc(e.message)}</span>`;
+      }
+    }
+    document.getElementById("igKitClose").onclick = () => { igModalId = null; document.getElementById("igKitMask").classList.remove("open"); };
+    document.getElementById("igKitMask").onclick = (e) => { if (e.target.id === "igKitMask") { igModalId = null; e.currentTarget.classList.remove("open"); } };
+    document.getElementById("igKitZip").onclick = (e) => { const p = findProgram(igModalId); if (p) igDownload(p, e.currentTarget); };
+    document.getElementById("igKitCopy").onclick = async () => {
+      const ta = document.getElementById("igKitCap");
+      if (await copyText(ta.value)) toast("IG 文案已複製 📋");
+      else { ta.focus(); ta.select(); toast("自動複製被擋，已幫你全選，按 Ctrl/⌘+C 複製"); }
+    };
+    // 投稿卡上的按鈕用事件委派（佇列每次重畫都換新 DOM）
+    document.getElementById("queue").addEventListener("click", (e) => {
+      const t = e.target.closest("[data-igopen],[data-igzip],[data-igcap]");
+      if (!t) return;
+      const id = t.dataset.igopen || t.dataset.igzip || t.dataset.igcap;
+      const p = findProgram(id);
+      if (!p) return;
+      if (t.dataset.igopen) openIgKit(id, t.dataset.igidx);
+      else if (t.dataset.igzip) igDownload(p, t);
+      else igCopyCaption(p);
+    });
 
     // ---- 補完 / 編輯計畫 modal ----
     (function initEditCat() {
@@ -908,6 +1087,6 @@
     boot();
   })();
   </script>
-  <script src="nav.js?v=50"></script>
+  <script src="nav.js?v=51"></script>
 </body>
 </html>
